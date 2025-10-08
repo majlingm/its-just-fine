@@ -4,12 +4,22 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 const loader = new GLTFLoader();
 const modelCache = {};
 
+// Get base path from Vite
+const BASE_PATH = import.meta.env.BASE_URL || '/';
+console.log('Model loader using BASE_PATH:', BASE_PATH);
+
 export function loadCharacterModel(characterName) {
   return new Promise((resolve, reject) => {
     // Check if it's a full path or just a character name
-    const modelPath = characterName.includes('/')
+    let modelPath = characterName.includes('/')
       ? characterName
       : `/assets/characters/Models/GLB format/${characterName}.glb`;
+
+    // Add base path for production (remove leading slash if BASE_PATH ends with /)
+    if (BASE_PATH !== '/') {
+      modelPath = modelPath.startsWith('/') ? modelPath.substring(1) : modelPath;
+      modelPath = BASE_PATH + modelPath;
+    }
 
     // Check if this is player or skeleton model - these should always load fresh
     const shouldSkipCache =
@@ -18,11 +28,13 @@ export function loadCharacterModel(characterName) {
       modelPath.includes('skeleton') ||
       modelPath.includes('Skeleton');
 
+    console.log('Loading model from path:', modelPath);
+
     if (shouldSkipCache) {
-      console.log('Loading model fresh (no cache for player/skeleton):', modelPath);
+      console.log('(no cache for player/skeleton)');
     } else if (modelCache[characterName]) {
       // Use cached model for non-player, non-skeleton models
-      console.log('Using cached model:', modelPath);
+      console.log('Using cached model');
       const cachedData = modelCache[characterName];
       const clone = cachedData.scene.clone(true);
       clone.position.set(0, 0, 0);
