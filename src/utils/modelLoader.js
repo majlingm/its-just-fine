@@ -15,21 +15,23 @@ export function loadCharacterModel(characterName) {
     // Get the correct path for the environment
     const modelPath = getAssetPath(relativePath);
 
-    // Check if this is player or skeleton model - these should always load fresh
+    // Use the model path as the cache key for consistency
+    const cacheKey = modelPath;
+
+    // Check if this is player model - only player models should always load fresh
+    // Skeleton models should be cached since they're used for multiple enemies
     const shouldSkipCache =
       modelPath.includes('anime_character_cyberstyle') ||
-      modelPath.includes('beautiful_witch') ||
-      modelPath.includes('skeleton') ||
-      modelPath.includes('Skeleton');
+      modelPath.includes('beautiful_witch');
 
     console.log('Loading model from path:', modelPath);
 
     if (shouldSkipCache) {
-      console.log('(no cache for player/skeleton)');
-    } else if (modelCache[characterName]) {
-      // Use cached model for non-player, non-skeleton models
-      console.log('Using cached model');
-      const cachedData = modelCache[characterName];
+      console.log('(no cache for player models)');
+    } else if (modelCache[cacheKey]) {
+      // Use cached model for all non-player models (including skeletons)
+      console.log('Using cached model for:', characterName);
+      const cachedData = modelCache[cacheKey];
       const clone = cachedData.scene.clone(true);
       clone.position.set(0, 0, 0);
       clone.rotation.set(0, 0, 0);
@@ -44,12 +46,13 @@ export function loadCharacterModel(characterName) {
         const model = gltf.scene;
         const animations = gltf.animations;
 
-        // Cache only non-player, non-skeleton models
+        // Cache all non-player models (including skeletons)
         if (!shouldSkipCache) {
-          modelCache[characterName] = {
+          modelCache[cacheKey] = {
             scene: model.clone(true),
             animations: animations
           };
+          console.log('Cached model for future use:', characterName);
         }
 
         resolve({ scene: model, animations: animations });
@@ -90,13 +93,44 @@ export async function preloadAllModels(onProgress = null) {
   }
 
   preloadComplete = true;
-  console.log(`Preloaded ${loaded}/${total} character models (cached non-player/skeleton models)`);
+  console.log(`Preloaded ${loaded}/${total} character models (cached all non-player models)`);
   return preloadComplete;
 }
 
 export function isPreloadComplete() {
-  // Check if we have some models cached (but not player/skeleton)
+  // Check if we have some models cached (but not player models)
   return Object.keys(modelCache).length > 0;
+}
+
+/**
+ * Clear the model cache to free up memory
+ * @param {string} modelName - Optional specific model to clear, otherwise clears all
+ */
+export function clearModelCache(modelName = null) {
+  if (modelName) {
+    if (modelCache[modelName]) {
+      // Dispose of the cached model's resources
+      const cachedData = modelCache[modelName];
+      if (cachedData.scene) {
+        cachedData.scene.traverse((child) => {
+          if (child.geometry) child.geometry.dispose();
+          if (child.material) {
+            if (Array.isArray(child.material)) {
+              child.material.forEach(mat => mat.dispose());
+            } else {
+              child.material.dispose();
+            }
+          }
+        });
+      }
+      delete modelCache[modelName];
+      console.log(`Cleared cache for model: ${modelName}`);
+    }
+  } else {
+    // Clear all cached models
+    Object.keys(modelCache).forEach(key => clearModelCache(key));
+    console.log('Cleared all model cache');
+  }
 }
 
 // Character assignments for the game

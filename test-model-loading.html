@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Model Loading Test</title>
+    <style>
+        body {
+            font-family: monospace;
+            padding: 20px;
+            background: #1a1a1a;
+            color: #0f0;
+        }
+        .log {
+            margin: 5px 0;
+            padding: 5px;
+            border-left: 3px solid #0f0;
+        }
+        .error {
+            color: #f00;
+            border-color: #f00;
+        }
+        .success {
+            color: #0f0;
+            border-color: #0f0;
+        }
+        .cached {
+            color: #00f;
+            border-color: #00f;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 10px 5px;
+            cursor: pointer;
+            background: #333;
+            color: #0f0;
+            border: 1px solid #0f0;
+        }
+        button:hover {
+            background: #444;
+        }
+    </style>
+</head>
+<body>
+    <h1>Model Loading Cache Test</h1>
+    <div>
+        <button onclick="testModelLoading()">Test Model Loading</button>
+        <button onclick="clearLogs()">Clear Logs</button>
+    </div>
+    <div id="logs"></div>
+
+    <script type="module">
+        import { loadCharacterModel, CHARACTER_MODELS, clearModelCache } from './src/utils/modelLoader.js';
+
+        window.testModelLoading = async function() {
+            const logsDiv = document.getElementById('logs');
+
+            addLog('Starting model loading test...', 'log');
+
+            // Test 1: Load skeleton warrior first time (should load fresh)
+            addLog('Test 1: Loading Skeleton Warrior (first time)...', 'log');
+            const start1 = performance.now();
+            try {
+                await loadCharacterModel(CHARACTER_MODELS.skeleton_warrior);
+                const time1 = (performance.now() - start1).toFixed(2);
+                addLog(`✓ Skeleton Warrior loaded in ${time1}ms (fresh load)`, 'success');
+            } catch(e) {
+                addLog(`✗ Failed to load: ${e.message}`, 'error');
+            }
+
+            // Test 2: Load skeleton warrior second time (should use cache)
+            addLog('Test 2: Loading Skeleton Warrior (second time)...', 'log');
+            const start2 = performance.now();
+            try {
+                await loadCharacterModel(CHARACTER_MODELS.skeleton_warrior);
+                const time2 = (performance.now() - start2).toFixed(2);
+                addLog(`✓ Skeleton Warrior loaded in ${time2}ms (should be cached)`, 'cached');
+            } catch(e) {
+                addLog(`✗ Failed to load: ${e.message}`, 'error');
+            }
+
+            // Test 3: Load skeleton mage first time
+            addLog('Test 3: Loading Skeleton Mage (first time)...', 'log');
+            const start3 = performance.now();
+            try {
+                await loadCharacterModel(CHARACTER_MODELS.skeleton_mage);
+                const time3 = (performance.now() - start3).toFixed(2);
+                addLog(`✓ Skeleton Mage loaded in ${time3}ms (fresh load)`, 'success');
+            } catch(e) {
+                addLog(`✗ Failed to load: ${e.message}`, 'error');
+            }
+
+            // Test 4: Load skeleton mage second time (should use cache)
+            addLog('Test 4: Loading Skeleton Mage (second time)...', 'log');
+            const start4 = performance.now();
+            try {
+                await loadCharacterModel(CHARACTER_MODELS.skeleton_mage);
+                const time4 = (performance.now() - start4).toFixed(2);
+                addLog(`✓ Skeleton Mage loaded in ${time4}ms (should be cached)`, 'cached');
+            } catch(e) {
+                addLog(`✗ Failed to load: ${e.message}`, 'error');
+            }
+
+            // Test 5: Load multiple warriors in parallel
+            addLog('Test 5: Loading 5 Skeleton Warriors in parallel...', 'log');
+            const start5 = performance.now();
+            try {
+                await Promise.all([
+                    loadCharacterModel(CHARACTER_MODELS.skeleton_warrior),
+                    loadCharacterModel(CHARACTER_MODELS.skeleton_warrior),
+                    loadCharacterModel(CHARACTER_MODELS.skeleton_warrior),
+                    loadCharacterModel(CHARACTER_MODELS.skeleton_warrior),
+                    loadCharacterModel(CHARACTER_MODELS.skeleton_warrior)
+                ]);
+                const time5 = (performance.now() - start5).toFixed(2);
+                addLog(`✓ 5 Warriors loaded in ${time5}ms (all should use cache)`, 'cached');
+            } catch(e) {
+                addLog(`✗ Failed to load: ${e.message}`, 'error');
+            }
+
+            addLog('Test complete! Check console and network tab for blob URLs.', 'success');
+        };
+
+        window.clearLogs = function() {
+            document.getElementById('logs').innerHTML = '';
+        };
+
+        function addLog(message, className) {
+            const logsDiv = document.getElementById('logs');
+            const logDiv = document.createElement('div');
+            logDiv.className = `log ${className}`;
+            logDiv.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            logsDiv.appendChild(logDiv);
+            console.log(message);
+        }
+    </script>
+</body>
+</html>
