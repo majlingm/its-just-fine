@@ -1,10 +1,11 @@
 // Desert Canyon Level - A natural desert canyon with rocks, cacti, and cliffs
+import { getAssetPath } from '../utils/assetPath.js';
 
 export const desertCanyonLevel = {
   name: 'Desert Canyon',
   description: 'A desolate canyon in the heart of the desert',
   groundType: 'desert', // sand texture
-  music: '/assets/music/risinginferno.mp3',
+  music: getAssetPath('/assets/music/risinginferno.mp3'),
 
   lighting: {
     background: 0xd4a574, // Warm sandy horizon
@@ -102,100 +103,100 @@ export const desertCanyonLevel = {
   objects: [
     // Border cliffs - create canyon walls
     // North wall
-    { model: '/models/nature-kit/cliff_block_stone.glb', x: -60, y: 0, z: -75, scale: 2, rotation: { y: 0 } },
-    { model: '/models/nature-kit/cliff_block_stone.glb', x: -30, y: 0, z: -75, scale: 2, rotation: { y: 0 } },
-    { model: '/models/nature-kit/cliff_block_stone.glb', x: 0, y: 0, z: -75, scale: 2, rotation: { y: 0 } },
-    { model: '/models/nature-kit/cliff_block_stone.glb', x: 30, y: 0, z: -75, scale: 2, rotation: { y: 0 } },
-    { model: '/models/nature-kit/cliff_block_stone.glb', x: 60, y: 0, z: -75, scale: 2, rotation: { y: 0 } },
+    { model: getAssetPath('/models/nature-kit/cliff_block_stone.glb'), x: -60, y: 0, z: -75, scale: 2, rotation: { y: 0 } },
+    { model: getAssetPath('/models/nature-kit/cliff_block_stone.glb'), x: -30, y: 0, z: -75, scale: 2, rotation: { y: 0 } },
+    { model: getAssetPath('/models/nature-kit/cliff_block_stone.glb'), x: 0, y: 0, z: -75, scale: 2, rotation: { y: 0 } },
+    { model: getAssetPath('/models/nature-kit/cliff_block_stone.glb'), x: 30, y: 0, z: -75, scale: 2, rotation: { y: 0 } },
+    { model: getAssetPath('/models/nature-kit/cliff_block_stone.glb'), x: 60, y: 0, z: -75, scale: 2, rotation: { y: 0 } },
 
     // South wall
-    { model: '/models/nature-kit/cliff_block_stone.glb', x: -60, y: 0, z: 75, scale: 2, rotation: { y: Math.PI } },
-    { model: '/models/nature-kit/cliff_block_stone.glb', x: -30, y: 0, z: 75, scale: 2, rotation: { y: Math.PI } },
-    { model: '/models/nature-kit/cliff_block_stone.glb', x: 0, y: 0, z: 75, scale: 2, rotation: { y: Math.PI } },
-    { model: '/models/nature-kit/cliff_block_stone.glb', x: 30, y: 0, z: 75, scale: 2, rotation: { y: Math.PI } },
-    { model: '/models/nature-kit/cliff_block_stone.glb', x: 60, y: 0, z: 75, scale: 2, rotation: { y: Math.PI } },
+    { model: getAssetPath('/models/nature-kit/cliff_block_stone.glb'), x: -60, y: 0, z: 75, scale: 2, rotation: { y: Math.PI } },
+    { model: getAssetPath('/models/nature-kit/cliff_block_stone.glb'), x: -30, y: 0, z: 75, scale: 2, rotation: { y: Math.PI } },
+    { model: getAssetPath('/models/nature-kit/cliff_block_stone.glb'), x: 0, y: 0, z: 75, scale: 2, rotation: { y: Math.PI } },
+    { model: getAssetPath('/models/nature-kit/cliff_block_stone.glb'), x: 30, y: 0, z: 75, scale: 2, rotation: { y: Math.PI } },
+    { model: getAssetPath('/models/nature-kit/cliff_block_stone.glb'), x: 60, y: 0, z: 75, scale: 2, rotation: { y: Math.PI } },
 
     // West wall
-    { model: '/models/nature-kit/cliff_block_stone.glb', x: -75, y: 0, z: -45, scale: 2, rotation: { y: Math.PI / 2 } },
-    { model: '/models/nature-kit/cliff_block_stone.glb', x: -75, y: 0, z: -15, scale: 2, rotation: { y: Math.PI / 2 } },
-    { model: '/models/nature-kit/cliff_block_stone.glb', x: -75, y: 0, z: 15, scale: 2, rotation: { y: Math.PI / 2 } },
-    { model: '/models/nature-kit/cliff_block_stone.glb', x: -75, y: 0, z: 45, scale: 2, rotation: { y: Math.PI / 2 } },
+    { model: getAssetPath('/models/nature-kit/cliff_block_stone.glb'), x: -75, y: 0, z: -45, scale: 2, rotation: { y: Math.PI / 2 } },
+    { model: getAssetPath('/models/nature-kit/cliff_block_stone.glb'), x: -75, y: 0, z: -15, scale: 2, rotation: { y: Math.PI / 2 } },
+    { model: getAssetPath('/models/nature-kit/cliff_block_stone.glb'), x: -75, y: 0, z: 15, scale: 2, rotation: { y: Math.PI / 2 } },
+    { model: getAssetPath('/models/nature-kit/cliff_block_stone.glb'), x: -75, y: 0, z: 45, scale: 2, rotation: { y: Math.PI / 2 } },
 
     // East wall
-    { model: '/models/nature-kit/cliff_block_stone.glb', x: 75, y: 0, z: -45, scale: 2, rotation: { y: -Math.PI / 2 } },
-    { model: '/models/nature-kit/cliff_block_stone.glb', x: 75, y: 0, z: -15, scale: 2, rotation: { y: -Math.PI / 2 } },
-    { model: '/models/nature-kit/cliff_block_stone.glb', x: 75, y: 0, z: 15, scale: 2, rotation: { y: -Math.PI / 2 } },
-    { model: '/models/nature-kit/cliff_block_stone.glb', x: 75, y: 0, z: 45, scale: 2, rotation: { y: -Math.PI / 2 } },
+    { model: getAssetPath('/models/nature-kit/cliff_block_stone.glb'), x: 75, y: 0, z: -45, scale: 2, rotation: { y: -Math.PI / 2 } },
+    { model: getAssetPath('/models/nature-kit/cliff_block_stone.glb'), x: 75, y: 0, z: -15, scale: 2, rotation: { y: -Math.PI / 2 } },
+    { model: getAssetPath('/models/nature-kit/cliff_block_stone.glb'), x: 75, y: 0, z: 15, scale: 2, rotation: { y: -Math.PI / 2 } },
+    { model: getAssetPath('/models/nature-kit/cliff_block_stone.glb'), x: 75, y: 0, z: 45, scale: 2, rotation: { y: -Math.PI / 2 } },
 
     // Corner rocks for variation
-    { model: '/models/nature-kit/cliff_cornerLarge_stone.glb', x: -75, y: 0, z: -75, scale: 2 },
-    { model: '/models/nature-kit/cliff_cornerLarge_stone.glb', x: 75, y: 0, z: -75, scale: 2, rotation: { y: Math.PI / 2 } },
-    { model: '/models/nature-kit/cliff_cornerLarge_stone.glb', x: -75, y: 0, z: 75, scale: 2, rotation: { y: -Math.PI / 2 } },
-    { model: '/models/nature-kit/cliff_cornerLarge_stone.glb', x: 75, y: 0, z: 75, scale: 2, rotation: { y: Math.PI } },
+    { model: getAssetPath('/models/nature-kit/cliff_cornerLarge_stone.glb'), x: -75, y: 0, z: -75, scale: 2 },
+    { model: getAssetPath('/models/nature-kit/cliff_cornerLarge_stone.glb'), x: 75, y: 0, z: -75, scale: 2, rotation: { y: Math.PI / 2 } },
+    { model: getAssetPath('/models/nature-kit/cliff_cornerLarge_stone.glb'), x: -75, y: 0, z: 75, scale: 2, rotation: { y: -Math.PI / 2 } },
+    { model: getAssetPath('/models/nature-kit/cliff_cornerLarge_stone.glb'), x: 75, y: 0, z: 75, scale: 2, rotation: { y: Math.PI } },
 
     // Central rock formations - cover (collidable for strategic gameplay)
-    { model: '/models/nature-kit/cliff_large_rock.glb', x: -25, y: 0, z: -20, scale: 2.5, rotation: { y: 0.5 } },
-    { model: '/models/nature-kit/cliff_large_rock.glb', x: 25, y: 0, z: 20, scale: 2.5, rotation: { y: -0.8 } },
-    { model: '/models/nature-kit/cliff_large_rock.glb', x: -15, y: 0, z: 30, scale: 2.2, rotation: { y: 1.2 } },
-    { model: '/models/nature-kit/cliff_large_rock.glb', x: 35, y: 0, z: -25, scale: 2.3, rotation: { y: -1.5 } },
+    { model: getAssetPath('/models/nature-kit/cliff_large_rock.glb'), x: -25, y: 0, z: -20, scale: 2.5, rotation: { y: 0.5 } },
+    { model: getAssetPath('/models/nature-kit/cliff_large_rock.glb'), x: 25, y: 0, z: 20, scale: 2.5, rotation: { y: -0.8 } },
+    { model: getAssetPath('/models/nature-kit/cliff_large_rock.glb'), x: -15, y: 0, z: 30, scale: 2.2, rotation: { y: 1.2 } },
+    { model: getAssetPath('/models/nature-kit/cliff_large_rock.glb'), x: 35, y: 0, z: -25, scale: 2.3, rotation: { y: -1.5 } },
 
     // Smaller rocks scattered around (collidable for cover)
-    { model: '/models/nature-kit/rock_tallH.glb', x: -40, y: 0, z: -35, scale: 2.0, rotation: { y: 0.3 } },
-    { model: '/models/nature-kit/rock_tallI.glb', x: 40, y: 0, z: 35, scale: 1.9, rotation: { y: -0.7 } },
-    { model: '/models/nature-kit/rock_tallJ.glb', x: -50, y: 0, z: 20, scale: 1.8, rotation: { y: 1.1 } },
-    { model: '/models/nature-kit/rock_tallH.glb', x: 45, y: 0, z: -40, scale: 2.1, rotation: { y: -0.4 } },
-    { model: '/models/nature-kit/rock_tallI.glb', x: 0, y: 0, z: -40, scale: 1.8, rotation: { y: 0.9 } },
+    { model: getAssetPath('/models/nature-kit/rock_tallH.glb'), x: -40, y: 0, z: -35, scale: 2.0, rotation: { y: 0.3 } },
+    { model: getAssetPath('/models/nature-kit/rock_tallI.glb'), x: 40, y: 0, z: 35, scale: 1.9, rotation: { y: -0.7 } },
+    { model: getAssetPath('/models/nature-kit/rock_tallJ.glb'), x: -50, y: 0, z: 20, scale: 1.8, rotation: { y: 1.1 } },
+    { model: getAssetPath('/models/nature-kit/rock_tallH.glb'), x: 45, y: 0, z: -40, scale: 2.1, rotation: { y: -0.4 } },
+    { model: getAssetPath('/models/nature-kit/rock_tallI.glb'), x: 0, y: 0, z: -40, scale: 1.8, rotation: { y: 0.9 } },
 
     // Medium sized rocks (collidable)
-    { model: '/models/nature-kit/stone_tallB.glb', x: -35, y: 0, z: 45, scale: 1.6, rotation: { y: 0.6 } },
-    { model: '/models/nature-kit/stone_tallC.glb', x: 30, y: 0, z: -50, scale: 1.7, rotation: { y: -1.2 } },
-    { model: '/models/nature-kit/stone_tallD.glb', x: -20, y: 0, z: -55, scale: 1.5, rotation: { y: 0.8 } },
-    { model: '/models/nature-kit/stone_tallE.glb', x: 50, y: 0, z: 10, scale: 1.6, rotation: { y: -0.5 } },
+    { model: getAssetPath('/models/nature-kit/stone_tallB.glb'), x: -35, y: 0, z: 45, scale: 1.6, rotation: { y: 0.6 } },
+    { model: getAssetPath('/models/nature-kit/stone_tallC.glb'), x: 30, y: 0, z: -50, scale: 1.7, rotation: { y: -1.2 } },
+    { model: getAssetPath('/models/nature-kit/stone_tallD.glb'), x: -20, y: 0, z: -55, scale: 1.5, rotation: { y: 0.8 } },
+    { model: getAssetPath('/models/nature-kit/stone_tallE.glb'), x: 50, y: 0, z: 10, scale: 1.6, rotation: { y: -0.5 } },
 
     // Small scattered stones (non-collidable decorations)
-    { model: '/models/nature-kit/stone_smallFlatA.glb', x: -10, y: 0, z: -10, scale: 1.5, rotation: { y: 0.2 }, collidable: false },
-    { model: '/models/nature-kit/stone_smallFlatB.glb', x: 15, y: 0, z: 5, scale: 1.5, rotation: { y: -0.3 }, collidable: false },
-    { model: '/models/nature-kit/stone_smallFlatC.glb', x: -5, y: 0, z: 25, scale: 1.5, rotation: { y: 1.0 }, collidable: false },
-    { model: '/models/nature-kit/stone_smallH.glb', x: 8, y: 0, z: -15, scale: 1.3, rotation: { y: 0.4 }, collidable: false },
-    { model: '/models/nature-kit/stone_smallI.glb', x: -30, y: 0, z: 0, scale: 1.4, rotation: { y: -0.6 }, collidable: false },
+    { model: getAssetPath('/models/nature-kit/stone_smallFlatA.glb'), x: -10, y: 0, z: -10, scale: 1.5, rotation: { y: 0.2 }, collidable: false },
+    { model: getAssetPath('/models/nature-kit/stone_smallFlatB.glb'), x: 15, y: 0, z: 5, scale: 1.5, rotation: { y: -0.3 }, collidable: false },
+    { model: getAssetPath('/models/nature-kit/stone_smallFlatC.glb'), x: -5, y: 0, z: 25, scale: 1.5, rotation: { y: 1.0 }, collidable: false },
+    { model: getAssetPath('/models/nature-kit/stone_smallH.glb'), x: 8, y: 0, z: -15, scale: 1.3, rotation: { y: 0.4 }, collidable: false },
+    { model: getAssetPath('/models/nature-kit/stone_smallI.glb'), x: -30, y: 0, z: 0, scale: 1.4, rotation: { y: -0.6 }, collidable: false },
 
     // Desert plants - sparse vegetation (non-collidable)
-    { model: '/models/nature-kit/plant_bush.glb', x: -45, y: 0, z: -10, scale: 1.6, rotation: { y: 0.3 }, collidable: false },
-    { model: '/models/nature-kit/plant_bushDetailed.glb', x: 42, y: 0, z: 8, scale: 1.5, rotation: { y: -0.8 }, collidable: false },
-    { model: '/models/nature-kit/plant_bushTriangle.glb', x: -38, y: 0, z: 30, scale: 1.4, rotation: { y: 1.2 }, collidable: false },
-    { model: '/models/nature-kit/plant_bush.glb', x: 20, y: 0, z: -35, scale: 1.3, rotation: { y: -1.0 }, collidable: false },
+    { model: getAssetPath('/models/nature-kit/plant_bush.glb'), x: -45, y: 0, z: -10, scale: 1.6, rotation: { y: 0.3 }, collidable: false },
+    { model: getAssetPath('/models/nature-kit/plant_bushDetailed.glb'), x: 42, y: 0, z: 8, scale: 1.5, rotation: { y: -0.8 }, collidable: false },
+    { model: getAssetPath('/models/nature-kit/plant_bushTriangle.glb'), x: -38, y: 0, z: 30, scale: 1.4, rotation: { y: 1.2 }, collidable: false },
+    { model: getAssetPath('/models/nature-kit/plant_bush.glb'), x: 20, y: 0, z: -35, scale: 1.3, rotation: { y: -1.0 }, collidable: false },
 
     // Dead stumps (non-collidable)
-    { model: '/models/nature-kit/stump_old.glb', x: -28, y: 0, z: -42, scale: 2.0, rotation: { y: 0.7 }, collidable: false },
-    { model: '/models/nature-kit/stump_oldTall.glb', x: 33, y: 0, z: 45, scale: 2.2, rotation: { y: -0.9 }, collidable: false },
+    { model: getAssetPath('/models/nature-kit/stump_old.glb'), x: -28, y: 0, z: -42, scale: 2.0, rotation: { y: 0.7 }, collidable: false },
+    { model: getAssetPath('/models/nature-kit/stump_oldTall.glb'), x: 33, y: 0, z: 45, scale: 2.2, rotation: { y: -0.9 }, collidable: false },
 
     // Small decorative elements (non-collidable)
-    { model: '/models/nature-kit/rock_smallFlatA.glb', x: 5, y: 0, z: 35, scale: 1.2, rotation: { y: 0.5 }, collidable: false },
-    { model: '/models/nature-kit/rock_smallFlatB.glb', x: -12, y: 0, z: 40, scale: 1.3, rotation: { y: -0.4 }, collidable: false },
-    { model: '/models/nature-kit/rock_smallFlatC.glb', x: 22, y: 0, z: -28, scale: 1.0, rotation: { y: 0.9 }, collidable: false },
+    { model: getAssetPath('/models/nature-kit/rock_smallFlatA.glb'), x: 5, y: 0, z: 35, scale: 1.2, rotation: { y: 0.5 }, collidable: false },
+    { model: getAssetPath('/models/nature-kit/rock_smallFlatB.glb'), x: -12, y: 0, z: 40, scale: 1.3, rotation: { y: -0.4 }, collidable: false },
+    { model: getAssetPath('/models/nature-kit/rock_smallFlatC.glb'), x: 22, y: 0, z: -28, scale: 1.0, rotation: { y: 0.9 }, collidable: false },
 
     // Oasis 1 - Northwest (palms around water area)
-    { model: '/models/nature-kit/grass_large.glb', x: -55, y: -0.1, z: -50, scale: 5, rotation: { y: 0 }, collidable: false }, // Water patch
-    { model: '/models/nature-kit/tree_palmTall.glb', x: -58, y: 0, z: -53, scale: 3.5, rotation: { y: 0.3 } },
-    { model: '/models/nature-kit/tree_palmDetailedTall.glb', x: -52, y: 0, z: -55, scale: 3.2, rotation: { y: -0.8 } },
-    { model: '/models/nature-kit/tree_palm.glb', x: -60, y: 0, z: -47, scale: 3.0, rotation: { y: 1.2 } },
-    { model: '/models/nature-kit/tree_palmShort.glb', x: -53, y: 0, z: -48, scale: 2.5, rotation: { y: -1.5 } },
-    { model: '/models/nature-kit/plant_bushDetailed.glb', x: -56, y: 0, z: -50, scale: 2.0, rotation: { y: 0.6 }, collidable: false },
-    { model: '/models/nature-kit/grass_leafs.glb', x: -54, y: 0, z: -52, scale: 2.5, rotation: { y: -0.4 }, collidable: false },
+    { model: getAssetPath('/models/nature-kit/grass_large.glb'), x: -55, y: -0.1, z: -50, scale: 5, rotation: { y: 0 }, collidable: false }, // Water patch
+    { model: getAssetPath('/models/nature-kit/tree_palmTall.glb'), x: -58, y: 0, z: -53, scale: 3.5, rotation: { y: 0.3 } },
+    { model: getAssetPath('/models/nature-kit/tree_palmDetailedTall.glb'), x: -52, y: 0, z: -55, scale: 3.2, rotation: { y: -0.8 } },
+    { model: getAssetPath('/models/nature-kit/tree_palm.glb'), x: -60, y: 0, z: -47, scale: 3.0, rotation: { y: 1.2 } },
+    { model: getAssetPath('/models/nature-kit/tree_palmShort.glb'), x: -53, y: 0, z: -48, scale: 2.5, rotation: { y: -1.5 } },
+    { model: getAssetPath('/models/nature-kit/plant_bushDetailed.glb'), x: -56, y: 0, z: -50, scale: 2.0, rotation: { y: 0.6 }, collidable: false },
+    { model: getAssetPath('/models/nature-kit/grass_leafs.glb'), x: -54, y: 0, z: -52, scale: 2.5, rotation: { y: -0.4 }, collidable: false },
 
     // Oasis 2 - Southeast (smaller oasis)
-    { model: '/models/nature-kit/grass_large.glb', x: 52, y: -0.1, z: 55, scale: 4.5, rotation: { y: 0.7 }, collidable: false }, // Water patch
-    { model: '/models/nature-kit/tree_palmDetailedShort.glb', x: 50, y: 0, z: 58, scale: 2.8, rotation: { y: 0.9 } },
-    { model: '/models/nature-kit/tree_palmBend.glb', x: 55, y: 0, z: 53, scale: 3.0, rotation: { y: -0.5 } },
-    { model: '/models/nature-kit/tree_palmShort.glb', x: 53, y: 0, z: 56, scale: 2.5, rotation: { y: 2.1 } },
-    { model: '/models/nature-kit/plant_bush.glb', x: 51, y: 0, z: 55, scale: 1.8, rotation: { y: 1.3 }, collidable: false },
-    { model: '/models/nature-kit/grass.glb', x: 54, y: 0, z: 57, scale: 2.5, rotation: { y: -0.8 }, collidable: false },
+    { model: getAssetPath('/models/nature-kit/grass_large.glb'), x: 52, y: -0.1, z: 55, scale: 4.5, rotation: { y: 0.7 }, collidable: false }, // Water patch
+    { model: getAssetPath('/models/nature-kit/tree_palmDetailedShort.glb'), x: 50, y: 0, z: 58, scale: 2.8, rotation: { y: 0.9 } },
+    { model: getAssetPath('/models/nature-kit/tree_palmBend.glb'), x: 55, y: 0, z: 53, scale: 3.0, rotation: { y: -0.5 } },
+    { model: getAssetPath('/models/nature-kit/tree_palmShort.glb'), x: 53, y: 0, z: 56, scale: 2.5, rotation: { y: 2.1 } },
+    { model: getAssetPath('/models/nature-kit/plant_bush.glb'), x: 51, y: 0, z: 55, scale: 1.8, rotation: { y: 1.3 }, collidable: false },
+    { model: getAssetPath('/models/nature-kit/grass.glb'), x: 54, y: 0, z: 57, scale: 2.5, rotation: { y: -0.8 }, collidable: false },
 
     // Oasis 3 - Central-East (medium size)
-    { model: '/models/nature-kit/grass_large.glb', x: 60, y: -0.1, z: -5, scale: 4.8, rotation: { y: 1.5 }, collidable: false }, // Water patch
-    { model: '/models/nature-kit/tree_palmTall.glb', x: 62, y: 0, z: -8, scale: 3.4, rotation: { y: 0.4 } },
-    { model: '/models/nature-kit/tree_palm.glb', x: 58, y: 0, z: -2, scale: 3.0, rotation: { y: -1.1 } },
-    { model: '/models/nature-kit/tree_palmDetailedShort.glb', x: 63, y: 0, z: -3, scale: 2.6, rotation: { y: 2.3 } },
-    { model: '/models/nature-kit/plant_bushTriangle.glb', x: 60, y: 0, z: -6, scale: 1.8, rotation: { y: 0.9 }, collidable: false },
+    { model: getAssetPath('/models/nature-kit/grass_large.glb'), x: 60, y: -0.1, z: -5, scale: 4.8, rotation: { y: 1.5 }, collidable: false }, // Water patch
+    { model: getAssetPath('/models/nature-kit/tree_palmTall.glb'), x: 62, y: 0, z: -8, scale: 3.4, rotation: { y: 0.4 } },
+    { model: getAssetPath('/models/nature-kit/tree_palm.glb'), x: 58, y: 0, z: -2, scale: 3.0, rotation: { y: -1.1 } },
+    { model: getAssetPath('/models/nature-kit/tree_palmDetailedShort.glb'), x: 63, y: 0, z: -3, scale: 2.6, rotation: { y: 2.3 } },
+    { model: getAssetPath('/models/nature-kit/plant_bushTriangle.glb'), x: 60, y: 0, z: -6, scale: 1.8, rotation: { y: 0.9 }, collidable: false },
   ]
 };

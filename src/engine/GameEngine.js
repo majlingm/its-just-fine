@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { getAssetPath } from '../utils/assetPath.js';
 import { SoundSystem } from './SoundSystem.js';
 import { ParticleSystem } from '../particles/ParticleSystem.js';
 import { InstancedParticlePool } from '../effects/InstancedParticlePool.js';
@@ -399,7 +400,7 @@ export class GameEngine {
     this.groundTiles = [];
 
     // Load grass tile model
-    loader.load('/models/retro-urban-kit/grass.glb', (gltf) => {
+    loader.load(getAssetPath('/models/retro-urban-kit/grass.glb'), (gltf) => {
       // First, get the mesh from the loaded model
       let grassMesh = null;
       let grassGeometry = null;
@@ -558,7 +559,7 @@ export class GameEngine {
         }
       };
       const tileNum = i.toString().padStart(4, '0');
-      img.src = `/assets/desert/Sliced/PNG${tileNum}.PNG`;
+      img.src = getAssetPath(`/assets/desert/Sliced/PNG${tileNum}.PNG`);
       tileImages[i] = img;
     }
   }

@@ -1,4 +1,5 @@
 import { desertCanyonLevel } from './desertCanyon.js';
+import { getAssetPath } from '../utils/assetPath.js';
 import { urbanOutpostLevel } from './urbanOutpost.js';
 import { abandonedTownLevel } from './abandonedTown.js';
 import { bossRushLevel } from './bossRush.js';

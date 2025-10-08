@@ -1,6 +1,7 @@
 import { SoundCache } from '../audio/SoundCache.js';
 import { ProceduralSounds } from '../audio/ProceduralSounds.js';
 import { SoundScheduler } from '../audio/SoundScheduler.js';
+import { getAssetPath } from '../utils/assetPath.js';
 
 export class SoundSystem {
   constructor() {
@@ -42,7 +43,7 @@ export class SoundSystem {
 
       // Preload thunder sounds
       this.soundCache.preload([
-        '/assets/music/sfx/Basic Spell Impacts/Lightning Spell Impacts/Lightning Spell Impact 1.wav'
+        getAssetPath('/assets/music/sfx/Basic Spell Impacts/Lightning Spell Impacts/Lightning Spell Impact 1.wav')
       ]);
     } catch (e) {
       console.warn('Web Audio API not supported');
@@ -154,7 +155,7 @@ export class SoundSystem {
     if (!this.enabled || !this.context || !this.soundCache) return;
 
     try {
-      const url = `/assets/music/sfx/Basic Spell Impacts/Lightning Spell Impacts/Lightning Spell Impact 1.wav`;
+      const url = getAssetPath('/assets/music/sfx/Basic Spell Impacts/Lightning Spell Impacts/Lightning Spell Impact 1.wav');
       const audioBuffer = await this.soundCache.load(url);
 
       // Play the cached sound

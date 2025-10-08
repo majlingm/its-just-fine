@@ -5,6 +5,7 @@ import { SPELL_TYPES, upgradeSpell, createSpellInstance } from "../spells/spellT
 import { getUpgradeCost } from "../spells/spellLevelScaling.js";
 import { LEVELS, GAME_MODES, getAllLevels } from "../levels/index.js";
 import { preloadAllModels } from "../utils/modelLoader.js";
+import { getAssetPath } from "../utils/assetPath.js";
 
 const DustAndDynamite = () => {
   const mountRef = useRef(null);
@@ -456,7 +457,7 @@ const DustAndDynamite = () => {
             left: 0,
             width: "100%",
             height: "100%",
-            backgroundImage: "url('/assets/main-menu.png')",
+            backgroundImage: `url('${getAssetPath('/assets/main-menu.png')}')`,
             backgroundSize: "cover",
             backgroundPosition: "center",
             backgroundRepeat: "no-repeat",

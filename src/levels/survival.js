@@ -1,10 +1,11 @@
 // Survival Mode - Endless waves on simple grass field
+import { getAssetPath } from '../utils/assetPath.js';
 
 export const survivalLevel = {
   name: 'Survive!',
   description: 'Endless waves of increasingly difficult enemies',
   groundType: 'checkerboard',
-  music: '/assets/music/risinginferno.mp3',
+  music: getAssetPath('/assets/music/risinginferno.mp3'),
   isSurvival: true, // Flag for endless mode
 
   lighting: {
