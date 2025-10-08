@@ -37,3 +37,6 @@ pids/
 # Coverage directory
 coverage/
 .nyc_output/
+
+# Asset packs (large files - used assets are copied to public/models)
+packs/

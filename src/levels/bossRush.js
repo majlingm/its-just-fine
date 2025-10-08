@@ -79,24 +79,24 @@ export const bossRushLevel = {
   objects: [
     // Minimal arena - just some cover
     // Central pillar
-    { model: '/packs/retro-urban-kit/Models/GLB format/wall-a.glb', x: 0, y: 0, z: 0, scale: 2.0, rotation: { y: 0 } },
+    { model: '/models/retro-urban-kit/wall-a.glb', x: 0, y: 0, z: 0, scale: 2.0, rotation: { y: 0 } },
 
     // Four corner pillars for cover
-    { model: '/packs/retro-urban-kit/Models/GLB format/wall-a-low.glb', x: -20, y: 0, z: -20, scale: 1.5, rotation: { y: Math.PI / 4 } },
-    { model: '/packs/retro-urban-kit/Models/GLB format/wall-a-low.glb', x: 20, y: 0, z: -20, scale: 1.5, rotation: { y: -Math.PI / 4 } },
-    { model: '/packs/retro-urban-kit/Models/GLB format/wall-a-low.glb', x: -20, y: 0, z: 20, scale: 1.5, rotation: { y: 3 * Math.PI / 4 } },
-    { model: '/packs/retro-urban-kit/Models/GLB format/wall-a-low.glb', x: 20, y: 0, z: 20, scale: 1.5, rotation: { y: -3 * Math.PI / 4 } },
+    { model: '/models/retro-urban-kit/wall-a-low.glb', x: -20, y: 0, z: -20, scale: 1.5, rotation: { y: Math.PI / 4 } },
+    { model: '/models/retro-urban-kit/wall-a-low.glb', x: 20, y: 0, z: -20, scale: 1.5, rotation: { y: -Math.PI / 4 } },
+    { model: '/models/retro-urban-kit/wall-a-low.glb', x: -20, y: 0, z: 20, scale: 1.5, rotation: { y: 3 * Math.PI / 4 } },
+    { model: '/models/retro-urban-kit/wall-a-low.glb', x: 20, y: 0, z: 20, scale: 1.5, rotation: { y: -3 * Math.PI / 4 } },
 
     // Border rocks (non-collidable decorations)
-    { model: '/packs/nature-kit/Models/GLTF format/stone_tallB.glb', x: -45, y: 0, z: -45, scale: 1.5, rotation: { y: 0.4 }, collidable: false },
-    { model: '/packs/nature-kit/Models/GLTF format/stone_tallC.glb', x: 45, y: 0, z: -45, scale: 1.5, rotation: { y: -0.6 }, collidable: false },
-    { model: '/packs/nature-kit/Models/GLTF format/stone_tallB.glb', x: -45, y: 0, z: 45, scale: 1.5, rotation: { y: 2.0 }, collidable: false },
-    { model: '/packs/nature-kit/Models/GLTF format/stone_tallC.glb', x: 45, y: 0, z: 45, scale: 1.5, rotation: { y: -2.0 }, collidable: false },
+    { model: '/models/nature-kit/stone_tallB.glb', x: -45, y: 0, z: -45, scale: 1.5, rotation: { y: 0.4 }, collidable: false },
+    { model: '/models/nature-kit/stone_tallC.glb', x: 45, y: 0, z: -45, scale: 1.5, rotation: { y: -0.6 }, collidable: false },
+    { model: '/models/nature-kit/stone_tallB.glb', x: -45, y: 0, z: 45, scale: 1.5, rotation: { y: 2.0 }, collidable: false },
+    { model: '/models/nature-kit/stone_tallC.glb', x: 45, y: 0, z: 45, scale: 1.5, rotation: { y: -2.0 }, collidable: false },
 
     // Border cliffs for arena boundary (collidable)
-    { model: '/packs/nature-kit/Models/GLTF format/cliff_block_stone.glb', x: -50, y: 0, z: -50, scale: 1.5, rotation: { y: Math.PI / 4 } },
-    { model: '/packs/nature-kit/Models/GLTF format/cliff_block_stone.glb', x: 50, y: 0, z: -50, scale: 1.5, rotation: { y: -Math.PI / 4 } },
-    { model: '/packs/nature-kit/Models/GLTF format/cliff_block_stone.glb', x: -50, y: 0, z: 50, scale: 1.5, rotation: { y: 3 * Math.PI / 4 } },
-    { model: '/packs/nature-kit/Models/GLTF format/cliff_block_stone.glb', x: 50, y: 0, z: 50, scale: 1.5, rotation: { y: -3 * Math.PI / 4 } },
+    { model: '/models/nature-kit/cliff_block_stone.glb', x: -50, y: 0, z: -50, scale: 1.5, rotation: { y: Math.PI / 4 } },
+    { model: '/models/nature-kit/cliff_block_stone.glb', x: 50, y: 0, z: -50, scale: 1.5, rotation: { y: -Math.PI / 4 } },
+    { model: '/models/nature-kit/cliff_block_stone.glb', x: -50, y: 0, z: 50, scale: 1.5, rotation: { y: 3 * Math.PI / 4 } },
+    { model: '/models/nature-kit/cliff_block_stone.glb', x: 50, y: 0, z: 50, scale: 1.5, rotation: { y: -3 * Math.PI / 4 } },
   ]
 };

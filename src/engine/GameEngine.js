@@ -399,7 +399,7 @@ export class GameEngine {
     this.groundTiles = [];
 
     // Load grass tile model
-    loader.load('/packs/retro-urban-kit/Models/GLB format/grass.glb', (gltf) => {
+    loader.load('/models/retro-urban-kit/grass.glb', (gltf) => {
       // First, get the mesh from the loaded model
       let grassMesh = null;
       let grassGeometry = null;

@@ -84,69 +84,69 @@ export const urbanOutpostLevel = {
   objects: [
     // Central buildings - main structures (collidable walls)
     // Building 1 - Left side
-    { model: '/packs/retro-urban-kit/Models/GLB format/wall-a.glb', x: -30, y: 0, z: -15, scale: 1.5, rotation: { y: 0 } },
-    { model: '/packs/retro-urban-kit/Models/GLB format/wall-a-corner.glb', x: -30, y: 0, z: -5, scale: 1.5, rotation: { y: 0 } },
-    { model: '/packs/retro-urban-kit/Models/GLB format/wall-a-window.glb', x: -20, y: 0, z: -15, scale: 1.5, rotation: { y: 0 } },
-    { model: '/packs/retro-urban-kit/Models/GLB format/wall-a-door.glb', x: -20, y: 0, z: -5, scale: 1.5, rotation: { y: Math.PI } },
+    { model: '/models/retro-urban-kit/wall-a.glb', x: -30, y: 0, z: -15, scale: 1.5, rotation: { y: 0 } },
+    { model: '/models/retro-urban-kit/wall-a-corner.glb', x: -30, y: 0, z: -5, scale: 1.5, rotation: { y: 0 } },
+    { model: '/models/retro-urban-kit/wall-a-window.glb', x: -20, y: 0, z: -15, scale: 1.5, rotation: { y: 0 } },
+    { model: '/models/retro-urban-kit/wall-a-door.glb', x: -20, y: 0, z: -5, scale: 1.5, rotation: { y: Math.PI } },
 
     // Building 2 - Right side
-    { model: '/packs/retro-urban-kit/Models/GLB format/wall-b.glb', x: 25, y: 0, z: 10, scale: 1.5, rotation: { y: Math.PI / 2 } },
-    { model: '/packs/retro-urban-kit/Models/GLB format/wall-b-window.glb', x: 35, y: 0, z: 10, scale: 1.5, rotation: { y: Math.PI / 2 } },
-    { model: '/packs/retro-urban-kit/Models/GLB format/wall-b-corner.glb', x: 25, y: 0, z: 20, scale: 1.5, rotation: { y: Math.PI / 2 } },
-    { model: '/packs/retro-urban-kit/Models/GLB format/wall-b-door.glb', x: 35, y: 0, z: 20, scale: 1.5, rotation: { y: -Math.PI / 2 } },
+    { model: '/models/retro-urban-kit/wall-b.glb', x: 25, y: 0, z: 10, scale: 1.5, rotation: { y: Math.PI / 2 } },
+    { model: '/models/retro-urban-kit/wall-b-window.glb', x: 35, y: 0, z: 10, scale: 1.5, rotation: { y: Math.PI / 2 } },
+    { model: '/models/retro-urban-kit/wall-b-corner.glb', x: 25, y: 0, z: 20, scale: 1.5, rotation: { y: Math.PI / 2 } },
+    { model: '/models/retro-urban-kit/wall-b-door.glb', x: 35, y: 0, z: 20, scale: 1.5, rotation: { y: -Math.PI / 2 } },
 
     // Building 3 - Back area (damaged/broken - still collidable)
-    { model: '/packs/retro-urban-kit/Models/GLB format/wall-broken-type-a.glb', x: 0, y: 0, z: 40, scale: 1.5, rotation: { y: 0 } },
-    { model: '/packs/retro-urban-kit/Models/GLB format/wall-broken-type-b.glb', x: 10, y: 0, z: 40, scale: 1.5, rotation: { y: 0.3 } },
+    { model: '/models/retro-urban-kit/wall-broken-type-a.glb', x: 0, y: 0, z: 40, scale: 1.5, rotation: { y: 0 } },
+    { model: '/models/retro-urban-kit/wall-broken-type-b.glb', x: 10, y: 0, z: 40, scale: 1.5, rotation: { y: 0.3 } },
 
     // Low walls for cover (collidable)
-    { model: '/packs/retro-urban-kit/Models/GLB format/wall-a-low.glb', x: -45, y: 0, z: 0, scale: 1.2, rotation: { y: Math.PI / 4 } },
-    { model: '/packs/retro-urban-kit/Models/GLB format/wall-a-low.glb', x: 45, y: 0, z: -25, scale: 1.2, rotation: { y: -Math.PI / 3 } },
-    { model: '/packs/retro-urban-kit/Models/GLB format/wall-b-low.glb', x: 0, y: 0, z: -35, scale: 1.2, rotation: { y: Math.PI / 2 } },
+    { model: '/models/retro-urban-kit/wall-a-low.glb', x: -45, y: 0, z: 0, scale: 1.2, rotation: { y: Math.PI / 4 } },
+    { model: '/models/retro-urban-kit/wall-a-low.glb', x: 45, y: 0, z: -25, scale: 1.2, rotation: { y: -Math.PI / 3 } },
+    { model: '/models/retro-urban-kit/wall-b-low.glb', x: 0, y: 0, z: -35, scale: 1.2, rotation: { y: Math.PI / 2 } },
 
     // Fences around perimeter (non-collidable - can be shot/walked through)
-    { model: '/packs/nature-kit/Models/GLTF format/fence_planks.glb', x: -60, y: 0, z: -40, scale: 1.5, rotation: { y: 0 }, collidable: false },
-    { model: '/packs/nature-kit/Models/GLTF format/fence_planks.glb', x: -60, y: 0, z: -30, scale: 1.5, rotation: { y: 0 }, collidable: false },
-    { model: '/packs/nature-kit/Models/GLTF format/fence_planks.glb', x: -60, y: 0, z: -20, scale: 1.5, rotation: { y: 0 }, collidable: false },
-    { model: '/packs/nature-kit/Models/GLTF format/fence_simple.glb', x: 60, y: 0, z: 30, scale: 1.5, rotation: { y: Math.PI }, collidable: false },
-    { model: '/packs/nature-kit/Models/GLTF format/fence_simple.glb', x: 60, y: 0, z: 40, scale: 1.5, rotation: { y: Math.PI }, collidable: false },
+    { model: '/models/nature-kit/fence_planks.glb', x: -60, y: 0, z: -40, scale: 1.5, rotation: { y: 0 }, collidable: false },
+    { model: '/models/nature-kit/fence_planks.glb', x: -60, y: 0, z: -30, scale: 1.5, rotation: { y: 0 }, collidable: false },
+    { model: '/models/nature-kit/fence_planks.glb', x: -60, y: 0, z: -20, scale: 1.5, rotation: { y: 0 }, collidable: false },
+    { model: '/models/nature-kit/fence_simple.glb', x: 60, y: 0, z: 30, scale: 1.5, rotation: { y: Math.PI }, collidable: false },
+    { model: '/models/nature-kit/fence_simple.glb', x: 60, y: 0, z: 40, scale: 1.5, rotation: { y: Math.PI }, collidable: false },
 
     // Scattered debris and objects (collidable for cover)
-    { model: '/packs/retro-urban-kit/Models/GLB format/detail-dumpster-closed.glb', x: -15, y: 0, z: 25, scale: 1.0, rotation: { y: 0.5 } },
-    { model: '/packs/retro-urban-kit/Models/GLB format/detail-dumpster-open.glb', x: 40, y: 0, z: -10, scale: 1.0, rotation: { y: -0.8 } },
-    { model: '/packs/retro-urban-kit/Models/GLB format/detail-barrier-type-a.glb', x: -25, y: 0, z: 35, scale: 1.0, rotation: { y: Math.PI / 4 } },
-    { model: '/packs/retro-urban-kit/Models/GLB format/detail-barrier-type-b.glb', x: 30, y: 0, z: -30, scale: 1.0, rotation: { y: -Math.PI / 3 } },
+    { model: '/models/retro-urban-kit/detail-dumpster-closed.glb', x: -15, y: 0, z: 25, scale: 1.0, rotation: { y: 0.5 } },
+    { model: '/models/retro-urban-kit/detail-dumpster-open.glb', x: 40, y: 0, z: -10, scale: 1.0, rotation: { y: -0.8 } },
+    { model: '/models/retro-urban-kit/detail-barrier-type-a.glb', x: -25, y: 0, z: 35, scale: 1.0, rotation: { y: Math.PI / 4 } },
+    { model: '/models/retro-urban-kit/detail-barrier-type-b.glb', x: 30, y: 0, z: -30, scale: 1.0, rotation: { y: -Math.PI / 3 } },
 
     // Wooden crates and pallets (collidable for cover)
-    { model: '/packs/retro-urban-kit/Models/GLB format/pallet.glb', x: -40, y: 0, z: -20, scale: 1.0, rotation: { y: 0.3 } },
-    { model: '/packs/retro-urban-kit/Models/GLB format/pallet-small.glb', x: -38, y: 0, z: -18, scale: 1.0, rotation: { y: -0.5 } },
-    { model: '/packs/retro-urban-kit/Models/GLB format/detail-block.glb', x: 35, y: 0, z: 35, scale: 1.0, rotation: { y: 0.7 } },
-    { model: '/packs/nature-kit/Models/GLTF format/pallet.glb', x: -10, y: 0, z: -30, scale: 1.0, rotation: { y: -0.4 } },
+    { model: '/models/retro-urban-kit/pallet.glb', x: -40, y: 0, z: -20, scale: 1.0, rotation: { y: 0.3 } },
+    { model: '/models/retro-urban-kit/pallet-small.glb', x: -38, y: 0, z: -18, scale: 1.0, rotation: { y: -0.5 } },
+    { model: '/models/retro-urban-kit/detail-block.glb', x: 35, y: 0, z: 35, scale: 1.0, rotation: { y: 0.7 } },
+    { model: '/models/nature-kit/pallet.glb', x: -10, y: 0, z: -30, scale: 1.0, rotation: { y: -0.4 } },
 
     // Barrels and smaller debris (non-collidable)
-    { model: '/packs/retro-urban-kit/Models/GLB format/detail-bricks-type-a.glb', x: 15, y: 0, z: -20, scale: 1.0, rotation: { y: 0.6 }, collidable: false },
-    { model: '/packs/retro-urban-kit/Models/GLB format/detail-bricks-type-b.glb', x: -20, y: 0, z: 15, scale: 1.0, rotation: { y: -0.7 }, collidable: false },
+    { model: '/models/retro-urban-kit/detail-bricks-type-a.glb', x: 15, y: 0, z: -20, scale: 1.0, rotation: { y: 0.6 }, collidable: false },
+    { model: '/models/retro-urban-kit/detail-bricks-type-b.glb', x: -20, y: 0, z: 15, scale: 1.0, rotation: { y: -0.7 }, collidable: false },
 
     // Trees for atmosphere (dead/sparse) - non-collidable
-    { model: '/packs/retro-urban-kit/Models/GLB format/tree-shrub.glb', x: -50, y: 0, z: 45, scale: 1.2, rotation: { y: 0.3 }, collidable: false },
-    { model: '/packs/retro-urban-kit/Models/GLB format/tree-small.glb', x: 50, y: 0, z: -45, scale: 1.0, rotation: { y: -0.8 }, collidable: false },
-    { model: '/packs/nature-kit/Models/GLTF format/tree_small_fall.glb', x: -55, y: 0, z: -50, scale: 1.5, rotation: { y: 1.2 }, collidable: false },
-    { model: '/packs/nature-kit/Models/GLTF format/stump_old.glb', x: 48, y: 0, z: 42, scale: 1.3, rotation: { y: -1.0 }, collidable: false },
+    { model: '/models/retro-urban-kit/tree-shrub.glb', x: -50, y: 0, z: 45, scale: 1.2, rotation: { y: 0.3 }, collidable: false },
+    { model: '/models/retro-urban-kit/tree-small.glb', x: 50, y: 0, z: -45, scale: 1.0, rotation: { y: -0.8 }, collidable: false },
+    { model: '/models/nature-kit/tree_small_fall.glb', x: -55, y: 0, z: -50, scale: 1.5, rotation: { y: 1.2 }, collidable: false },
+    { model: '/models/nature-kit/stump_old.glb', x: 48, y: 0, z: 42, scale: 1.3, rotation: { y: -1.0 }, collidable: false },
 
     // Rocks scattered around (non-collidable decorations)
-    { model: '/packs/nature-kit/Models/GLTF format/stone_tallB.glb', x: -65, y: 0, z: 10, scale: 1.0, rotation: { y: 0.4 }, collidable: false },
-    { model: '/packs/nature-kit/Models/GLTF format/stone_tallC.glb', x: 65, y: 0, z: -15, scale: 0.9, rotation: { y: -0.6 }, collidable: false },
-    { model: '/packs/nature-kit/Models/GLTF format/rock_smallFlatA.glb', x: 10, y: 0, z: 5, scale: 0.8, rotation: { y: 0.2 }, collidable: false },
-    { model: '/packs/nature-kit/Models/GLTF format/rock_smallFlatB.glb', x: -8, y: 0, z: -8, scale: 0.7, rotation: { y: -0.3 }, collidable: false },
+    { model: '/models/nature-kit/stone_tallB.glb', x: -65, y: 0, z: 10, scale: 1.0, rotation: { y: 0.4 }, collidable: false },
+    { model: '/models/nature-kit/stone_tallC.glb', x: 65, y: 0, z: -15, scale: 0.9, rotation: { y: -0.6 }, collidable: false },
+    { model: '/models/nature-kit/rock_smallFlatA.glb', x: 10, y: 0, z: 5, scale: 0.8, rotation: { y: 0.2 }, collidable: false },
+    { model: '/models/nature-kit/rock_smallFlatB.glb', x: -8, y: 0, z: -8, scale: 0.7, rotation: { y: -0.3 }, collidable: false },
 
     // Border cliffs for canyon feel (collidable boundary)
-    { model: '/packs/nature-kit/Models/GLTF format/cliff_block_stone.glb', x: -70, y: 0, z: -70, scale: 1.5, rotation: { y: Math.PI / 4 } },
-    { model: '/packs/nature-kit/Models/GLTF format/cliff_block_stone.glb', x: 70, y: 0, z: -70, scale: 1.5, rotation: { y: -Math.PI / 4 } },
-    { model: '/packs/nature-kit/Models/GLTF format/cliff_block_stone.glb', x: -70, y: 0, z: 70, scale: 1.5, rotation: { y: 3 * Math.PI / 4 } },
-    { model: '/packs/nature-kit/Models/GLTF format/cliff_block_stone.glb', x: 70, y: 0, z: 70, scale: 1.5, rotation: { y: -3 * Math.PI / 4 } },
+    { model: '/models/nature-kit/cliff_block_stone.glb', x: -70, y: 0, z: -70, scale: 1.5, rotation: { y: Math.PI / 4 } },
+    { model: '/models/nature-kit/cliff_block_stone.glb', x: 70, y: 0, z: -70, scale: 1.5, rotation: { y: -Math.PI / 4 } },
+    { model: '/models/nature-kit/cliff_block_stone.glb', x: -70, y: 0, z: 70, scale: 1.5, rotation: { y: 3 * Math.PI / 4 } },
+    { model: '/models/nature-kit/cliff_block_stone.glb', x: 70, y: 0, z: 70, scale: 1.5, rotation: { y: -3 * Math.PI / 4 } },
 
     // Additional scattered cover (collidable)
-    { model: '/packs/retro-urban-kit/Models/GLB format/detail-barrier-strong-type-a.glb', x: 0, y: 0, z: -25, scale: 1.0, rotation: { y: 0 } },
-    { model: '/packs/retro-urban-kit/Models/GLB format/detail-barrier-strong-type-b.glb', x: -35, y: 0, z: 20, scale: 1.0, rotation: { y: Math.PI / 2 } },
+    { model: '/models/retro-urban-kit/detail-barrier-strong-type-a.glb', x: 0, y: 0, z: -25, scale: 1.0, rotation: { y: 0 } },
+    { model: '/models/retro-urban-kit/detail-barrier-strong-type-b.glb', x: -35, y: 0, z: 20, scale: 1.0, rotation: { y: Math.PI / 2 } },
   ]
 };
