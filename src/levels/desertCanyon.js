@@ -1,0 +1,201 @@
+// Desert Canyon Level - A natural desert canyon with rocks, cacti, and cliffs
+
+export const desertCanyonLevel = {
+  name: 'Desert Canyon',
+  description: 'A desolate canyon in the heart of the desert',
+  groundType: 'desert', // sand texture
+  music: '/assets/music/risinginferno.mp3',
+
+  lighting: {
+    background: 0xd4a574, // Warm sandy horizon
+    ambient: { color: 0xffddaa, intensity: 0.6 },
+    sun: {
+      color: 0xfff4e0,
+      intensity: 1.2,
+      position: { x: 20, y: 40, z: 15 }
+    },
+    fill: { color: 0xff9944, intensity: 0.3 },
+    hemisphere: {
+      sky: 0xffffbb,
+      ground: 0x4a3520,
+      intensity: 0.5
+    }
+  },
+
+  spawnBoundaries: {
+    minX: -70,
+    maxX: 70,
+    minZ: -70,
+    maxZ: 70
+  },
+
+  // Wave configuration - Tutorial/Easy level (4x enemy counts)
+  waves: [
+    // Wave 1 - Introduction with mixed spawns
+    {
+      enemyCount: 40,
+      spawnInterval: 1.5,
+      spawnBatchSize: 3,
+      groupSpawnChance: 0.6, // 60% spawn in groups
+      enemyTypes: [
+        { type: 'normal', weight: 10 }
+      ]
+    },
+    // Wave 2 - More varied spawns
+    {
+      enemyCount: 60,
+      spawnInterval: 1.2,
+      spawnBatchSize: 4,
+      groupSpawnChance: 0.7,
+      enemyTypes: [
+        { type: 'normal', weight: 8 },
+        { type: 'fast', weight: 2 }
+      ]
+    },
+    // Wave 3 - First elites, more dangerous
+    {
+      enemyCount: 80,
+      spawnInterval: 1.0,
+      spawnBatchSize: 5,
+      groupSpawnChance: 0.5, // Mix of solo and group
+      enemyTypes: [
+        { type: 'normal', weight: 6 },
+        { type: 'fast', weight: 3 },
+        { type: 'elite', weight: 1 }
+      ]
+    },
+    // Wave 4 - Final wave, intense
+    {
+      enemyCount: 100,
+      spawnInterval: 0.8,
+      spawnBatchSize: 6,
+      groupSpawnChance: 0.8, // Mostly groups
+      enemyTypes: [
+        { type: 'normal', weight: 5 },
+        { type: 'fast', weight: 4 },
+        { type: 'elite', weight: 1 }
+      ]
+    }
+  ],
+
+  // Boss configuration
+  boss: {
+    type: 'zombieLord',
+    health: 4000,
+    damage: 40,
+    speed: 2.5
+  },
+
+  // Enemy behavior settings
+  enemySettings: {
+    // Only elites can shoot in tutorial level
+    rangedEnemies: [], // No regular enemies shoot
+    elitesCanShoot: true, // Only elites get ranged attacks
+    eliteShootChance: 0.5, // 50% of elites can shoot
+    // Shooting parameters
+    shootRange: 12,
+    shootCooldown: { min: 4.0, max: 6.0 },
+    projectileSpeed: 6,
+    projectileDamage: 12
+  },
+
+  objects: [
+    // Border cliffs - create canyon walls
+    // North wall
+    { model: '/packs/nature-kit/Models/GLTF format/cliff_block_stone.glb', x: -60, y: 0, z: -75, scale: 2, rotation: { y: 0 } },
+    { model: '/packs/nature-kit/Models/GLTF format/cliff_block_stone.glb', x: -30, y: 0, z: -75, scale: 2, rotation: { y: 0 } },
+    { model: '/packs/nature-kit/Models/GLTF format/cliff_block_stone.glb', x: 0, y: 0, z: -75, scale: 2, rotation: { y: 0 } },
+    { model: '/packs/nature-kit/Models/GLTF format/cliff_block_stone.glb', x: 30, y: 0, z: -75, scale: 2, rotation: { y: 0 } },
+    { model: '/packs/nature-kit/Models/GLTF format/cliff_block_stone.glb', x: 60, y: 0, z: -75, scale: 2, rotation: { y: 0 } },
+
+    // South wall
+    { model: '/packs/nature-kit/Models/GLTF format/cliff_block_stone.glb', x: -60, y: 0, z: 75, scale: 2, rotation: { y: Math.PI } },
+    { model: '/packs/nature-kit/Models/GLTF format/cliff_block_stone.glb', x: -30, y: 0, z: 75, scale: 2, rotation: { y: Math.PI } },
+    { model: '/packs/nature-kit/Models/GLTF format/cliff_block_stone.glb', x: 0, y: 0, z: 75, scale: 2, rotation: { y: Math.PI } },
+    { model: '/packs/nature-kit/Models/GLTF format/cliff_block_stone.glb', x: 30, y: 0, z: 75, scale: 2, rotation: { y: Math.PI } },
+    { model: '/packs/nature-kit/Models/GLTF format/cliff_block_stone.glb', x: 60, y: 0, z: 75, scale: 2, rotation: { y: Math.PI } },
+
+    // West wall
+    { model: '/packs/nature-kit/Models/GLTF format/cliff_block_stone.glb', x: -75, y: 0, z: -45, scale: 2, rotation: { y: Math.PI / 2 } },
+    { model: '/packs/nature-kit/Models/GLTF format/cliff_block_stone.glb', x: -75, y: 0, z: -15, scale: 2, rotation: { y: Math.PI / 2 } },
+    { model: '/packs/nature-kit/Models/GLTF format/cliff_block_stone.glb', x: -75, y: 0, z: 15, scale: 2, rotation: { y: Math.PI / 2 } },
+    { model: '/packs/nature-kit/Models/GLTF format/cliff_block_stone.glb', x: -75, y: 0, z: 45, scale: 2, rotation: { y: Math.PI / 2 } },
+
+    // East wall
+    { model: '/packs/nature-kit/Models/GLTF format/cliff_block_stone.glb', x: 75, y: 0, z: -45, scale: 2, rotation: { y: -Math.PI / 2 } },
+    { model: '/packs/nature-kit/Models/GLTF format/cliff_block_stone.glb', x: 75, y: 0, z: -15, scale: 2, rotation: { y: -Math.PI / 2 } },
+    { model: '/packs/nature-kit/Models/GLTF format/cliff_block_stone.glb', x: 75, y: 0, z: 15, scale: 2, rotation: { y: -Math.PI / 2 } },
+    { model: '/packs/nature-kit/Models/GLTF format/cliff_block_stone.glb', x: 75, y: 0, z: 45, scale: 2, rotation: { y: -Math.PI / 2 } },
+
+    // Corner rocks for variation
+    { model: '/packs/nature-kit/Models/GLTF format/cliff_cornerLarge_stone.glb', x: -75, y: 0, z: -75, scale: 2 },
+    { model: '/packs/nature-kit/Models/GLTF format/cliff_cornerLarge_stone.glb', x: 75, y: 0, z: -75, scale: 2, rotation: { y: Math.PI / 2 } },
+    { model: '/packs/nature-kit/Models/GLTF format/cliff_cornerLarge_stone.glb', x: -75, y: 0, z: 75, scale: 2, rotation: { y: -Math.PI / 2 } },
+    { model: '/packs/nature-kit/Models/GLTF format/cliff_cornerLarge_stone.glb', x: 75, y: 0, z: 75, scale: 2, rotation: { y: Math.PI } },
+
+    // Central rock formations - cover (collidable for strategic gameplay)
+    { model: '/packs/nature-kit/Models/GLTF format/cliff_large_rock.glb', x: -25, y: 0, z: -20, scale: 2.5, rotation: { y: 0.5 } },
+    { model: '/packs/nature-kit/Models/GLTF format/cliff_large_rock.glb', x: 25, y: 0, z: 20, scale: 2.5, rotation: { y: -0.8 } },
+    { model: '/packs/nature-kit/Models/GLTF format/cliff_large_rock.glb', x: -15, y: 0, z: 30, scale: 2.2, rotation: { y: 1.2 } },
+    { model: '/packs/nature-kit/Models/GLTF format/cliff_large_rock.glb', x: 35, y: 0, z: -25, scale: 2.3, rotation: { y: -1.5 } },
+
+    // Smaller rocks scattered around (collidable for cover)
+    { model: '/packs/nature-kit/Models/GLTF format/rock_tallH.glb', x: -40, y: 0, z: -35, scale: 2.0, rotation: { y: 0.3 } },
+    { model: '/packs/nature-kit/Models/GLTF format/rock_tallI.glb', x: 40, y: 0, z: 35, scale: 1.9, rotation: { y: -0.7 } },
+    { model: '/packs/nature-kit/Models/GLTF format/rock_tallJ.glb', x: -50, y: 0, z: 20, scale: 1.8, rotation: { y: 1.1 } },
+    { model: '/packs/nature-kit/Models/GLTF format/rock_tallH.glb', x: 45, y: 0, z: -40, scale: 2.1, rotation: { y: -0.4 } },
+    { model: '/packs/nature-kit/Models/GLTF format/rock_tallI.glb', x: 0, y: 0, z: -40, scale: 1.8, rotation: { y: 0.9 } },
+
+    // Medium sized rocks (collidable)
+    { model: '/packs/nature-kit/Models/GLTF format/stone_tallB.glb', x: -35, y: 0, z: 45, scale: 1.6, rotation: { y: 0.6 } },
+    { model: '/packs/nature-kit/Models/GLTF format/stone_tallC.glb', x: 30, y: 0, z: -50, scale: 1.7, rotation: { y: -1.2 } },
+    { model: '/packs/nature-kit/Models/GLTF format/stone_tallD.glb', x: -20, y: 0, z: -55, scale: 1.5, rotation: { y: 0.8 } },
+    { model: '/packs/nature-kit/Models/GLTF format/stone_tallE.glb', x: 50, y: 0, z: 10, scale: 1.6, rotation: { y: -0.5 } },
+
+    // Small scattered stones (non-collidable decorations)
+    { model: '/packs/nature-kit/Models/GLTF format/stone_smallFlatA.glb', x: -10, y: 0, z: -10, scale: 1.5, rotation: { y: 0.2 }, collidable: false },
+    { model: '/packs/nature-kit/Models/GLTF format/stone_smallFlatB.glb', x: 15, y: 0, z: 5, scale: 1.5, rotation: { y: -0.3 }, collidable: false },
+    { model: '/packs/nature-kit/Models/GLTF format/stone_smallFlatC.glb', x: -5, y: 0, z: 25, scale: 1.5, rotation: { y: 1.0 }, collidable: false },
+    { model: '/packs/nature-kit/Models/GLTF format/stone_smallH.glb', x: 8, y: 0, z: -15, scale: 1.3, rotation: { y: 0.4 }, collidable: false },
+    { model: '/packs/nature-kit/Models/GLTF format/stone_smallI.glb', x: -30, y: 0, z: 0, scale: 1.4, rotation: { y: -0.6 }, collidable: false },
+
+    // Desert plants - sparse vegetation (non-collidable)
+    { model: '/packs/nature-kit/Models/GLTF format/plant_bush.glb', x: -45, y: 0, z: -10, scale: 1.6, rotation: { y: 0.3 }, collidable: false },
+    { model: '/packs/nature-kit/Models/GLTF format/plant_bushDetailed.glb', x: 42, y: 0, z: 8, scale: 1.5, rotation: { y: -0.8 }, collidable: false },
+    { model: '/packs/nature-kit/Models/GLTF format/plant_bushTriangle.glb', x: -38, y: 0, z: 30, scale: 1.4, rotation: { y: 1.2 }, collidable: false },
+    { model: '/packs/nature-kit/Models/GLTF format/plant_bush.glb', x: 20, y: 0, z: -35, scale: 1.3, rotation: { y: -1.0 }, collidable: false },
+
+    // Dead stumps (non-collidable)
+    { model: '/packs/nature-kit/Models/GLTF format/stump_old.glb', x: -28, y: 0, z: -42, scale: 2.0, rotation: { y: 0.7 }, collidable: false },
+    { model: '/packs/nature-kit/Models/GLTF format/stump_oldTall.glb', x: 33, y: 0, z: 45, scale: 2.2, rotation: { y: -0.9 }, collidable: false },
+
+    // Small decorative elements (non-collidable)
+    { model: '/packs/nature-kit/Models/GLTF format/rock_smallFlatA.glb', x: 5, y: 0, z: 35, scale: 1.2, rotation: { y: 0.5 }, collidable: false },
+    { model: '/packs/nature-kit/Models/GLTF format/rock_smallFlatB.glb', x: -12, y: 0, z: 40, scale: 1.3, rotation: { y: -0.4 }, collidable: false },
+    { model: '/packs/nature-kit/Models/GLTF format/rock_smallFlatC.glb', x: 22, y: 0, z: -28, scale: 1.0, rotation: { y: 0.9 }, collidable: false },
+
+    // Oasis 1 - Northwest (palms around water area)
+    { model: '/packs/nature-kit/Models/GLTF format/grass_large.glb', x: -55, y: -0.1, z: -50, scale: 5, rotation: { y: 0 }, collidable: false }, // Water patch
+    { model: '/packs/nature-kit/Models/GLTF format/tree_palmTall.glb', x: -58, y: 0, z: -53, scale: 3.5, rotation: { y: 0.3 } },
+    { model: '/packs/nature-kit/Models/GLTF format/tree_palmDetailedTall.glb', x: -52, y: 0, z: -55, scale: 3.2, rotation: { y: -0.8 } },
+    { model: '/packs/nature-kit/Models/GLTF format/tree_palm.glb', x: -60, y: 0, z: -47, scale: 3.0, rotation: { y: 1.2 } },
+    { model: '/packs/nature-kit/Models/GLTF format/tree_palmShort.glb', x: -53, y: 0, z: -48, scale: 2.5, rotation: { y: -1.5 } },
+    { model: '/packs/nature-kit/Models/GLTF format/plant_bushDetailed.glb', x: -56, y: 0, z: -50, scale: 2.0, rotation: { y: 0.6 }, collidable: false },
+    { model: '/packs/nature-kit/Models/GLTF format/grass_leafs.glb', x: -54, y: 0, z: -52, scale: 2.5, rotation: { y: -0.4 }, collidable: false },
+
+    // Oasis 2 - Southeast (smaller oasis)
+    { model: '/packs/nature-kit/Models/GLTF format/grass_large.glb', x: 52, y: -0.1, z: 55, scale: 4.5, rotation: { y: 0.7 }, collidable: false }, // Water patch
+    { model: '/packs/nature-kit/Models/GLTF format/tree_palmDetailedShort.glb', x: 50, y: 0, z: 58, scale: 2.8, rotation: { y: 0.9 } },
+    { model: '/packs/nature-kit/Models/GLTF format/tree_palmBend.glb', x: 55, y: 0, z: 53, scale: 3.0, rotation: { y: -0.5 } },
+    { model: '/packs/nature-kit/Models/GLTF format/tree_palmShort.glb', x: 53, y: 0, z: 56, scale: 2.5, rotation: { y: 2.1 } },
+    { model: '/packs/nature-kit/Models/GLTF format/plant_bush.glb', x: 51, y: 0, z: 55, scale: 1.8, rotation: { y: 1.3 }, collidable: false },
+    { model: '/packs/nature-kit/Models/GLTF format/grass.glb', x: 54, y: 0, z: 57, scale: 2.5, rotation: { y: -0.8 }, collidable: false },
+
+    // Oasis 3 - Central-East (medium size)
+    { model: '/packs/nature-kit/Models/GLTF format/grass_large.glb', x: 60, y: -0.1, z: -5, scale: 4.8, rotation: { y: 1.5 }, collidable: false }, // Water patch
+    { model: '/packs/nature-kit/Models/GLTF format/tree_palmTall.glb', x: 62, y: 0, z: -8, scale: 3.4, rotation: { y: 0.4 } },
+    { model: '/packs/nature-kit/Models/GLTF format/tree_palm.glb', x: 58, y: 0, z: -2, scale: 3.0, rotation: { y: -1.1 } },
+    { model: '/packs/nature-kit/Models/GLTF format/tree_palmDetailedShort.glb', x: 63, y: 0, z: -3, scale: 2.6, rotation: { y: 2.3 } },
+    { model: '/packs/nature-kit/Models/GLTF format/plant_bushTriangle.glb', x: 60, y: 0, z: -6, scale: 1.8, rotation: { y: 0.9 }, collidable: false },
+  ]
+};

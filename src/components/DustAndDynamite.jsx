@@ -1,0 +1,1579 @@
+import React, { useEffect, useRef, useState } from "react";
+import { GameEngine } from "../engine/GameEngine.js";
+import { DustAndDynamiteGame } from "../engine/DustAndDynamiteGame.js";
+import { SPELL_TYPES, upgradeSpell, createSpellInstance } from "../spells/spellTypes.js";
+import { getUpgradeCost } from "../spells/spellLevelScaling.js";
+import { LEVELS, GAME_MODES, getAllLevels } from "../levels/index.js";
+import { preloadAllModels } from "../utils/modelLoader.js";
+
+const DustAndDynamite = () => {
+  const mountRef = useRef(null);
+  const engineRef = useRef(null);
+  const gameRef = useRef(null);
+
+  // Spell visual configuration
+  const getSpellVisuals = (spellName) => {
+    const visuals = {
+      'Thunder Strike': { color: '#ffff00', gradient: 'radial-gradient(circle, rgba(255, 255, 0, 0.8), rgba(200, 200, 0, 0.3))', icon: '⚡', border: '#ffff00' },
+      'Chain Lightning': { color: '#8844ff', gradient: 'radial-gradient(circle, rgba(136, 68, 255, 0.8), rgba(68, 34, 200, 0.3))', icon: '🌩️', border: '#aa66ff' },
+      'Fireball': { color: '#ff4400', gradient: 'radial-gradient(circle, rgba(255, 68, 0, 0.8), rgba(200, 0, 0, 0.3))', icon: '🔥', border: '#ff6622' },
+      'Pyro Explosion': { color: '#ff8800', gradient: 'radial-gradient(circle, rgba(255, 136, 0, 0.8), rgba(200, 68, 0, 0.3))', icon: '💥', border: '#ffaa44' },
+      'Ring of Fire': { color: '#ff2200', gradient: 'radial-gradient(circle, rgba(255, 34, 0, 0.8), rgba(200, 0, 0, 0.3))', icon: '🔴', border: '#ff4422' },
+      'Ice Lance': { color: '#00ddff', gradient: 'radial-gradient(circle, rgba(0, 221, 255, 0.8), rgba(0, 150, 200, 0.3))', icon: '❄️', border: '#22eeff' },
+      'Ring of Ice': { color: '#66ccff', gradient: 'radial-gradient(circle, rgba(102, 204, 255, 0.8), rgba(50, 150, 200, 0.3))', icon: '💎', border: '#88ddff' },
+      'Magic Bullet': { color: '#ff00ff', gradient: 'radial-gradient(circle, rgba(255, 0, 255, 0.8), rgba(200, 0, 200, 0.3))', icon: '✨', border: '#ff44ff' },
+      'Static Burst': { color: '#ffffff', gradient: 'radial-gradient(circle, rgba(255, 255, 255, 0.8), rgba(180, 180, 255, 0.3))', icon: '⚡', border: '#ccddff' },
+      'Power Chord': { color: '#ff0000', gradient: 'radial-gradient(circle, rgba(255, 0, 0, 0.8), rgba(200, 0, 0, 0.3))', icon: '⚡', border: '#ff4444' },
+    };
+    return visuals[spellName] || { color: '#ffd700', gradient: 'radial-gradient(circle, rgba(255, 215, 0, 0.8), rgba(180, 150, 0, 0.3))', icon: '⭐', border: '#ffd700' };
+  };
+  const [uiState, setUiState] = useState({
+    health: 100,
+    maxHealth: 100,
+    xp: 0,
+    level: 1,
+    xpProgress: 0,
+    time: 0,
+    enemyCount: 0,
+    levelingUp: false,
+    upgradeChoices: [],
+    gameOver: false,
+    gameOverTime: 0,
+    victory: false,
+    victoryTime: 0,
+    kills: 0,
+    damage: 0,
+    weapons: [],
+    wave: 1,
+    highestWave: 0,
+    totalKills: 0,
+    // Wave system state
+    currentWave: 1,
+    totalWaves: 4,
+    waveActive: false,
+    allWavesCompleted: false,
+    bossSpawned: false,
+    enemiesRemaining: 0,
+    // Boss tracking
+    hasBoss: false,
+    bossHealth: 0,
+    bossMaxHealth: 0,
+  });
+
+  const [showWeaponPanel, setShowWeaponPanel] = useState(false);
+  const [gameStarted, setGameStarted] = useState(false);
+  const [selectedLevel, setSelectedLevel] = useState(null);
+  const [selectedUpgradeIndex, setSelectedUpgradeIndex] = useState(0);
+  const [waveNotification, setWaveNotification] = useState(null);
+  const [showDevMenu, setShowDevMenu] = useState(false); // Dev menu starts hidden, toggle with P key
+  const [showStoryLevels, setShowStoryLevels] = useState(false); // Toggle story submenu
+  const [selectedGround, setSelectedGround] = useState('checkerboard'); // Default ground for survival
+  const [loading, setLoading] = useState(false);
+  const [loadingProgress, setLoadingProgress] = useState({ loaded: 0, total: 0, current: '' });
+
+  const isMobile =
+    /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) ||
+    window.innerWidth < 768;
+  const uiScale = isMobile ? 0.7 : 1;
+
+  // Gamepad navigation for upgrades
+  useEffect(() => {
+    if (!uiState.levelingUp) return;
+
+    let lastDpadInput = 0;
+    let lastButtonInput = 0;
+
+    const checkGamepad = () => {
+      const gamepads = navigator.getGamepads ? navigator.getGamepads() : [];
+      const gamepad = gamepads[0];
+
+      if (!gamepad || !uiState.upgradeChoices.length) return;
+
+      const now = Date.now();
+
+      // D-pad or left stick horizontal (left/right)
+      const deadzone = 0.5;
+      const horizontal = Math.abs(gamepad.axes[0]) > deadzone ? gamepad.axes[0] :
+                        (gamepad.buttons[14]?.pressed ? -1 : gamepad.buttons[15]?.pressed ? 1 : 0);
+
+      if (horizontal !== 0 && now - lastDpadInput > 200) {
+        if (horizontal < 0) {
+          setSelectedUpgradeIndex(prev => Math.max(0, prev - 1));
+        } else {
+          setSelectedUpgradeIndex(prev => Math.min(uiState.upgradeChoices.length - 1, prev + 1));
+        }
+        lastDpadInput = now;
+      }
+
+      // A button to select
+      if (gamepad.buttons[0]?.pressed && now - lastButtonInput > 200) {
+        handleUpgradeSelect(uiState.upgradeChoices[selectedUpgradeIndex]);
+        lastButtonInput = now;
+      }
+    };
+
+    const interval = setInterval(checkGamepad, 50);
+    return () => clearInterval(interval);
+  }, [uiState.levelingUp, uiState.upgradeChoices, selectedUpgradeIndex]);
+
+  useEffect(() => {
+    if (!gameStarted || !selectedLevel) return;
+
+    const initGame = async () => {
+      // Show loading screen
+      setLoading(true);
+
+      // Preload all models
+      await preloadAllModels((loaded, total, modelName) => {
+        setLoadingProgress({ loaded, total, current: modelName });
+      });
+
+      // Initialize game after preloading
+      const engine = new GameEngine();
+      engine.init(mountRef.current);
+      engineRef.current = engine;
+
+      const game = new DustAndDynamiteGame(engine);
+      gameRef.current = game;
+
+      game.onUpdate = (state) => {
+        setUiState((prev) => ({
+          ...prev,
+          ...state,
+          levelingUp: prev.levelingUp,
+          upgradeChoices: prev.upgradeChoices,
+          gameOver: prev.gameOver,
+          gameOverTime: prev.gameOverTime,
+          weapons: game.player ? game.player.weapons.map((w) => w.type.name) : [],
+        }));
+      };
+
+      game.onWaveUpdate = (waveInfo) => {
+        setUiState((prev) => ({
+          ...prev,
+          currentWave: waveInfo.currentWave,
+          totalWaves: waveInfo.totalWaves,
+          waveActive: waveInfo.waveActive,
+          allWavesCompleted: waveInfo.allWavesCompleted,
+          bossSpawned: waveInfo.bossSpawned,
+          enemiesRemaining: waveInfo.enemiesRemaining,
+        }));
+      };
+
+      game.onLevelUp = (choices) => {
+        setUiState((prev) => ({
+          ...prev,
+          levelingUp: true,
+          upgradeChoices: choices,
+        }));
+      };
+
+      game.onGameOver = (stats) => {
+        setUiState((prev) => ({
+          ...prev,
+          gameOver: true,
+          gameOverTime: Date.now(),
+          ...stats,
+        }));
+      };
+
+      game.onVictory = (stats) => {
+        setUiState((prev) => ({
+          ...prev,
+          victory: true,
+          victoryTime: Date.now(),
+          damage: Math.floor(game.totalDamageDealt || 0),
+          ...stats,
+        }));
+      };
+
+      const originalUpdate = engine.update.bind(engine);
+      engine.update = (dt) => {
+        originalUpdate(dt);
+        game.update(dt);
+      };
+
+      await game.start(selectedLevel);
+
+      // Hide loading screen
+      setLoading(false);
+    };
+
+    initGame();
+
+    return () => {
+      if (engineRef.current) {
+        engineRef.current.cleanup();
+      }
+    };
+  }, [gameStarted, selectedLevel]);
+
+  const handleUpgradeSelect = (upgrade) => {
+    gameRef.current.selectUpgrade(upgrade);
+    setUiState((prev) => ({ ...prev, levelingUp: false, upgradeChoices: [] }));
+  };
+
+  const handleRestart = () => {
+    window.location.reload();
+  };
+
+  const toggleFullscreen = () => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch(() => {});
+    } else {
+      if (document.exitFullscreen) {
+        document.exitFullscreen();
+      }
+    }
+  };
+
+  const handleStartGame = (levelKey) => {
+    setSelectedLevel(levelKey);
+    setGameStarted(true);
+  };
+
+  const handleFullscreen = () => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch(() => {});
+    } else {
+      document.exitFullscreen();
+    }
+  };
+
+  const toggleWeapon = (weaponType) => {
+    if (!gameRef.current || !gameRef.current.player) return;
+
+    const player = gameRef.current.player;
+    const existingIndex = player.weapons.findIndex(
+      (w) => w.type === weaponType,
+    );
+
+    if (existingIndex >= 0) {
+      // Remove weapon
+      player.weapons.splice(existingIndex, 1);
+    } else {
+      // Add weapon
+      player.weapons.push({ type: weaponType, level: 1, lastShot: 0 });
+    }
+  };
+
+  const hasWeapon = (weaponType) => {
+    if (!gameRef.current || !gameRef.current.player) return false;
+    return gameRef.current.player.weapons.some((w) => w.type === weaponType);
+  };
+
+  const getWeaponLevel = (weaponType) => {
+    if (!gameRef.current || !gameRef.current.player) return 1;
+    const weapon = gameRef.current.player.weapons.find((w) => w.type === weaponType);
+    return weapon?.type?.level || 1;
+  };
+
+  const handleSpellUpgrade = (weaponType, event) => {
+    event.stopPropagation(); // Prevent toggle when clicking upgrade button
+
+    if (!gameRef.current || !gameRef.current.player) return;
+
+    const player = gameRef.current.player;
+    const weapon = player.weapons.find((w) => w.type === weaponType);
+
+    if (!weapon) return;
+
+    // Find the spell key (e.g., 'THUNDER_STRIKE')
+    const spellKey = Object.keys(SPELL_TYPES).find(key => SPELL_TYPES[key] === weaponType);
+
+    if (!spellKey) return;
+
+    // Attempt to upgrade
+    const success = upgradeSpell(weapon.type, spellKey);
+
+    if (success) {
+      // If this is a ring spell, destroy and recreate it with new stats
+      if (weapon.type.activeRing && weapon.type.activeRing.active) {
+        weapon.type.activeRing.destroy();
+        weapon.type.activeRing = null;
+      }
+    }
+  };
+
+  const handleGroundChange = (groundType) => {
+    if (!gameRef.current || !gameRef.current.engine) return;
+    setSelectedGround(groundType);
+    gameRef.current.engine.updateGround(groundType);
+  };
+
+  // Get all active ring spells
+  const getRingSpells = () => {
+    if (!gameRef.current || !gameRef.current.player) return [];
+    const rings = [];
+    const ringFire = gameRef.current.player.weapons.find((w) => w.type === SPELL_TYPES.RING_OF_FIRE);
+    const ringIce = gameRef.current.player.weapons.find((w) => w.type === SPELL_TYPES.RING_OF_ICE);
+    if (ringFire) rings.push(ringFire);
+    if (ringIce) rings.push(ringIce);
+    return rings;
+  };
+
+  // Check if any ring is full
+  const isAnyRingFull = () => {
+    const rings = getRingSpells();
+    return rings.some(ring => ring.type.activeRing && ring.type.activeRing.isRingFull());
+  };
+
+  // Trigger ring burst for all active rings
+  const triggerRingBurst = () => {
+    const rings = getRingSpells();
+    rings.forEach(ring => {
+      if (ring.type.activeRing && ring.type.activeRing.isRingFull()) {
+        ring.type.activeRing.triggerBurst();
+      }
+    });
+  };
+
+  // Keyboard handler for ring burst (R key) and dev menu toggle (P key)
+  useEffect(() => {
+    const handleKeyPress = (e) => {
+      if (e.key === 'r' || e.key === 'R') {
+        triggerRingBurst();
+      }
+      if (e.key === 'p' || e.key === 'P') {
+        setShowDevMenu(prev => !prev);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyPress);
+    return () => window.removeEventListener('keydown', handleKeyPress);
+  }, [gameStarted]);
+
+  // Wave notification system
+  useEffect(() => {
+    if (!gameStarted) return;
+
+    // Show wave start notification
+    if (uiState.waveActive && uiState.currentWave > 0 && uiState.totalWaves > 0) {
+      setWaveNotification(`Wave ${uiState.currentWave} Starting!`);
+      const timer = setTimeout(() => setWaveNotification(null), 2500);
+      return () => clearTimeout(timer);
+    }
+
+    // Show all waves complete notification
+    if (uiState.allWavesCompleted && !uiState.bossSpawned) {
+      setWaveNotification('All Waves Complete! Boss Incoming...');
+      const timer = setTimeout(() => setWaveNotification(null), 3000);
+      return () => clearTimeout(timer);
+    }
+
+    // Show boss spawn notification
+    if (uiState.bossSpawned) {
+      setWaveNotification('⚔️ BOSS FIGHT! ⚔️');
+      const timer = setTimeout(() => setWaveNotification(null), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [uiState.currentWave, uiState.waveActive, uiState.allWavesCompleted, uiState.bossSpawned, gameStarted]);
+
+  return (
+    <div
+      style={{
+        width: "100vw",
+        height: "100vh",
+        overflow: "hidden",
+        position: "relative",
+        touchAction: "none",
+        userSelect: "none",
+        WebkitUserSelect: "none",
+        WebkitTouchCallout: "none",
+      }}
+    >
+      <div
+        ref={mountRef}
+        style={{
+          width: "100%",
+          height: "100%",
+          touchAction: "none",
+          userSelect: "none",
+          WebkitUserSelect: "none",
+        }}
+      />
+
+      {/* Loading Screen */}
+      {loading && (
+        <div
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            width: "100%",
+            height: "100%",
+            background: "rgba(0, 0, 0, 0.95)",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            fontFamily: "'Inter', sans-serif",
+            color: "rgba(255, 255, 255, 0.9)",
+            zIndex: 4000,
+          }}
+        >
+          <div style={{ fontSize: 12, fontWeight: 200, letterSpacing: "0.3em", textTransform: "uppercase", opacity: 0.6, marginBottom: 40 }}>
+            Loading Assets
+          </div>
+
+          {/* Progress bar */}
+          <div
+            style={{
+              width: 300,
+              height: 2,
+              background: "rgba(255, 255, 255, 0.1)",
+              position: "relative",
+            }}
+          >
+            <div
+              style={{
+                width: `${(loadingProgress.loaded / loadingProgress.total) * 100}%`,
+                height: "100%",
+                background: "rgba(255, 255, 255, 0.9)",
+                transition: "width 0.3s",
+              }}
+            />
+          </div>
+
+          <div style={{ marginTop: 20, fontSize: 14, fontWeight: 200, opacity: 0.7 }}>
+            {loadingProgress.loaded} / {loadingProgress.total}
+          </div>
+
+          {loadingProgress.current && (
+            <div style={{ marginTop: 10, fontSize: 11, fontWeight: 200, opacity: 0.5 }}>
+              {loadingProgress.current.split('/').pop().replace('.glb', '')}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Start Screen */}
+      {!gameStarted && !loading && (
+        <div
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            width: "100%",
+            height: "100%",
+            backgroundImage: "url('/assets/main-menu.png')",
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+            backgroundRepeat: "no-repeat",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            fontFamily: "'Inter', sans-serif",
+            color: "#fff",
+            zIndex: 3000,
+            overflow: "hidden",
+          }}
+        >
+          {/* Dark overlay for minimalist aesthetic */}
+          <div style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            width: "100%",
+            height: "100%",
+            background: "rgba(0, 0, 0, 0.55)",
+            zIndex: 1,
+          }} />
+          {/* Animated particles background */}
+          <div style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            width: "100%",
+            height: "100%",
+            zIndex: 2,
+            overflow: "hidden",
+            pointerEvents: "none",
+          }}>
+            {[...Array(40)].map((_, i) => (
+              <div
+                key={i}
+                style={{
+                  position: "absolute",
+                  width: `${Math.random() * 6 + 3}px`,
+                  height: `${Math.random() * 6 + 3}px`,
+                  borderRadius: "50%",
+                  background: ["#ff4400", "#ff8800", "#ffaa00", "#ff2200", "#ffcc00"][Math.floor(Math.random() * 5)],
+                  boxShadow: `0 0 ${Math.random() * 25 + 15}px currentColor`,
+                  bottom: `${Math.random() * 20 - 10}%`,
+                  left: `${Math.random() * 100}%`,
+                  animation: `fireRise ${Math.random() * 4 + 3}s infinite ease-out`,
+                  animationDelay: `${Math.random() * 3}s`,
+                  opacity: Math.random() * 0.6 + 0.4,
+                }}
+              />
+            ))}
+          </div>
+          <style>{`
+            @keyframes fireRise {
+              0% {
+                transform: translateY(0) translateX(0) scale(1);
+                opacity: 1;
+              }
+              25% {
+                transform: translateY(-25vh) translateX(10px) scale(0.9);
+                opacity: 0.8;
+              }
+              50% {
+                transform: translateY(-50vh) translateX(-15px) scale(0.7);
+                opacity: 0.5;
+              }
+              75% {
+                transform: translateY(-75vh) translateX(20px) scale(0.5);
+                opacity: 0.3;
+              }
+              100% {
+                transform: translateY(-110vh) translateX(-10px) scale(0.2);
+                opacity: 0;
+              }
+            }
+          `}</style>
+          <div style={{ textAlign: "center", position: "relative", zIndex: 10, marginBottom: 80 }}>
+            <h1
+              style={{
+                fontSize: `${72 * uiScale}px`,
+                color: "rgba(255, 255, 255, 0.95)",
+                marginBottom: 16,
+                fontWeight: 200,
+                fontFamily: "'Inter', sans-serif",
+                letterSpacing: "0.15em",
+                textTransform: "uppercase",
+              }}
+            >
+              This is Fine
+            </h1>
+            <p
+              style={{
+                fontSize: `${18 * uiScale}px`,
+                color: "rgba(255, 255, 255, 0.6)",
+                fontWeight: 200,
+                fontFamily: "'Inter', sans-serif",
+                letterSpacing: "0.1em",
+                margin: 0,
+              }}
+            >
+              Just surviving the latest apocalypse
+            </p>
+          </div>
+
+          {/* Fullscreen Button */}
+          <button
+            onClick={handleFullscreen}
+            style={{
+              position: "absolute",
+              top: 20,
+              right: 20,
+              background: "transparent",
+              border: "none",
+              color: "rgba(255, 255, 255, 0.5)",
+              fontFamily: "'Inter', sans-serif",
+              fontSize: 14,
+              cursor: "pointer",
+              zIndex: 100,
+              transition: "all 0.3s",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.color = "rgba(255, 255, 255, 1)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.color = "rgba(255, 255, 255, 0.5)";
+            }}
+          >
+            ⛶ Fullscreen
+          </button>
+
+          {/* Main Menu */}
+          {!showStoryLevels ? (
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                gap: 35,
+                position: "relative",
+                zIndex: 10,
+              }}
+            >
+              {/* Survive Option */}
+              <div
+                onClick={() => handleStartGame('SURVIVAL')}
+                style={{
+                  cursor: "pointer",
+                  fontSize: `${36 * uiScale}px`,
+                  color: "rgba(255, 255, 255, 0.7)",
+                  fontFamily: "'Inter', sans-serif",
+                  fontWeight: 300,
+                  letterSpacing: "0.05em",
+                  transition: "all 0.2s",
+                  textAlign: "center",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.color = "rgba(255, 255, 255, 1)";
+                  e.currentTarget.style.transform = "scale(1.05)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.color = "rgba(255, 255, 255, 0.7)";
+                  e.currentTarget.style.transform = "scale(1)";
+                }}
+              >
+                Survive
+              </div>
+
+              {/* Story Option */}
+              <div
+                onClick={() => setShowStoryLevels(true)}
+                style={{
+                  cursor: "pointer",
+                  fontSize: `${36 * uiScale}px`,
+                  color: "rgba(255, 255, 255, 0.7)",
+                  fontFamily: "'Inter', sans-serif",
+                  fontWeight: 300,
+                  letterSpacing: "0.05em",
+                  transition: "all 0.2s",
+                  textAlign: "center",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.color = "rgba(255, 255, 255, 1)";
+                  e.currentTarget.style.transform = "scale(1.05)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.color = "rgba(255, 255, 255, 0.7)";
+                  e.currentTarget.style.transform = "scale(1)";
+                }}
+              >
+                Story
+              </div>
+            </div>
+          ) : (
+            /* Story Levels Submenu */
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                gap: 30,
+                position: "relative",
+                zIndex: 10,
+              }}
+            >
+              {/* Back Button */}
+              <div
+                onClick={() => setShowStoryLevels(false)}
+                style={{
+                  cursor: "pointer",
+                  fontSize: `${24 * uiScale}px`,
+                  color: "rgba(255, 255, 255, 0.5)",
+                  fontFamily: "'Inter', sans-serif",
+                  fontWeight: 300,
+                  marginBottom: 20,
+                  transition: "all 0.2s",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.color = "rgba(255, 255, 255, 1)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.color = "rgba(255, 255, 255, 0.5)";
+                }}
+              >
+                ← Back
+              </div>
+
+              {/* Story Levels */}
+              {GAME_MODES.STORY.levels.map(levelKey => {
+                const level = LEVELS[levelKey];
+                return (
+                  <div
+                    key={levelKey}
+                    onClick={() => handleStartGame(levelKey)}
+                    style={{
+                      cursor: "pointer",
+                      fontSize: `${28 * uiScale}px`,
+                      color: "rgba(255, 255, 255, 0.7)",
+                      fontFamily: "'Inter', sans-serif",
+                      fontWeight: 300,
+                      letterSpacing: "0.05em",
+                      transition: "all 0.2s",
+                      textAlign: "center",
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.color = "rgba(255, 255, 255, 1)";
+                      e.currentTarget.style.transform = "scale(1.05)";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.color = "rgba(255, 255, 255, 0.7)";
+                      e.currentTarget.style.transform = "scale(1)";
+                    }}
+                  >
+                    {level.name}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          <div
+            style={{
+              fontSize: `${12 * uiScale}px`,
+              color: "rgba(255, 255, 255, 0.4)",
+              textAlign: "center",
+              maxWidth: "600px",
+              position: "absolute",
+              bottom: 30,
+              left: "50%",
+              transform: "translateX(-50%)",
+              zIndex: 10,
+              fontFamily: "'Inter', sans-serif",
+              fontWeight: 300,
+              letterSpacing: "0.05em",
+            }}
+          >
+            <p>WASD or Arrow Keys to move • SPACE to dash</p>
+          </div>
+        </div>
+      )}
+
+      {/* Game UI - only show when game started */}
+      {gameStarted && (
+        <>
+          {/* Boss Health Bar - minimalist */}
+          {uiState.hasBoss && (
+            <div
+              style={{
+                position: "absolute",
+                top: 40,
+                left: "50%",
+                transform: "translateX(-50%)",
+                color: "rgba(255, 255, 255, 0.9)",
+                fontFamily: "'Inter', sans-serif",
+                fontSize: 12,
+                pointerEvents: "none",
+                textAlign: "center",
+                fontWeight: 200,
+                letterSpacing: "0.2em",
+              }}
+            >
+              <div style={{ marginBottom: 8, textTransform: "uppercase", opacity: 0.6 }}>
+                Boss
+              </div>
+              <div
+                style={{
+                  width: 300,
+                  height: 2,
+                  background: "rgba(255, 255, 255, 0.1)",
+                  position: "relative",
+                }}
+              >
+                <div
+                  style={{
+                    width: `${(uiState.bossHealth / uiState.bossMaxHealth) * 100}%`,
+                    height: "100%",
+                    background: "rgba(255, 255, 255, 0.9)",
+                    transition: "width 0.3s",
+                  }}
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Player Health - minimalist */}
+          <div
+            style={{
+              position: "absolute",
+              top: 40,
+              left: 40,
+              pointerEvents: "none",
+              fontFamily: "'Inter', sans-serif",
+              color: "rgba(255, 255, 255, 0.9)",
+            }}
+          >
+            <div style={{ fontSize: 12, fontWeight: 200, letterSpacing: "0.2em", textTransform: "uppercase", opacity: 0.6, marginBottom: 8 }}>
+              Health
+            </div>
+            <div style={{ fontSize: 32, fontWeight: 200, letterSpacing: "0.05em" }}>
+              {uiState.health}
+            </div>
+            <div
+              style={{
+                marginTop: 8,
+                width: 100,
+                height: 2,
+                background: "rgba(255, 255, 255, 0.1)",
+                position: "relative",
+              }}
+            >
+              <div
+                style={{
+                  width: `${(uiState.health / uiState.maxHealth) * 100}%`,
+                  height: "100%",
+                  background: "rgba(255, 255, 255, 0.9)",
+                  transition: "width 0.3s",
+                }}
+              />
+            </div>
+          </div>
+
+          {/* XP Bar - rainbow centered */}
+          <div
+            style={{
+              position: "absolute",
+              bottom: 40,
+              left: "50%",
+              transform: "translateX(-50%)",
+              pointerEvents: "none",
+              fontFamily: "'Inter', sans-serif",
+              color: "rgba(255, 255, 255, 0.9)",
+              textAlign: "center",
+            }}
+          >
+            <div style={{ fontSize: 12, fontWeight: 200, letterSpacing: "0.2em", textTransform: "uppercase", opacity: 0.6, marginBottom: 8 }}>
+              Level {uiState.level}
+            </div>
+            <div
+              style={{
+                width: "33vw",
+                height: 4,
+                background: "rgba(50, 50, 50, 0.5)",
+                position: "relative",
+                borderRadius: 2,
+                border: "1px solid rgba(255, 255, 255, 0.2)",
+              }}
+            >
+              <div
+                style={{
+                  width: `${Math.max(uiState.xpProgress * 100, 2)}%`,
+                  height: "100%",
+                  background: "linear-gradient(90deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #9400d3)",
+                  transition: "width 0.3s",
+                  borderRadius: 2,
+                  boxShadow: "0 0 15px rgba(255, 100, 255, 0.5)",
+                }}
+              />
+            </div>
+          </div>
+
+          {/* Wave and Enemy Count - Upper Right - minimalist */}
+          <div
+            style={{
+              position: "absolute",
+              top: 40,
+              right: 40,
+              fontFamily: "'Inter', sans-serif",
+              color: "rgba(255, 255, 255, 0.9)",
+              pointerEvents: "none",
+              textAlign: "right",
+            }}
+          >
+            <div style={{ fontSize: 12, fontWeight: 200, letterSpacing: "0.2em", textTransform: "uppercase", opacity: 0.6, marginBottom: 8 }}>
+              {uiState.totalWaves > 0 ? (
+                <>
+                  {uiState.allWavesCompleted ? (
+                    uiState.bossSpawned ? "Boss Battle" : "Complete"
+                  ) : (
+                    `Wave ${uiState.currentWave}/${uiState.totalWaves === Infinity ? '∞' : uiState.totalWaves}`
+                  )}
+                </>
+              ) : (
+                `Wave ${Math.floor(uiState.time / 60) + 1}`
+              )}
+            </div>
+            {uiState.totalWaves > 0 && !uiState.allWavesCompleted && (
+              <div style={{ fontSize: 32, fontWeight: 200, letterSpacing: "0.05em", marginBottom: 12 }}>
+                {uiState.enemiesRemaining}
+              </div>
+            )}
+            <div style={{ fontSize: 12, fontWeight: 200, opacity: 0.6 }}>
+              {Math.floor(uiState.time / 60)}:{(uiState.time % 60).toString().padStart(2, "0")}
+            </div>
+          </div>
+
+
+          {/* Wave Notification - minimalist */}
+          {waveNotification && (
+            <div
+              style={{
+                position: "absolute",
+                top: "50%",
+                left: "50%",
+                transform: "translate(-50%, -50%)",
+                color: "rgba(255, 255, 255, 0.95)",
+                fontFamily: "'Inter', sans-serif",
+                fontSize: 72,
+                fontWeight: 200,
+                letterSpacing: "0.1em",
+                zIndex: 5000,
+                pointerEvents: "none",
+                animation: "fadeInOut 2.5s ease-in-out",
+                textAlign: "center",
+                textTransform: "uppercase",
+              }}
+            >
+              {waveNotification}
+            </div>
+          )}
+
+          <style>
+            {`
+              @keyframes fadeInOut {
+                0% { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
+                15% { opacity: 1; transform: translate(-50%, -50%) scale(1.1); }
+                20% { transform: translate(-50%, -50%) scale(1); }
+                85% { opacity: 1; }
+                100% { opacity: 0; transform: translate(-50%, -50%) scale(0.9); }
+              }
+            `}
+          </style>
+
+          {/* Ring Burst Button */}
+          {getRingSpells().length > 0 && (
+            <div
+              style={{
+                position: "absolute",
+                bottom: isMobile ? 20 : 30,
+                right: isMobile ? 20 : 30,
+                pointerEvents: "auto",
+              }}
+            >
+              <button
+                onClick={triggerRingBurst}
+                disabled={!isAnyRingFull()}
+                style={{
+                  width: isMobile ? 60 : 80,
+                  height: isMobile ? 60 : 80,
+                  borderRadius: "50%",
+                  background: isAnyRingFull()
+                    ? getRingSpells().length === 2
+                      ? "radial-gradient(circle, #ff8800 0%, #88ddff 50%, #ff4400 100%)" // Mixed fire + ice
+                      : getRingSpells()[0].type === SPELL_TYPES.RING_OF_FIRE
+                        ? "radial-gradient(circle, #ff8800, #ff4400)" // Fire only
+                        : "radial-gradient(circle, #88ddff, #4499ff)" // Ice only
+                    : "#333",
+                  border: isAnyRingFull() ? "4px solid #ffd700" : "3px solid #666",
+                  cursor: isAnyRingFull() ? "pointer" : "not-allowed",
+                  fontSize: `${isMobile ? 24 : 32}px`,
+                  fontFamily: "Georgia, serif",
+                  color: isAnyRingFull() ? "#fff" : "#666",
+                  textShadow: isAnyRingFull() ? "2px 2px 4px rgba(0,0,0,0.8)" : "none",
+                  boxShadow: isAnyRingFull()
+                    ? "0 0 20px rgba(255, 215, 0, 0.8), inset 0 0 10px rgba(255, 255, 255, 0.3)"
+                    : "none",
+                  transition: "all 0.3s",
+                  opacity: isAnyRingFull() ? 1 : 0.5,
+                  animation: isAnyRingFull() ? "pulse 1.5s infinite" : "none",
+                }}
+                onMouseEnter={(e) => {
+                  if (isAnyRingFull()) {
+                    e.currentTarget.style.transform = "scale(1.1)";
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = "scale(1)";
+                }}
+              >
+                💥
+              </button>
+              <div
+                style={{
+                  textAlign: "center",
+                  marginTop: 8,
+                  color: "#fff",
+                  fontSize: `${isMobile ? 10 : 12}px`,
+                  fontFamily: "Georgia, serif",
+                  textShadow: "1px 1px 2px rgba(0,0,0,0.8)",
+                  pointerEvents: "none",
+                }}
+              >
+                [R] Burst {getRingSpells().length === 2 ? "(Both)" : ""}
+              </div>
+            </div>
+          )}
+
+          <style>
+            {`
+              @keyframes pulse {
+                0%, 100% {
+                  box-shadow: 0 0 20px rgba(255, 215, 0, 0.8), inset 0 0 10px rgba(255, 255, 255, 0.3);
+                }
+                50% {
+                  box-shadow: 0 0 40px rgba(255, 215, 0, 1), inset 0 0 20px rgba(255, 255, 255, 0.5);
+                }
+              }
+            `}
+          </style>
+
+          {/* Level Up Screen - minimalist */}
+          {uiState.levelingUp && (
+            <div
+              style={{
+                position: "absolute",
+                top: 0,
+                left: 0,
+                width: "100%",
+                height: "100%",
+                background: "rgba(0, 0, 0, 0.95)",
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
+                fontFamily: "'Inter', sans-serif",
+                color: "rgba(255, 255, 255, 0.9)",
+                zIndex: 9999,
+              }}
+            >
+              {/* Decorative corner patterns */}
+              <div style={{ position: "absolute", top: 40, left: 40, width: 60, height: 60, border: "1px solid rgba(255, 255, 255, 0.2)", borderRight: "none", borderBottom: "none" }} />
+              <div style={{ position: "absolute", top: 40, right: 40, width: 60, height: 60, border: "1px solid rgba(255, 255, 255, 0.2)", borderLeft: "none", borderBottom: "none" }} />
+              <div style={{ position: "absolute", bottom: 40, left: 40, width: 60, height: 60, border: "1px solid rgba(255, 255, 255, 0.2)", borderRight: "none", borderTop: "none" }} />
+              <div style={{ position: "absolute", bottom: 40, right: 40, width: 60, height: 60, border: "1px solid rgba(255, 255, 255, 0.2)", borderLeft: "none", borderTop: "none" }} />
+
+              <div style={{ fontSize: 12, fontWeight: 200, letterSpacing: "0.3em", textTransform: "uppercase", opacity: 0.6, marginBottom: 60 }}>
+                Level {uiState.level}
+              </div>
+
+              <div style={{ display: "flex", gap: 60, alignItems: "stretch" }}>
+                {uiState.upgradeChoices.map((upgrade, i) => (
+                  <button
+                    key={i}
+                    onClick={() => handleUpgradeSelect(upgrade)}
+                    style={{
+                      width: 280,
+                      padding: 0,
+                      background: "transparent",
+                      border: selectedUpgradeIndex === i ? "1px solid rgba(255, 255, 255, 0.6)" : "1px solid rgba(255, 255, 255, 0.2)",
+                      cursor: "pointer",
+                      transition: "all 0.3s",
+                      fontFamily: "'Inter', sans-serif",
+                      color: "rgba(255, 255, 255, 0.9)",
+                      opacity: selectedUpgradeIndex === i ? 1 : 0.6,
+                      position: "relative",
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.opacity = "1";
+                      e.currentTarget.style.borderColor = "rgba(255, 255, 255, 0.6)";
+                    }}
+                    onMouseLeave={(e) => {
+                      if (selectedUpgradeIndex !== i) {
+                        e.currentTarget.style.opacity = "0.6";
+                        e.currentTarget.style.borderColor = "rgba(255, 255, 255, 0.2)";
+                      }
+                    }}
+                  >
+                    <div style={{ padding: 40, textAlign: "center" }}>
+                      <div style={{ fontSize: 18, fontWeight: 300, letterSpacing: "0.1em", marginBottom: 20 }}>
+                        {upgrade.name}
+                      </div>
+                      <div style={{ fontSize: 13, fontWeight: 200, opacity: 0.7, lineHeight: 1.6 }}>
+                        {upgrade.desc}
+                      </div>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Fullscreen Button */}
+          <button
+            onClick={toggleFullscreen}
+            style={{
+              position: "absolute",
+              bottom: 20,
+              left: 20,
+              padding: "8px 16px",
+              background: "rgba(0, 0, 0, 0.3)",
+              color: "rgba(255, 255, 255, 0.7)",
+              border: "1px solid rgba(255, 255, 255, 0.2)",
+              cursor: "pointer",
+              fontFamily: "'Inter', sans-serif",
+              fontSize: 12,
+              fontWeight: 200,
+              letterSpacing: "0.1em",
+              textTransform: "uppercase",
+              zIndex: 1000,
+              transition: "all 0.3s",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.borderColor = "rgba(255, 255, 255, 0.5)";
+              e.currentTarget.style.color = "rgba(255, 255, 255, 1)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.borderColor = "rgba(255, 255, 255, 0.2)";
+              e.currentTarget.style.color = "rgba(255, 255, 255, 0.7)";
+            }}
+          >
+            Fullscreen
+          </button>
+
+          {/* Dev Menu - Toggle with ~ key */}
+          {showDevMenu && (
+            <>
+              {/* God Mode Button */}
+              <button
+                onClick={() => {
+                  if (gameRef.current && gameRef.current.player) {
+                    gameRef.current.godMode = !gameRef.current.godMode;
+                    const btn = document.getElementById('god-mode-btn');
+                    if (btn) {
+                      btn.textContent = gameRef.current.godMode ? 'God Mode: ON' : 'God Mode: OFF';
+                      btn.style.borderColor = gameRef.current.godMode ? 'rgba(0, 255, 0, 0.5)' : 'rgba(255, 255, 255, 0.2)';
+                    }
+                  }
+                }}
+                id="god-mode-btn"
+                style={{
+                  position: "absolute",
+                  bottom: 20,
+                  left: 140,
+                  padding: "8px 16px",
+                  background: "rgba(0, 0, 0, 0.3)",
+                  color: "rgba(255, 255, 255, 0.7)",
+                  border: "1px solid rgba(255, 255, 255, 0.2)",
+                  cursor: "pointer",
+                  fontFamily: "'Inter', sans-serif",
+                  fontSize: 12,
+                  fontWeight: 200,
+                  letterSpacing: "0.1em",
+                  textTransform: "uppercase",
+                  zIndex: 1000,
+                  transition: "all 0.3s",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.borderColor = gameRef.current?.godMode ? "rgba(0, 255, 0, 0.7)" : "rgba(255, 255, 255, 0.5)";
+                  e.currentTarget.style.color = "rgba(255, 255, 255, 1)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.borderColor = gameRef.current?.godMode ? "rgba(0, 255, 0, 0.5)" : "rgba(255, 255, 255, 0.2)";
+                  e.currentTarget.style.color = "rgba(255, 255, 255, 0.7)";
+                }}
+              >
+                God Mode: OFF
+              </button>
+
+              {/* Spell Toggle Panel */}
+              <button
+                onClick={() => setShowWeaponPanel(!showWeaponPanel)}
+                style={{
+                  position: "absolute",
+                  bottom: 20,
+                  right: 20,
+                  padding: "8px 16px",
+                  background: "rgba(0, 0, 0, 0.3)",
+                  color: "rgba(255, 255, 255, 0.7)",
+                  border: "1px solid rgba(255, 255, 255, 0.2)",
+                  cursor: "pointer",
+                  fontFamily: "'Inter', sans-serif",
+                  fontSize: 12,
+                  fontWeight: 200,
+                  letterSpacing: "0.1em",
+                  textTransform: "uppercase",
+                  zIndex: 1000,
+                  transition: "all 0.3s",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.borderColor = "rgba(255, 255, 255, 0.5)";
+                  e.currentTarget.style.color = "rgba(255, 255, 255, 1)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.borderColor = "rgba(255, 255, 255, 0.2)";
+                  e.currentTarget.style.color = "rgba(255, 255, 255, 0.7)";
+                }}
+              >
+                {showWeaponPanel ? "Hide" : "Spells"}
+              </button>
+
+              {/* Ground Selector - Dev Menu */}
+              {gameRef.current?.levelConfig?.isSurvival && (
+                <div
+                  style={{
+                    position: "absolute",
+                    bottom: 20,
+                    left: 300,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "10px",
+                    zIndex: 1000,
+                  }}
+                >
+                  <label
+                    style={{
+                      color: "rgba(255, 255, 255, 0.6)",
+                      fontFamily: "'Inter', sans-serif",
+                      fontSize: 12,
+                      fontWeight: 200,
+                      letterSpacing: "0.1em",
+                      textTransform: "uppercase",
+                    }}
+                  >
+                    Ground:
+                  </label>
+                  <select
+                    value={selectedGround}
+                    onChange={(e) => handleGroundChange(e.target.value)}
+                    style={{
+                      padding: "8px 16px",
+                      background: "rgba(0, 0, 0, 0.3)",
+                      color: "rgba(255, 255, 255, 0.9)",
+                      border: "1px solid rgba(255, 255, 255, 0.2)",
+                      cursor: "pointer",
+                      fontFamily: "'Inter', sans-serif",
+                      fontSize: 12,
+                      fontWeight: 200,
+                      outline: "none",
+                      transition: "all 0.3s",
+                    }}
+                  >
+                    <optgroup label="Dreamy">
+                      <option value="pink-clouds">Pink Clouds</option>
+                      <option value="rainbow">Rainbow</option>
+                      <option value="psychedelic">Psychedelic</option>
+                    </optgroup>
+                    <optgroup label="Reflective">
+                      <option value="mirror">Mirror</option>
+                      <option value="glass">Glass</option>
+                      <option value="ice">Ice</option>
+                      <option value="water">Water</option>
+                    </optgroup>
+                    <optgroup label="Animated">
+                      <option value="lava">Lava</option>
+                      <option value="lava-mirror">Lava Mirror</option>
+                      <option value="neon">Neon Grid</option>
+                      <option value="void">Void</option>
+                      <option value="matrix">Matrix</option>
+                    </optgroup>
+                    <optgroup label="Simple">
+                      <option value="bright">Bright</option>
+                      <option value="dark">Dark</option>
+                      <option value="checkerboard">Checkerboard</option>
+                      <option value="grass">Grass</option>
+                      <option value="desert">Desert</option>
+                    </optgroup>
+                  </select>
+                </div>
+              )}
+            </>
+          )}
+
+          {showDevMenu && showWeaponPanel && (
+            <div
+              style={{
+                position: "absolute",
+                bottom: 70,
+                right: 20,
+                background: "rgba(0, 0, 0, 0.85)",
+                border: "1px solid rgba(255, 255, 255, 0.2)",
+                padding: 20,
+                maxHeight: "70vh",
+                overflowY: "auto",
+                fontFamily: "'Inter', sans-serif",
+                color: "rgba(255, 255, 255, 0.9)",
+                minWidth: 280,
+                zIndex: 999,
+              }}
+            >
+              <h3
+                style={{ margin: "0 0 16px 0", color: "rgba(255, 255, 255, 0.9)", fontSize: 14, fontWeight: 200, letterSpacing: "0.2em", textTransform: "uppercase" }}
+              >
+                Test Spells
+              </h3>
+              <button
+                onClick={() => {
+                  // Add all spells
+                  if (gameRef.current && gameRef.current.player) {
+                    Object.values(SPELL_TYPES).forEach((spell) => {
+                      const hasSpell = gameRef.current.player.weapons.some(
+                        (w) => w.type === spell
+                      );
+                      if (!hasSpell) {
+                        gameRef.current.player.weapons.push({
+                          type: spell,
+                          level: 1,
+                          lastShot: 0,
+                        });
+                      }
+                    });
+                  }
+                }}
+                style={{
+                  padding: "10px 16px",
+                  background: "transparent",
+                  color: "rgba(255, 255, 255, 0.9)",
+                  border: "1px solid rgba(255, 255, 255, 0.3)",
+                  cursor: "pointer",
+                  fontSize: 12,
+                  fontWeight: 200,
+                  letterSpacing: "0.1em",
+                  textTransform: "uppercase",
+                  marginBottom: 16,
+                  width: "100%",
+                  transition: "all 0.3s",
+                  fontFamily: "'Inter', sans-serif",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.borderColor = "rgba(255, 255, 255, 0.6)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.borderColor = "rgba(255, 255, 255, 0.3)";
+                }}
+              >
+                Turn On All Spells
+              </button>
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                {Object.values(SPELL_TYPES).map((spell) => {
+                  const active = hasWeapon(spell);
+                  const level = getWeaponLevel(spell);
+                  const canUpgrade = level < 7;
+
+                  return (
+                    <div
+                      key={spell.name}
+                      style={{
+                        display: "flex",
+                        gap: 8,
+                        alignItems: "stretch",
+                      }}
+                    >
+                      <button
+                        onClick={() => toggleWeapon(spell)}
+                        style={{
+                          flex: 1,
+                          padding: "10px 12px",
+                          background: active
+                            ? "rgba(255, 255, 255, 0.05)"
+                            : "transparent",
+                          color: "rgba(255, 255, 255, 0.9)",
+                          border: active
+                            ? "1px solid rgba(255, 255, 255, 0.4)"
+                            : "1px solid rgba(255, 255, 255, 0.15)",
+                          cursor: "pointer",
+                          fontSize: 12,
+                          textAlign: "left",
+                          transition: "all 0.3s",
+                          fontFamily: "'Inter', sans-serif",
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.borderColor = "rgba(255, 255, 255, 0.5)";
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.borderColor = active ? "rgba(255, 255, 255, 0.4)" : "rgba(255, 255, 255, 0.15)";
+                        }}
+                      >
+                        <div style={{ fontWeight: 300, marginBottom: 4, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                          <span>
+                            {active ? "✓ " : ""}
+                            {spell.name}
+                          </span>
+                          {active && <span style={{ fontSize: 10, background: "rgba(255, 255, 255, 0.1)", padding: "2px 8px", fontWeight: 200, opacity: 0.7 }}>Lv.{level}</span>}
+                        </div>
+                        <div style={{ fontSize: 10, opacity: 0.6, fontWeight: 200, lineHeight: 1.4 }}>
+                          {spell.desc}
+                        </div>
+                      </button>
+                      {active && canUpgrade && (
+                        <button
+                          onClick={(e) => handleSpellUpgrade(spell, e)}
+                          style={{
+                            padding: "10px 12px",
+                            background: "transparent",
+                            color: "rgba(255, 255, 255, 0.9)",
+                            border: "1px solid rgba(255, 255, 255, 0.3)",
+                            cursor: "pointer",
+                            fontSize: 11,
+                            fontWeight: 200,
+                            letterSpacing: "0.1em",
+                            whiteSpace: "nowrap",
+                            transition: "all 0.3s",
+                            fontFamily: "'Inter', sans-serif",
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.borderColor = "rgba(255, 255, 255, 0.6)";
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.borderColor = "rgba(255, 255, 255, 0.3)";
+                          }}
+                        >
+                          UP
+                        </button>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Game Over Screen - minimalist */}
+          {uiState.gameOver && (
+            <div
+              style={{
+                position: "absolute",
+                top: 0,
+                left: 0,
+                width: "100%",
+                height: "100%",
+                background: "rgba(0, 0, 0, 0.95)",
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
+                fontFamily: "'Inter', sans-serif",
+                color: "rgba(255, 255, 255, 0.9)",
+                zIndex: 2000,
+              }}
+            >
+              {/* Decorative corner patterns */}
+              <div style={{ position: "absolute", top: 40, left: 40, width: 60, height: 60, border: "1px solid rgba(255, 255, 255, 0.2)", borderRight: "none", borderBottom: "none" }} />
+              <div style={{ position: "absolute", top: 40, right: 40, width: 60, height: 60, border: "1px solid rgba(255, 255, 255, 0.2)", borderLeft: "none", borderBottom: "none" }} />
+              <div style={{ position: "absolute", bottom: 40, left: 40, width: 60, height: 60, border: "1px solid rgba(255, 255, 255, 0.2)", borderRight: "none", borderTop: "none" }} />
+              <div style={{ position: "absolute", bottom: 40, right: 40, width: 60, height: 60, border: "1px solid rgba(255, 255, 255, 0.2)", borderLeft: "none", borderTop: "none" }} />
+
+              <div style={{ fontSize: 12, fontWeight: 200, letterSpacing: "0.3em", textTransform: "uppercase", opacity: 0.4, marginBottom: 40 }}>
+                Game Over
+              </div>
+
+              <div style={{ textAlign: "center", marginBottom: 60 }}>
+                <div style={{ fontSize: 14, fontWeight: 200, opacity: 0.6, marginBottom: 12, letterSpacing: "0.15em" }}>
+                  Wave {uiState.wave}
+                </div>
+                <div style={{ fontSize: 48, fontWeight: 200, marginBottom: 12 }}>
+                  {uiState.kills}
+                </div>
+                <div style={{ fontSize: 12, fontWeight: 200, opacity: 0.6, letterSpacing: "0.15em" }}>
+                  Kills
+                </div>
+              </div>
+
+              <button
+                onClick={handleRestart}
+                style={{
+                  padding: "16px 48px",
+                  background: "transparent",
+                  color: "rgba(255, 255, 255, 0.9)",
+                  border: "1px solid rgba(255, 255, 255, 0.3)",
+                  cursor: "pointer",
+                  fontFamily: "'Inter', sans-serif",
+                  fontSize: 14,
+                  fontWeight: 200,
+                  letterSpacing: "0.2em",
+                  textTransform: "uppercase",
+                  transition: "all 0.3s",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.borderColor = "rgba(255, 255, 255, 0.6)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.borderColor = "rgba(255, 255, 255, 0.3)";
+                }}
+              >
+                Try Again
+              </button>
+            </div>
+          )}
+
+          {/* Victory Screen - minimalist */}
+          {uiState.victory && (
+            <div
+              style={{
+                position: "absolute",
+                top: 0,
+                left: 0,
+                width: "100%",
+                height: "100%",
+                background: "rgba(0, 0, 0, 0.95)",
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
+                fontFamily: "'Inter', sans-serif",
+                color: "rgba(255, 255, 255, 0.9)",
+                zIndex: 2000,
+              }}
+            >
+              {/* Decorative corner patterns */}
+              <div style={{ position: "absolute", top: 40, left: 40, width: 60, height: 60, border: "1px solid rgba(255, 255, 255, 0.2)", borderRight: "none", borderBottom: "none" }} />
+              <div style={{ position: "absolute", top: 40, right: 40, width: 60, height: 60, border: "1px solid rgba(255, 255, 255, 0.2)", borderLeft: "none", borderBottom: "none" }} />
+              <div style={{ position: "absolute", bottom: 40, left: 40, width: 60, height: 60, border: "1px solid rgba(255, 255, 255, 0.2)", borderRight: "none", borderTop: "none" }} />
+              <div style={{ position: "absolute", bottom: 40, right: 40, width: 60, height: 60, border: "1px solid rgba(255, 255, 255, 0.2)", borderLeft: "none", borderTop: "none" }} />
+
+              <div style={{ fontSize: 12, fontWeight: 200, letterSpacing: "0.3em", textTransform: "uppercase", opacity: 0.6, marginBottom: 40 }}>
+                Victory
+              </div>
+
+              <div style={{ textAlign: "center", marginBottom: 60 }}>
+                <div style={{ fontSize: 14, fontWeight: 200, opacity: 0.6, marginBottom: 12, letterSpacing: "0.15em" }}>
+                  {Math.floor(uiState.time / 60)}:{(uiState.time % 60).toString().padStart(2, "0")}
+                </div>
+                <div style={{ fontSize: 48, fontWeight: 200, marginBottom: 12 }}>
+                  {uiState.kills}
+                </div>
+                <div style={{ fontSize: 12, fontWeight: 200, opacity: 0.6, letterSpacing: "0.15em" }}>
+                  Kills
+                </div>
+              </div>
+
+              <div style={{ display: "flex", gap: 40 }}>
+                <button
+                  onClick={() => {
+                    setGameStarted(false);
+                    setSelectedLevel(null);
+                  }}
+                  style={{
+                    padding: "16px 48px",
+                    background: "transparent",
+                    color: "rgba(255, 255, 255, 0.9)",
+                    border: "1px solid rgba(255, 255, 255, 0.3)",
+                    cursor: "pointer",
+                    fontFamily: "'Inter', sans-serif",
+                    fontSize: 14,
+                    fontWeight: 200,
+                    letterSpacing: "0.2em",
+                    textTransform: "uppercase",
+                    transition: "all 0.3s",
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.borderColor = "rgba(255, 255, 255, 0.6)";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.borderColor = "rgba(255, 255, 255, 0.3)";
+                  }}
+                >
+                  Main Menu
+                </button>
+                <button
+                  onClick={handleRestart}
+                  style={{
+                    padding: "16px 48px",
+                    background: "transparent",
+                    color: "rgba(255, 255, 255, 0.9)",
+                    border: "1px solid rgba(255, 255, 255, 0.3)",
+                    cursor: "pointer",
+                    fontFamily: "'Inter', sans-serif",
+                    fontSize: 14,
+                    fontWeight: 200,
+                    letterSpacing: "0.2em",
+                    textTransform: "uppercase",
+                    transition: "all 0.3s",
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.borderColor = "rgba(255, 255, 255, 0.6)";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.borderColor = "rgba(255, 255, 255, 0.3)";
+                  }}
+                >
+                  Play Again
+                </button>
+              </div>
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  );
+};
+
+export default DustAndDynamite;

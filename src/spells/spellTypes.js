@@ -1,0 +1,342 @@
+import { Projectile } from '../entities/Projectile.js';
+import { InstantLightning } from '../entities/InstantLightning.js';
+import { ColoredLightning } from '../entities/ColoredLightning.js';
+import { FlameProjectile } from '../entities/FlameProjectile.js';
+import { IceLance } from '../entities/IceLance.js';
+import { MagicBullet } from '../entities/MagicBullet.js';
+import { FireExplosion } from '../entities/FireExplosion.js';
+import { LightningExplosion } from '../entities/LightningExplosion.js';
+import { RingOfFire } from '../entities/RingOfFire.js';
+import { RingOfIce } from '../entities/RingOfIce.js';
+import { LightningEffect } from '../effects/LightningEffect.js';
+import { FireEffect } from '../effects/FireEffect.js';
+import { applySpellLevelScaling } from './spellLevelScaling.js';
+import * as THREE from 'three';
+
+// Configure reusable effects
+const thunderStrikeEffect = new LightningEffect({
+  color: 0xffff00,
+  glowColor: 0xffffaa,
+  width: 1.2,
+  taper: true,
+  gradientColor: 0xffffff,
+  lifetime: 0.3,
+  branches: 2 + Math.floor(Math.random() * 4),
+  branchWidth: 0.4
+});
+
+const pyroExplosionEffect = new FireEffect({
+  radius: 3.5,
+  particleCount: 20,
+  lifetime: 1.0,
+  color: 0xff4400
+});
+
+export const SPELL_TYPES = {
+  // ===== LIGHTNING SPELLS =====
+  THUNDER_STRIKE: {
+    name: 'Thunder Strike',
+    desc: 'Sky lightning strikes ground with devastating explosion',
+    category: 'lightning',
+    level: 1, // Default level
+    cooldown: 0.8,
+    baseCooldownMin: 0.8,
+    baseCooldownMax: 1.5,
+    damage: 200,
+    targeting: 'random',
+    maxRange: 15,
+    isInstant: true,
+    execute: (engine, player, target, spell, stats) => {
+      if (!target) return;
+
+      // Prevent simultaneous thunder strikes
+      const currentTime = engine.time;
+      if (!spell.lastGlobalStrike) spell.lastGlobalStrike = 0;
+      if (currentTime - spell.lastGlobalStrike < 0.3) return;
+      spell.lastGlobalStrike = currentTime;
+
+      // Set random cooldown
+      spell.cooldown = spell.baseCooldownMin + Math.random() * (spell.baseCooldownMax - spell.baseCooldownMin);
+
+      // Spawn lightning effect with random offset
+      const offsetX = (Math.random() - 0.5) * 3;
+      const offsetZ = (Math.random() - 0.5) * 3;
+
+      // Update effect config for this strike with spell level stats
+      const branchMin = spell.branchCountMin || 2;
+      const branchMax = spell.branchCountMax || 5;
+      const lightningWidth = spell.lightningWidth || 1.2;
+
+      thunderStrikeEffect.config.branches = branchMin + Math.floor(Math.random() * (branchMax - branchMin + 1));
+      thunderStrikeEffect.config.width = lightningWidth;
+
+      const lightning = thunderStrikeEffect.spawn(engine, {
+        startX: target.x + offsetX,
+        startY: 35,
+        startZ: target.z + offsetZ,
+        endX: target.x,
+        endY: 0, // Target ground
+        endZ: target.z,
+        damage: 0 // Explosion handles all damage
+      });
+
+      // Create ground explosion at impact with spell level radius
+      const explosionRadius = spell.radius || 5;
+      const explosion = new LightningExplosion(
+        engine,
+        target.x,
+        target.z,
+        explosionRadius,
+        spell.damage * stats.damage
+      );
+      engine.addEntity(explosion);
+    }
+  },
+
+  CHAIN_LIGHTNING: {
+    name: 'Chain Lightning',
+    desc: 'Continuous lightning that chains between enemies',
+    category: 'lightning',
+    level: 1, // Default level
+    cooldown: 0.15, // Fast continuous fire rate
+    damage: 12,
+    targeting: 'random', // Random target within zone
+    isInstant: true,
+    isContinuous: true, // Mark as continuous spell
+    chainCount: 3,
+    chainRange: 8,
+    maxRange: 15,
+    execute: (engine, player, target, spell, stats) => {
+      if (!target) return;
+
+      const damage = spell.damage * stats.damage;
+      let currentTarget = target;
+      const hitEnemies = new Set();
+      let prevX = player.x;
+      let prevZ = player.z;
+
+      for (let i = 0; i < spell.chainCount; i++) {
+        if (!currentTarget || hitEnemies.has(currentTarget)) break;
+
+        // Create dark purple lightning bolt with spell level width
+        const lightningWidth = spell.lightningWidth || 1.2;
+        const lightning = new ColoredLightning(
+          engine,
+          prevX,
+          1.0, // Character/enemy center height
+          prevZ,
+          currentTarget.x,
+          1.0, // Enemy center height
+          currentTarget.z,
+          damage,
+          0x2200aa, // Dark purple
+          0x8844ff, // Purple glow
+          lightningWidth
+        );
+        engine.addEntity(lightning);
+
+        // Damage enemy
+        const died = currentTarget.takeDamage(damage);
+        if (died && engine.game) {
+          engine.game.killCount++;
+          engine.sound.playHit();
+          engine.game.dropXP(currentTarget.x, currentTarget.z, currentTarget.isElite);
+        }
+
+        hitEnemies.add(currentTarget);
+
+        // Find next chain target
+        let nextTarget = null;
+        let minDist = spell.chainRange;
+
+        engine.entities.forEach(e => {
+          if (e.health === undefined || !e.active || hitEnemies.has(e)) return;
+          if (e === engine.game?.player) return; // Don't chain to player
+          const dx = e.x - currentTarget.x;
+          const dz = e.z - currentTarget.z;
+          const dist = Math.sqrt(dx * dx + dz * dz);
+          if (dist < minDist) {
+            minDist = dist;
+            nextTarget = e;
+          }
+        });
+
+        prevX = currentTarget.x;
+        prevZ = currentTarget.z;
+        currentTarget = nextTarget;
+      }
+    }
+  },
+
+  // ===== FIRE SPELLS =====
+  FIREBALL: {
+    name: 'Fireball',
+    desc: 'Blazing fire projectiles with trail',
+    category: 'fire',
+    level: 1, // Default level
+    cooldown: 0.25,
+    damage: 16,
+    speed: 20,
+    pierce: 2,
+    projectileCount: 1,
+    spread: 0,
+    targeting: 'nearest',
+    maxRange: 20, // Don't target enemies too far away
+    lifetime: 0.8,
+    createProjectile: (engine, x, y, z, dirX, dirZ, spell, stats, dirY) => {
+      return new FlameProjectile(engine, x, y, z, dirX, dirZ, spell, stats, dirY);
+    }
+  },
+
+  PYRO_EXPLOSION: {
+    name: 'Pyro Explosion',
+    desc: 'Explosive fire area damage',
+    category: 'fire',
+    level: 1, // Default level
+    cooldown: 1.5,
+    damage: 30,
+    targeting: 'nearest',
+    isInstant: true,
+    execute: (engine, player, target, spell, stats) => {
+      if (!target) return;
+
+      // Update effect config with spell level stats
+      pyroExplosionEffect.config.radius = spell.radius || 3.5;
+      pyroExplosionEffect.config.particleCount = spell.particleCount || 20;
+
+      pyroExplosionEffect.spawn(engine, {
+        x: target.x,
+        y: 0, // Ground explosion
+        z: target.z,
+        damage: spell.damage * stats.damage
+      });
+    }
+  },
+
+  RING_OF_FIRE: {
+    name: 'Ring of Fire',
+    desc: 'Protective ring of many small flames that orbit the player',
+    category: 'fire',
+    level: 1, // Default level
+    cooldown: 0, // No cooldown - continuous effect
+    damage: 15, // Total DPS spread across many particles
+    targeting: 'self',
+    isInstant: false,
+    isContinuous: true,
+    isPersistent: true, // Stays active as long as spell is active
+    activeRing: null, // Store reference to active ring
+    execute: (engine, player, target, spell, stats) => {
+      // Only create ring if it doesn't exist
+      if (!spell.activeRing || !spell.activeRing.active) {
+        spell.activeRing = new RingOfFire(engine, player, spell.damage * stats.damage, spell);
+        engine.addEntity(spell.activeRing);
+      }
+    }
+  },
+
+  // ===== ICE SPELLS =====
+  ICE_LANCE: {
+    name: 'Ice Lance',
+    desc: 'Sharp icicle projectiles that pierce enemies',
+    category: 'ice',
+    level: 1, // Default level
+    cooldown: 0.4,
+    baseCooldownMin: 0.3,
+    baseCooldownMax: 0.8,
+    damage: 20,
+    speed: 25,
+    pierce: 3,
+    projectileCount: 1,
+    spread: 0,
+    targeting: 'nearest',
+    maxRange: 20, // Don't target enemies too far away
+    lifetime: 0.8,
+    hasRandomCooldown: true, // Flag to indicate random cooldown
+    createProjectile: (engine, x, y, z, dirX, dirZ, spell, stats, dirY) => {
+      return new IceLance(engine, x, y, z, dirX, dirZ, spell, stats, dirY);
+    }
+  },
+
+  RING_OF_ICE: {
+    name: 'Ring of Ice',
+    desc: 'Protective ring of ice shards that orbit the player and freeze enemies',
+    category: 'ice',
+    level: 1, // Default level
+    cooldown: 0, // No cooldown - continuous effect
+    damage: 10, // Lower damage than Ring of Fire
+    targeting: 'self',
+    isInstant: false,
+    isContinuous: true,
+    isPersistent: true, // Stays active as long as spell is active
+    activeRing: null, // Store reference to active ring
+    execute: (engine, player, target, spell, stats) => {
+      // Only create ring if it doesn't exist
+      if (!spell.activeRing || !spell.activeRing.active) {
+        spell.activeRing = new RingOfIce(engine, player, spell.damage * stats.damage, spell);
+        engine.addEntity(spell.activeRing);
+      }
+    }
+  },
+
+  // ===== MAGIC SPELLS =====
+  MAGIC_BULLET: {
+    name: 'Magic Bullet',
+    desc: 'Fast rainbow bullets that spray in random directions',
+    category: 'magic',
+    level: 1, // Default level
+    cooldown: 0.08, // Very fast fire rate
+    damage: 8,
+    speed: 30, // Very fast
+    pierce: 1,
+    projectileCount: 1,
+    spread: Math.PI * 2, // Full 360 degrees
+    targeting: 'none', // No targeting - random directions
+    lifetime: 0.6,
+    createProjectile: (engine, x, y, z, dirX, dirZ, spell, stats, dirY) => {
+      // Random direction (horizontal only for magic bullets)
+      const randomAngle = Math.random() * Math.PI * 2;
+      const randomDirX = Math.cos(randomAngle);
+      const randomDirZ = Math.sin(randomAngle);
+      return new MagicBullet(engine, x, y, z, randomDirX, randomDirZ, spell, stats, 0); // No Y direction for random bullets
+    }
+  }
+};
+
+/**
+ * Create a spell instance for a player with level scaling applied
+ * @param {string} spellKey - The spell type key (e.g., 'THUNDER_STRIKE')
+ * @param {number} level - The spell level (1-7)
+ * @returns {object} A copy of the spell with level scaling applied
+ */
+export function createSpellInstance(spellKey, level = 1) {
+  const baseSpell = SPELL_TYPES[spellKey];
+  if (!baseSpell) {
+    console.error(`Unknown spell type: ${spellKey}`);
+    return null;
+  }
+
+  // Create a deep copy of the spell
+  const spellInstance = { ...baseSpell };
+
+  // Apply level scaling
+  applySpellLevelScaling(spellInstance, spellKey, level);
+
+  return spellInstance;
+}
+
+/**
+ * Upgrade a spell to the next level
+ * @param {object} spell - The spell instance to upgrade
+ * @param {string} spellKey - The spell type key
+ * @returns {boolean} True if upgrade successful, false if already max level
+ */
+export function upgradeSpell(spell, spellKey) {
+  if (!spell || spell.level >= 7) {
+    return false; // Already max level
+  }
+
+  const newLevel = spell.level + 1;
+  applySpellLevelScaling(spell, spellKey, newLevel);
+
+  return true;
+}
