@@ -1,25 +1,19 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { getAssetPath } from './assetPath.js';
 
 const loader = new GLTFLoader();
 const modelCache = {};
 
-// Get base path from Vite
-const BASE_PATH = import.meta.env.BASE_URL || '/';
-console.log('Model loader using BASE_PATH:', BASE_PATH);
-
 export function loadCharacterModel(characterName) {
   return new Promise((resolve, reject) => {
     // Check if it's a full path or just a character name
-    let modelPath = characterName.includes('/')
+    const relativePath = characterName.includes('/')
       ? characterName
       : `/assets/characters/Models/GLB format/${characterName}.glb`;
 
-    // Add base path for production (remove leading slash if BASE_PATH ends with /)
-    if (BASE_PATH !== '/') {
-      modelPath = modelPath.startsWith('/') ? modelPath.substring(1) : modelPath;
-      modelPath = BASE_PATH + modelPath;
-    }
+    // Get the correct path for the environment
+    const modelPath = getAssetPath(relativePath);
 
     // Check if this is player or skeleton model - these should always load fresh
     const shouldSkipCache =
