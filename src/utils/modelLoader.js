@@ -3,7 +3,6 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 
 const loader = new GLTFLoader();
 const modelCache = {};
-let preloadComplete = false;
 
 export function loadCharacterModel(characterName) {
   return new Promise((resolve, reject) => {
@@ -12,12 +11,20 @@ export function loadCharacterModel(characterName) {
       ? characterName
       : `/assets/characters/Models/GLB format/${characterName}.glb`;
 
-    // All models are now cached (including skeletons after proper cloning)
-    if (modelCache[characterName]) {
-      // Clone cached model with animations - use deep clone for proper bone structure
+    // Check if this is player or skeleton model - these should always load fresh
+    const shouldSkipCache =
+      modelPath.includes('anime_character_cyberstyle') ||
+      modelPath.includes('beautiful_witch') ||
+      modelPath.includes('skeleton') ||
+      modelPath.includes('Skeleton');
+
+    if (shouldSkipCache) {
+      console.log('Loading model fresh (no cache for player/skeleton):', modelPath);
+    } else if (modelCache[characterName]) {
+      // Use cached model for non-player, non-skeleton models
+      console.log('Using cached model:', modelPath);
       const cachedData = modelCache[characterName];
-      const clone = cachedData.scene.clone(true); // true = deep clone
-      // Reset position for fresh use
+      const clone = cachedData.scene.clone(true);
       clone.position.set(0, 0, 0);
       clone.rotation.set(0, 0, 0);
       clone.scale.set(1, 1, 1);
@@ -31,16 +38,19 @@ export function loadCharacterModel(characterName) {
         const model = gltf.scene;
         const animations = gltf.animations;
 
-        // Store all models in cache (with proper cloning for skeletons)
-        modelCache[characterName] = {
-          scene: model.clone(true),
-          animations: animations
-        };
+        // Cache only non-player, non-skeleton models
+        if (!shouldSkipCache) {
+          modelCache[characterName] = {
+            scene: model.clone(true),
+            animations: animations
+          };
+        }
 
         resolve({ scene: model, animations: animations });
       },
       undefined,
       (error) => {
+        console.error('Error loading model:', modelPath, error);
         reject(error);
       }
     );
@@ -48,7 +58,7 @@ export function loadCharacterModel(characterName) {
 }
 
 /**
- * Preload all character models to prevent stuttering during gameplay
+ * Preload all character models (caches non-player, non-skeleton models)
  */
 export async function preloadAllModels(onProgress = null) {
   const modelNames = Object.values(CHARACTER_MODELS);
@@ -56,25 +66,31 @@ export async function preloadAllModels(onProgress = null) {
 
   let loaded = 0;
   const total = uniqueModels.length;
+  let preloadComplete = false;
+
+  console.log('Starting model preload (selective caching)...');
 
   for (const modelName of uniqueModels) {
     try {
+      // This will cache non-player, non-skeleton models automatically
       await loadCharacterModel(modelName);
       loaded++;
       if (onProgress) {
         onProgress(loaded, total, modelName);
       }
     } catch (error) {
-      console.warn(`Failed to preload model ${modelName}:`, error);
+      console.warn(`Failed to load model ${modelName}:`, error);
     }
   }
 
   preloadComplete = true;
-  console.log(`Preloaded ${loaded}/${total} character models`);
+  console.log(`Preloaded ${loaded}/${total} character models (cached non-player/skeleton models)`);
+  return preloadComplete;
 }
 
 export function isPreloadComplete() {
-  return preloadComplete;
+  // Check if we have some models cached (but not player/skeleton)
+  return Object.keys(modelCache).length > 0;
 }
 
 // Character assignments for the game

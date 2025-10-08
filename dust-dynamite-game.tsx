@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 
 // ==================== GAME ENGINE ====================
 
@@ -691,34 +692,107 @@ class Player extends Entity {
   }
 
   createMesh() {
-    const texture = createPlayerSprite();
-    const material = new THREE.SpriteMaterial({ map: texture });
-    const sprite = new THREE.Sprite(material);
-    sprite.scale.set(2, 2, 1);
-    
-    this.mesh = sprite;
-    
-    const flashCanvas = document.createElement('canvas');
-    flashCanvas.width = 32;
-    flashCanvas.height = 32;
-    const ctx = flashCanvas.getContext('2d');
-    const gradient = ctx.createRadialGradient(16, 16, 4, 16, 16, 16);
-    gradient.addColorStop(0, 'rgba(255, 200, 0, 1)');
-    gradient.addColorStop(1, 'rgba(255, 100, 0, 0)');
-    ctx.fillStyle = gradient;
-    ctx.fillRect(0, 0, 32, 32);
-    
-    const flashTexture = new THREE.CanvasTexture(flashCanvas);
-    const flashMat = new THREE.SpriteMaterial({ 
-      map: flashTexture,
-      transparent: true,
-      opacity: 0
-    });
-    const flash = new THREE.Sprite(flashMat);
-    flash.scale.set(1.5, 1.5, 1);
-    flash.position.z = 0.5;
-    this.mesh.add(flash);
-    this.muzzleFlash = flash;
+    // Create a container group for the player
+    this.mesh = new THREE.Group();
+
+    // Load 3D model
+    const loader = new GLTFLoader();
+    const modelPath = '/assets/characters/beautiful_witch.glb';
+    console.log('Loading player model from:', modelPath);
+
+    loader.load(
+      modelPath,
+      (gltf) => {
+        console.log('Player model loaded successfully:', gltf);
+
+        // Add the loaded model to our group
+        const model = gltf.scene;
+        model.scale.set(0.8, 0.8, 0.8); // Adjusted scale for witch model
+
+        // Center the model
+        const box = new THREE.Box3().setFromObject(model);
+        const center = box.getCenter(new THREE.Vector3());
+        const size = box.getSize(new THREE.Vector3());
+
+        console.log('Model size:', size);
+        console.log('Model center:', center);
+
+        // Position model relative to the group
+        model.position.set(-center.x, -box.min.y, -center.z);
+
+        // Add animations if available
+        if (gltf.animations && gltf.animations.length > 0) {
+          console.log('Found animations:', gltf.animations.length);
+          this.mixer = new THREE.AnimationMixer(model);
+          const action = this.mixer.clipAction(gltf.animations[0]);
+          action.play();
+        }
+
+        this.mesh.add(model);
+        this.model = model;
+
+        // Add muzzle flash
+        const flashCanvas = document.createElement('canvas');
+        flashCanvas.width = 32;
+        flashCanvas.height = 32;
+        const ctx = flashCanvas.getContext('2d');
+        const gradient = ctx.createRadialGradient(16, 16, 4, 16, 16, 16);
+        gradient.addColorStop(0, 'rgba(255, 200, 0, 1)');
+        gradient.addColorStop(1, 'rgba(255, 100, 0, 0)');
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, 32, 32);
+
+        const flashTexture = new THREE.CanvasTexture(flashCanvas);
+        const flashMat = new THREE.SpriteMaterial({
+          map: flashTexture,
+          transparent: true,
+          opacity: 0
+        });
+        const flash = new THREE.Sprite(flashMat);
+        flash.scale.set(1.5, 1.5, 1);
+        flash.position.set(0, size.y * 0.5, 0.5);
+        this.mesh.add(flash);
+        this.muzzleFlash = flash;
+      },
+      (progress) => {
+        console.log('Loading player model...', (progress.loaded / progress.total * 100) + '%');
+      },
+      (error) => {
+        console.error('Error loading player model:', error);
+        console.log('Falling back to sprite-based player');
+
+        // Fallback to sprite if model fails to load
+        const texture = createPlayerSprite();
+        const spriteMaterial = new THREE.SpriteMaterial({ map: texture });
+        const sprite = new THREE.Sprite(spriteMaterial);
+        sprite.scale.set(2, 2, 1);
+
+        this.mesh.add(sprite);
+
+        // Add muzzle flash to sprite fallback
+        const flashCanvas = document.createElement('canvas');
+        flashCanvas.width = 32;
+        flashCanvas.height = 32;
+        const ctx = flashCanvas.getContext('2d');
+        const gradient = ctx.createRadialGradient(16, 16, 4, 16, 16, 16);
+        gradient.addColorStop(0, 'rgba(255, 200, 0, 1)');
+        gradient.addColorStop(1, 'rgba(255, 100, 0, 0)');
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, 32, 32);
+
+        const flashTexture = new THREE.CanvasTexture(flashCanvas);
+        const flashMat = new THREE.SpriteMaterial({
+          map: flashTexture,
+          transparent: true,
+          opacity: 0
+        });
+        const flash = new THREE.Sprite(flashMat);
+        flash.scale.set(1.5, 1.5, 1);
+        flash.position.z = 0.5;
+        this.mesh.add(flash);
+        this.muzzleFlash = flash;
+      }
+    );
   }
 
   showMuzzleFlash() {
@@ -781,6 +855,11 @@ class Player extends Entity {
     this.mesh.position.x = this.x;
     this.mesh.position.y = 1;
     this.mesh.position.z = this.z;
+
+    // Update animations if mixer exists
+    if (this.mixer) {
+      this.mixer.update(dt);
+    }
   }
 
   addXP(amount) {
