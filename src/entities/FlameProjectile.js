@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { Projectile } from './Projectile.js';
+import { resourceCache } from '../systems/ResourceCache.js';
 
 export class FlameProjectile extends Projectile {
   constructor(engine, x, y, z, dirX, dirZ, weapon, stats, dirY = 0) {
@@ -13,27 +14,8 @@ export class FlameProjectile extends Projectile {
   }
 
   createMesh() {
-    // Create main fire sprite
-    const canvas = document.createElement('canvas');
-    canvas.width = 32;
-    canvas.height = 32;
-    const ctx = canvas.getContext('2d');
-
-    const gradient = ctx.createRadialGradient(16, 16, 2, 16, 16, 16);
-    gradient.addColorStop(0, 'rgba(255, 255, 200, 1)');
-    gradient.addColorStop(0.3, 'rgba(255, 150, 0, 0.9)');
-    gradient.addColorStop(0.7, 'rgba(255, 50, 0, 0.6)');
-    gradient.addColorStop(1, 'rgba(150, 0, 0, 0)');
-    ctx.fillStyle = gradient;
-    ctx.fillRect(0, 0, 32, 32);
-
-    const texture = new THREE.CanvasTexture(canvas);
-    const material = new THREE.SpriteMaterial({
-      map: texture,
-      transparent: true,
-      blending: THREE.AdditiveBlending,
-      depthWrite: false
-    });
+    // Use cached fireball material
+    const material = resourceCache.getFireballMaterial();
     const sprite = new THREE.Sprite(material);
     // Use spell level size scaling
     const scale = 1.2 * (this.weapon?.sizeScale || 1.0);
@@ -44,40 +26,19 @@ export class FlameProjectile extends Projectile {
   }
 
   createFlameTrail() {
-    // Create flame trail particle
-    const canvas = document.createElement('canvas');
-    canvas.width = 24;
-    canvas.height = 24;
-    const ctx = canvas.getContext('2d');
-
-    const gradient = ctx.createRadialGradient(12, 12, 1, 12, 12, 12);
+    // Use cached flame trail materials
     const colorChoice = Math.random();
+    let colorType;
     if (colorChoice < 0.3) {
-      // Yellow flame
-      gradient.addColorStop(0, 'rgba(255, 255, 150, 0.9)');
-      gradient.addColorStop(0.5, 'rgba(255, 180, 0, 0.6)');
-      gradient.addColorStop(1, 'rgba(255, 100, 0, 0)');
+      colorType = 'yellow';
     } else if (colorChoice < 0.7) {
-      // Orange flame
-      gradient.addColorStop(0, 'rgba(255, 200, 100, 0.9)');
-      gradient.addColorStop(0.5, 'rgba(255, 100, 0, 0.6)');
-      gradient.addColorStop(1, 'rgba(200, 50, 0, 0)');
+      colorType = 'orange';
     } else {
-      // Red flame
-      gradient.addColorStop(0, 'rgba(255, 150, 100, 0.9)');
-      gradient.addColorStop(0.5, 'rgba(255, 50, 0, 0.6)');
-      gradient.addColorStop(1, 'rgba(150, 0, 0, 0)');
+      colorType = 'red';
     }
-    ctx.fillStyle = gradient;
-    ctx.fillRect(0, 0, 24, 24);
 
-    const texture = new THREE.CanvasTexture(canvas);
-    const material = new THREE.SpriteMaterial({
-      map: texture,
-      transparent: true,
-      blending: THREE.AdditiveBlending,
-      depthWrite: false
-    });
+    // Get cached material (cloned so we can modify opacity independently)
+    const material = resourceCache.getFlameTrailMaterial(colorType);
     const sprite = new THREE.Sprite(material);
     sprite.scale.set(0.8, 0.8, 1);
     sprite.renderOrder = 998;

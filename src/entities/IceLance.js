@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { Projectile } from './Projectile.js';
+import { resourceCache } from '../systems/ResourceCache.js';
 
 export class IceLance extends Projectile {
   constructor(engine, x, y, z, dirX, dirZ, weapon, stats, dirY = 0) {
@@ -66,40 +67,19 @@ export class IceLance extends Projectile {
   }
 
   createIceShard() {
-    // Create ice shard particle
-    const canvas = document.createElement('canvas');
-    canvas.width = 16;
-    canvas.height = 16;
-    const ctx = canvas.getContext('2d');
-
-    const gradient = ctx.createRadialGradient(8, 8, 1, 8, 8, 8);
+    // Use cached ice shard materials
     const colorChoice = Math.random();
+    let colorType;
     if (colorChoice < 0.3) {
-      // White ice
-      gradient.addColorStop(0, 'rgba(255, 255, 255, 0.9)');
-      gradient.addColorStop(0.5, 'rgba(230, 245, 255, 0.6)');
-      gradient.addColorStop(1, 'rgba(200, 230, 255, 0)');
+      colorType = 'white';
     } else if (colorChoice < 0.7) {
-      // Light blue ice
-      gradient.addColorStop(0, 'rgba(230, 245, 255, 0.9)');
-      gradient.addColorStop(0.5, 'rgba(180, 220, 255, 0.6)');
-      gradient.addColorStop(1, 'rgba(150, 200, 255, 0)');
+      colorType = 'lightblue';
     } else {
-      // Cyan ice
-      gradient.addColorStop(0, 'rgba(200, 240, 255, 0.9)');
-      gradient.addColorStop(0.5, 'rgba(150, 210, 255, 0.6)');
-      gradient.addColorStop(1, 'rgba(100, 180, 255, 0)');
+      colorType = 'cyan';
     }
-    ctx.fillStyle = gradient;
-    ctx.fillRect(0, 0, 16, 16);
 
-    const texture = new THREE.CanvasTexture(canvas);
-    const material = new THREE.SpriteMaterial({
-      map: texture,
-      transparent: true,
-      blending: THREE.AdditiveBlending,
-      depthWrite: false
-    });
+    // Get cached material (cloned so we can modify opacity independently)
+    const material = resourceCache.getIceShardMaterial(colorType);
     const sprite = new THREE.Sprite(material);
     sprite.scale.set(0.3, 0.3, 1);
     sprite.renderOrder = 998;

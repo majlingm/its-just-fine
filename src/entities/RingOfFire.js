@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { Entity } from './Entity.js';
+import { resourceCache } from '../systems/ResourceCache.js';
 
 export class RingOfFire extends Entity {
   constructor(engine, player, damage, spell = null) {
@@ -82,53 +83,21 @@ export class RingOfFire extends Entity {
   }
 
   createFireParticle(index) {
-    // Create animated fire particle with varying sizes
-    const particleSize = 32 + Math.random() * 20; // Random size between 32-52 (larger)
-    const canvas = document.createElement('canvas');
-    canvas.width = particleSize;
-    canvas.height = particleSize;
-    const ctx = canvas.getContext('2d');
-
-    const center = particleSize / 2;
-    const gradient = ctx.createRadialGradient(center, center, 2, center, center, center);
+    // Use cached materials for fire particles
     const colorChoice = Math.random();
-
+    let colorType;
     if (colorChoice < 0.25) {
-      // Bright white-yellow core (hottest)
-      gradient.addColorStop(0, 'rgba(255, 255, 255, 1)');
-      gradient.addColorStop(0.2, 'rgba(255, 255, 200, 0.95)');
-      gradient.addColorStop(0.5, 'rgba(255, 200, 100, 0.8)');
-      gradient.addColorStop(1, 'rgba(255, 150, 0, 0)');
+      colorType = 'white';
     } else if (colorChoice < 0.5) {
-      // Bright yellow
-      gradient.addColorStop(0, 'rgba(255, 255, 180, 1)');
-      gradient.addColorStop(0.3, 'rgba(255, 220, 100, 0.9)');
-      gradient.addColorStop(0.6, 'rgba(255, 150, 50, 0.7)');
-      gradient.addColorStop(1, 'rgba(255, 100, 0, 0)');
+      colorType = 'yellow';
     } else if (colorChoice < 0.8) {
-      // Orange flames
-      gradient.addColorStop(0, 'rgba(255, 200, 100, 1)');
-      gradient.addColorStop(0.3, 'rgba(255, 150, 50, 0.9)');
-      gradient.addColorStop(0.6, 'rgba(255, 80, 0, 0.7)');
-      gradient.addColorStop(1, 'rgba(200, 40, 0, 0)');
+      colorType = 'orange';
     } else {
-      // Red/dark flames (cooler)
-      gradient.addColorStop(0, 'rgba(255, 150, 80, 1)');
-      gradient.addColorStop(0.3, 'rgba(255, 100, 40, 0.9)');
-      gradient.addColorStop(0.6, 'rgba(200, 50, 0, 0.7)');
-      gradient.addColorStop(1, 'rgba(150, 0, 0, 0)');
+      colorType = 'red';
     }
 
-    ctx.fillStyle = gradient;
-    ctx.fillRect(0, 0, particleSize, particleSize);
-
-    const texture = new THREE.CanvasTexture(canvas);
-    const material = new THREE.SpriteMaterial({
-      map: texture,
-      transparent: true,
-      blending: THREE.AdditiveBlending,
-      depthWrite: false
-    });
+    // Get cached material (cloned so each particle can have independent properties)
+    const material = resourceCache.getRingOfFireMaterial(colorType);
     const sprite = new THREE.Sprite(material);
 
     // Larger, varied scale for more visible fire
@@ -242,11 +211,20 @@ export class RingOfFire extends Entity {
         if (destroyed) {
           destroyed.active = true;
           destroyed.sprite.visible = true;
-          // Recreate texture for variety
-          const index = this.fireParticles.indexOf(destroyed);
-          const newParticle = this.createFireParticle(index);
-          destroyed.sprite.material.map = newParticle.sprite.material.map;
-          this.engine.scene.remove(newParticle.sprite);
+          // Just change the material color variant for variety, don't create new texture
+          const colorChoice = Math.random();
+          let colorType;
+          if (colorChoice < 0.25) {
+            colorType = 'white';
+          } else if (colorChoice < 0.5) {
+            colorType = 'yellow';
+          } else if (colorChoice < 0.8) {
+            colorType = 'orange';
+          } else {
+            colorType = 'red';
+          }
+          // Update material with cached version
+          destroyed.sprite.material = resourceCache.getRingOfFireMaterial(colorType);
         }
       }
     }

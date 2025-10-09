@@ -91,6 +91,41 @@ class ResourceCache {
   }
 
   /**
+   * Get fireball main sprite material with cached texture
+   * @returns {THREE.SpriteMaterial} Sprite material for fireball
+   */
+  getFireballMaterial() {
+    const key = 'fireball_main';
+
+    // Get cached texture or create new one
+    const texture = this.getTexture(key, () => {
+      const canvas = this.getCanvas(key, (ctx, width, height) => {
+        const centerX = width / 2;
+        const centerY = height / 2;
+        const gradient = ctx.createRadialGradient(centerX, centerY, 2, centerX, centerY, centerX);
+
+        gradient.addColorStop(0, 'rgba(255, 255, 200, 1)');
+        gradient.addColorStop(0.3, 'rgba(255, 150, 0, 0.9)');
+        gradient.addColorStop(0.7, 'rgba(255, 50, 0, 0.6)');
+        gradient.addColorStop(1, 'rgba(150, 0, 0, 0)');
+
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, width, height);
+      }, 32, 32);
+
+      return new THREE.CanvasTexture(canvas);
+    });
+
+    // Return a new material instance (not cloned) for independent scaling
+    return new THREE.SpriteMaterial({
+      map: texture,
+      transparent: true,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false
+    });
+  }
+
+  /**
    * Create a projectile sprite material with cached texture
    * @param {string} color - Color of the projectile
    * @returns {THREE.SpriteMaterial} Sprite material for projectile
@@ -134,6 +169,246 @@ class ResourceCache {
       map: texture,
       transparent: true,
       blending: THREE.AdditiveBlending
+    });
+  }
+
+  /**
+   * Get flame trail material with cached texture
+   * @param {string} colorType - Color type (yellow, orange, red)
+   * @returns {THREE.SpriteMaterial} Sprite material for flame trail
+   */
+  getFlameTrailMaterial(colorType = 'orange') {
+    const key = `flame_trail_${colorType}`;
+
+    // Get cached texture or create new one
+    const texture = this.getTexture(key, () => {
+      const canvas = this.getCanvas(key, (ctx, width, height) => {
+        const centerX = width / 2;
+        const centerY = height / 2;
+        const gradient = ctx.createRadialGradient(centerX, centerY, 1, centerX, centerY, centerX);
+
+        if (colorType === 'yellow') {
+          gradient.addColorStop(0, 'rgba(255, 255, 150, 0.9)');
+          gradient.addColorStop(0.5, 'rgba(255, 180, 0, 0.6)');
+          gradient.addColorStop(1, 'rgba(255, 100, 0, 0)');
+        } else if (colorType === 'orange') {
+          gradient.addColorStop(0, 'rgba(255, 200, 100, 0.9)');
+          gradient.addColorStop(0.5, 'rgba(255, 100, 0, 0.6)');
+          gradient.addColorStop(1, 'rgba(200, 50, 0, 0)');
+        } else { // red
+          gradient.addColorStop(0, 'rgba(255, 150, 100, 0.9)');
+          gradient.addColorStop(0.5, 'rgba(255, 50, 0, 0.6)');
+          gradient.addColorStop(1, 'rgba(150, 0, 0, 0)');
+        }
+
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, width, height);
+      }, 24, 24);
+
+      return new THREE.CanvasTexture(canvas);
+    });
+
+    // Return a cloned material so each sprite can have its own opacity
+    return new THREE.SpriteMaterial({
+      map: texture,
+      transparent: true,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false
+    });
+  }
+
+  /**
+   * Get ice shard material with cached texture
+   * @param {string} colorType - Color type (white, lightblue, cyan)
+   * @returns {THREE.SpriteMaterial} Sprite material for ice shard
+   */
+  getIceShardMaterial(colorType = 'lightblue') {
+    const key = `ice_shard_${colorType}`;
+
+    // Get cached texture or create new one
+    const texture = this.getTexture(key, () => {
+      const canvas = this.getCanvas(key, (ctx, width, height) => {
+        const centerX = width / 2;
+        const centerY = height / 2;
+        const gradient = ctx.createRadialGradient(centerX, centerY, 1, centerX, centerY, centerX / 2);
+
+        if (colorType === 'white') {
+          gradient.addColorStop(0, 'rgba(255, 255, 255, 0.9)');
+          gradient.addColorStop(0.5, 'rgba(230, 245, 255, 0.6)');
+          gradient.addColorStop(1, 'rgba(200, 230, 255, 0)');
+        } else if (colorType === 'lightblue') {
+          gradient.addColorStop(0, 'rgba(230, 245, 255, 0.9)');
+          gradient.addColorStop(0.5, 'rgba(180, 220, 255, 0.6)');
+          gradient.addColorStop(1, 'rgba(150, 200, 255, 0)');
+        } else { // cyan
+          gradient.addColorStop(0, 'rgba(200, 240, 255, 0.9)');
+          gradient.addColorStop(0.5, 'rgba(150, 210, 255, 0.6)');
+          gradient.addColorStop(1, 'rgba(100, 180, 255, 0)');
+        }
+
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, width, height);
+      }, 16, 16);
+
+      return new THREE.CanvasTexture(canvas);
+    });
+
+    // Return a cloned material so each sprite can have its own opacity
+    return new THREE.SpriteMaterial({
+      map: texture,
+      transparent: true,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false
+    });
+  }
+
+  /**
+   * Get ring of fire particle material with cached texture
+   * @param {string} colorType - Color type (white, yellow, orange, red)
+   * @returns {THREE.SpriteMaterial} Sprite material for ring of fire particle
+   */
+  getRingOfFireMaterial(colorType = 'orange') {
+    const key = `ring_fire_${colorType}`;
+
+    // Get cached texture or create new one
+    const texture = this.getTexture(key, () => {
+      const size = Math.random() < 0.5 ? 32 : 48; // Vary size for visual interest
+      const canvas = this.getCanvas(key, (ctx, width, height) => {
+        const center = width / 2;
+        const gradient = ctx.createRadialGradient(center, center, 2, center, center, center);
+
+        if (colorType === 'white') {
+          // Bright white-yellow core (hottest)
+          gradient.addColorStop(0, 'rgba(255, 255, 255, 1)');
+          gradient.addColorStop(0.2, 'rgba(255, 255, 200, 0.95)');
+          gradient.addColorStop(0.5, 'rgba(255, 200, 100, 0.8)');
+          gradient.addColorStop(1, 'rgba(255, 150, 0, 0)');
+        } else if (colorType === 'yellow') {
+          // Bright yellow
+          gradient.addColorStop(0, 'rgba(255, 255, 180, 1)');
+          gradient.addColorStop(0.3, 'rgba(255, 220, 100, 0.9)');
+          gradient.addColorStop(0.6, 'rgba(255, 150, 50, 0.7)');
+          gradient.addColorStop(1, 'rgba(255, 100, 0, 0)');
+        } else if (colorType === 'orange') {
+          // Orange flames
+          gradient.addColorStop(0, 'rgba(255, 200, 100, 1)');
+          gradient.addColorStop(0.3, 'rgba(255, 150, 50, 0.9)');
+          gradient.addColorStop(0.6, 'rgba(255, 80, 0, 0.7)');
+          gradient.addColorStop(1, 'rgba(200, 40, 0, 0)');
+        } else { // red
+          // Red/dark flames (cooler)
+          gradient.addColorStop(0, 'rgba(255, 150, 80, 1)');
+          gradient.addColorStop(0.3, 'rgba(255, 100, 40, 0.9)');
+          gradient.addColorStop(0.6, 'rgba(200, 50, 0, 0.7)');
+          gradient.addColorStop(1, 'rgba(150, 0, 0, 0)');
+        }
+
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, width, height);
+      }, size, size);
+
+      return new THREE.CanvasTexture(canvas);
+    });
+
+    // Return a cloned material so each sprite can have its own properties
+    return new THREE.SpriteMaterial({
+      map: texture,
+      transparent: true,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false
+    });
+  }
+
+  /**
+   * Get lightning explosion particle material with cached texture
+   * @param {string} colorType - Color type (white, blue, purple)
+   * @returns {THREE.SpriteMaterial} Sprite material for lightning explosion
+   */
+  getLightningParticleMaterial(colorType = 'blue') {
+    const key = `lightning_particle_${colorType}`;
+
+    // Get cached texture or create new one
+    const texture = this.getTexture(key, () => {
+      const canvas = this.getCanvas(key, (ctx, width, height) => {
+        const center = width / 2;
+        const gradient = ctx.createRadialGradient(center, center, 2, center, center, center);
+
+        if (colorType === 'white') {
+          // White core
+          gradient.addColorStop(0, 'rgba(255, 255, 255, 1)');
+          gradient.addColorStop(0.2, 'rgba(200, 220, 255, 0.9)');
+          gradient.addColorStop(0.6, 'rgba(150, 180, 255, 0.5)');
+          gradient.addColorStop(1, 'rgba(100, 150, 255, 0)');
+        } else if (colorType === 'blue') {
+          // Electric blue
+          gradient.addColorStop(0, 'rgba(200, 220, 255, 1)');
+          gradient.addColorStop(0.3, 'rgba(100, 150, 255, 0.8)');
+          gradient.addColorStop(0.7, 'rgba(50, 100, 200, 0.4)');
+          gradient.addColorStop(1, 'rgba(20, 50, 150, 0)');
+        } else { // purple
+          // Purple electric
+          gradient.addColorStop(0, 'rgba(220, 180, 255, 1)');
+          gradient.addColorStop(0.3, 'rgba(150, 100, 255, 0.8)');
+          gradient.addColorStop(0.7, 'rgba(100, 50, 200, 0.4)');
+          gradient.addColorStop(1, 'rgba(50, 20, 150, 0)');
+        }
+
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, width, height);
+      }, 32, 32);
+
+      return new THREE.CanvasTexture(canvas);
+    });
+
+    // Return a cloned material
+    return new THREE.SpriteMaterial({
+      map: texture,
+      transparent: true,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false
+    });
+  }
+
+  /**
+   * Get fire explosion particle material with cached texture
+   * @param {number} variant - Variant number (0-4) for visual variety
+   * @returns {THREE.SpriteMaterial} Sprite material for fire explosion
+   */
+  getFireExplosionMaterial(variant = 0) {
+    const key = `fire_explosion_${variant}`;
+
+    // Get cached texture or create new one
+    const texture = this.getTexture(key, () => {
+      const canvas = this.getCanvas(key, (ctx, width, height) => {
+        const center = width / 2;
+        const gradient = ctx.createRadialGradient(center, center, 2, center, center, center);
+
+        // Different color schemes for variety
+        const colors = [
+          ['#ffff00', '#ffaa00'],
+          ['#ffaa00', '#ff6600'],
+          ['#ff6600', '#ff0000'],
+          ['#ff0000', '#aa0000'],
+          ['#ffcc00', '#ff9900']
+        ];
+
+        const colorPair = colors[variant % colors.length];
+        gradient.addColorStop(0, colorPair[0]);
+        gradient.addColorStop(1, colorPair[1]);
+
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, width, height);
+      }, 32, 32);
+
+      return new THREE.CanvasTexture(canvas);
+    });
+
+    // Return a cloned material
+    return new THREE.SpriteMaterial({
+      map: texture,
+      transparent: true,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false
     });
   }
 

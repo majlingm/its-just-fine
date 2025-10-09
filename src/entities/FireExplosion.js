@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { Entity } from './Entity.js';
+import { resourceCache } from '../systems/ResourceCache.js';
 
 export class FireExplosion extends Entity {
   constructor(engine, x, z, radius, damage) {
@@ -21,40 +22,12 @@ export class FireExplosion extends Entity {
     const numParticles = 30;
 
     for (let i = 0; i < numParticles; i++) {
-      const canvas = document.createElement('canvas');
-      canvas.width = 32;
-      canvas.height = 32;
-      const ctx = canvas.getContext('2d');
+      // Use cached materials for fire explosion particles
+      // Vary the color variants for visual diversity
+      const variant = Math.floor(Math.random() * 5); // 5 color variants available
 
-      const gradient = ctx.createRadialGradient(16, 16, 2, 16, 16, 16);
-      const colorChoice = Math.random();
-
-      if (colorChoice < 0.3) {
-        // Bright yellow core
-        gradient.addColorStop(0, 'rgba(255, 255, 200, 1)');
-        gradient.addColorStop(0.4, 'rgba(255, 200, 0, 0.8)');
-        gradient.addColorStop(1, 'rgba(255, 150, 0, 0)');
-      } else if (colorChoice < 0.7) {
-        // Orange flames
-        gradient.addColorStop(0, 'rgba(255, 180, 100, 1)');
-        gradient.addColorStop(0.4, 'rgba(255, 100, 0, 0.7)');
-        gradient.addColorStop(1, 'rgba(200, 50, 0, 0)');
-      } else {
-        // Red/dark flames
-        gradient.addColorStop(0, 'rgba(255, 100, 50, 1)');
-        gradient.addColorStop(0.4, 'rgba(200, 50, 0, 0.6)');
-        gradient.addColorStop(1, 'rgba(100, 0, 0, 0)');
-      }
-
-      ctx.fillStyle = gradient;
-      ctx.fillRect(0, 0, 32, 32);
-
-      const texture = new THREE.CanvasTexture(canvas);
-      const material = new THREE.SpriteMaterial({
-        map: texture,
-        transparent: true,
-        blending: THREE.AdditiveBlending
-      });
+      // Get cached material (cloned for independent properties)
+      const material = resourceCache.getFireExplosionMaterial(variant);
       const sprite = new THREE.Sprite(material);
 
       const angle = (i / numParticles) * Math.PI * 2;

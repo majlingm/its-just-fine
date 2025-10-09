@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { Entity } from './Entity.js';
+import { resourceCache } from '../systems/ResourceCache.js';
 
 export class LightningExplosion extends Entity {
   constructor(engine, x, z, radius, damage) {
@@ -21,40 +22,19 @@ export class LightningExplosion extends Entity {
     const numParticles = 30;
 
     for (let i = 0; i < numParticles; i++) {
-      const canvas = document.createElement('canvas');
-      canvas.width = 32;
-      canvas.height = 32;
-      const ctx = canvas.getContext('2d');
-
-      const gradient = ctx.createRadialGradient(16, 16, 2, 16, 16, 16);
+      // Use cached materials for lightning particles
       const colorChoice = Math.random();
-
+      let colorType;
       if (colorChoice < 0.3) {
-        // Bright white/cyan core
-        gradient.addColorStop(0, 'rgba(255, 255, 255, 1)');
-        gradient.addColorStop(0.4, 'rgba(150, 230, 255, 0.8)');
-        gradient.addColorStop(1, 'rgba(100, 200, 255, 0)');
+        colorType = 'white';
       } else if (colorChoice < 0.7) {
-        // Light blue electric
-        gradient.addColorStop(0, 'rgba(200, 240, 255, 1)');
-        gradient.addColorStop(0.4, 'rgba(100, 180, 255, 0.7)');
-        gradient.addColorStop(1, 'rgba(80, 150, 230, 0)');
+        colorType = 'blue';
       } else {
-        // Deep blue electric
-        gradient.addColorStop(0, 'rgba(150, 200, 255, 1)');
-        gradient.addColorStop(0.4, 'rgba(80, 150, 255, 0.6)');
-        gradient.addColorStop(1, 'rgba(50, 100, 200, 0)');
+        colorType = 'purple';
       }
 
-      ctx.fillStyle = gradient;
-      ctx.fillRect(0, 0, 32, 32);
-
-      const texture = new THREE.CanvasTexture(canvas);
-      const material = new THREE.SpriteMaterial({
-        map: texture,
-        transparent: true,
-        blending: THREE.AdditiveBlending
-      });
+      // Get cached material (cloned for independent properties)
+      const material = resourceCache.getLightningParticleMaterial(colorType);
       const sprite = new THREE.Sprite(material);
 
       const angle = (i / numParticles) * Math.PI * 2;
