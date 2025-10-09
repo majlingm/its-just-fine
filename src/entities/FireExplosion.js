@@ -26,8 +26,9 @@ export class FireExplosion extends Entity {
       // Vary the color variants for visual diversity
       const variant = Math.floor(Math.random() * 5); // 5 color variants available
 
-      // Get cached material (cloned for independent properties)
-      const material = resourceCache.getFireExplosionMaterial(variant);
+      // Get cached material and clone it for independent properties
+      const baseMaterial = resourceCache.getFireExplosionMaterial(variant);
+      const material = baseMaterial.clone();
       const sprite = new THREE.Sprite(material);
 
       const angle = (i / numParticles) * Math.PI * 2;

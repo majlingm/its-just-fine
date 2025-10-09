@@ -72,10 +72,19 @@ const DustAndDynamite = () => {
   const [loading, setLoading] = useState(false);
   const [loadingProgress, setLoadingProgress] = useState({ loaded: 0, total: 0, current: '' });
 
-  const isMobile =
-    /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) ||
-    window.innerWidth < 768;
-  const uiScale = isMobile ? 0.7 : 1;
+  const userAgent = navigator.userAgent;
+  const width = window.innerWidth;
+  const height = window.innerHeight;
+
+  // Detect device type (same logic as game camera)
+  const isIPhone = /iPhone/i.test(userAgent);
+  const isIPad = /iPad/i.test(userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  const isAndroid = /Android/i.test(userAgent);
+  const isTablet = isIPad || (isAndroid && width >= 768 && width <= 1024);
+  const isMobile = (isIPhone || (isAndroid && width < 768)) && !isTablet;
+  const isLandscape = width > height;
+
+  const uiScale = isMobile ? 0.7 : isTablet ? 0.85 : 1;
 
   // Gamepad navigation for upgrades
   useEffect(() => {
@@ -823,7 +832,7 @@ const DustAndDynamite = () => {
           <div
             style={{
               position: "absolute",
-              bottom: 40,
+              bottom: isMobile ? 100 : 40,
               left: "50%",
               transform: "translateX(-50%)",
               pointerEvents: "none",
@@ -837,7 +846,7 @@ const DustAndDynamite = () => {
             </div>
             <div
               style={{
-                width: "33vw",
+                width: isMobile ? "50vw" : "33vw",
                 height: 4,
                 background: "rgba(50, 50, 50, 0.5)",
                 position: "relative",
@@ -935,8 +944,13 @@ const DustAndDynamite = () => {
             <div
               style={{
                 position: "absolute",
-                bottom: isMobile ? 20 : 30,
-                right: isMobile ? 20 : 30,
+                bottom: isMobile ? 160 : isTablet ? 40 : 30,
+                // Move to left side on iPad or landscape mobile to avoid steering controls
+                ...(isTablet || (isMobile && isLandscape) ? {
+                  left: isMobile ? 20 : isTablet ? 30 : 30,
+                } : {
+                  right: isMobile ? 20 : 30,
+                }),
                 pointerEvents: "auto",
               }}
             >
@@ -1032,17 +1046,26 @@ const DustAndDynamite = () => {
               <div style={{ position: "absolute", bottom: 40, left: 40, width: 60, height: 60, border: "1px solid rgba(255, 255, 255, 0.2)", borderRight: "none", borderTop: "none" }} />
               <div style={{ position: "absolute", bottom: 40, right: 40, width: 60, height: 60, border: "1px solid rgba(255, 255, 255, 0.2)", borderLeft: "none", borderTop: "none" }} />
 
-              <div style={{ fontSize: 12, fontWeight: 200, letterSpacing: "0.3em", textTransform: "uppercase", opacity: 0.6, marginBottom: 60 }}>
+              <div style={{ fontSize: 12, fontWeight: 200, letterSpacing: "0.3em", textTransform: "uppercase", opacity: 0.6, marginBottom: isMobile ? 30 : 60 }}>
                 Level {uiState.level}
               </div>
 
-              <div style={{ display: "flex", gap: 60, alignItems: "stretch" }}>
+              <div style={{
+                display: "flex",
+                gap: isMobile ? 20 : 60,
+                alignItems: "stretch",
+                flexDirection: isMobile ? "column" : "row",
+                maxHeight: isMobile ? "60vh" : "auto",
+                overflowY: isMobile ? "auto" : "visible",
+                padding: isMobile ? "0 20px" : 0,
+              }}>
                 {uiState.upgradeChoices.map((upgrade, i) => (
                   <button
                     key={i}
                     onClick={() => handleUpgradeSelect(upgrade)}
                     style={{
-                      width: 280,
+                      width: isMobile ? "100%" : 280,
+                      minHeight: isMobile ? "auto" : "auto",
                       padding: 0,
                       background: "transparent",
                       border: selectedUpgradeIndex === i ? "1px solid rgba(255, 255, 255, 0.6)" : "1px solid rgba(255, 255, 255, 0.2)",
@@ -1054,47 +1077,70 @@ const DustAndDynamite = () => {
                       position: "relative",
                     }}
                     onMouseEnter={(e) => {
-                      e.currentTarget.style.opacity = "1";
-                      e.currentTarget.style.borderColor = "rgba(255, 255, 255, 0.6)";
+                      if (!isMobile) {
+                        e.currentTarget.style.opacity = "1";
+                        e.currentTarget.style.borderColor = "rgba(255, 255, 255, 0.6)";
+                      }
                     }}
                     onMouseLeave={(e) => {
-                      if (selectedUpgradeIndex !== i) {
+                      if (!isMobile && selectedUpgradeIndex !== i) {
                         e.currentTarget.style.opacity = "0.6";
                         e.currentTarget.style.borderColor = "rgba(255, 255, 255, 0.2)";
                       }
                     }}
+                    onTouchStart={(e) => {
+                      if (isMobile) {
+                        // Update selected index on touch
+                        setSelectedUpgradeIndex(i);
+                      }
+                    }}
                   >
-                    <div style={{ padding: 40, textAlign: "center" }}>
-                      <div style={{ fontSize: 18, fontWeight: 300, letterSpacing: "0.1em", marginBottom: 20 }}>
+                    <div style={{ padding: isMobile ? "20px" : 40, textAlign: "center" }}>
+                      <div style={{ fontSize: isMobile ? 16 : 18, fontWeight: 300, letterSpacing: "0.1em", marginBottom: isMobile ? 12 : 20 }}>
                         {upgrade.name}
                       </div>
-                      <div style={{ fontSize: 13, fontWeight: 200, opacity: 0.7, lineHeight: 1.6 }}>
+                      <div style={{ fontSize: isMobile ? 12 : 13, fontWeight: 200, opacity: 0.7, lineHeight: 1.6 }}>
                         {upgrade.desc}
                       </div>
                     </div>
                   </button>
                 ))}
               </div>
+
+              {/* Mobile hint */}
+              {isMobile && (
+                <div style={{
+                  marginTop: 20,
+                  fontSize: 11,
+                  opacity: 0.5,
+                  fontWeight: 200,
+                  textAlign: "center"
+                }}>
+                  Tap to select • Scroll for more options
+                </div>
+              )}
             </div>
           )}
 
-          {/* Fullscreen Button */}
+          {/* Fullscreen Button - Icon Only */}
           <button
             onClick={toggleFullscreen}
             style={{
               position: "absolute",
-              bottom: 20,
-              left: 20,
-              padding: "8px 16px",
+              top: (isMobile && isLandscape) ? 80 : 100,
+              right: 20,
+              width: 36,
+              height: 36,
+              padding: 0,
               background: "rgba(0, 0, 0, 0.3)",
               color: "rgba(255, 255, 255, 0.7)",
               border: "1px solid rgba(255, 255, 255, 0.2)",
+              borderRadius: "4px",
               cursor: "pointer",
-              fontFamily: "'Inter', sans-serif",
-              fontSize: 12,
-              fontWeight: 200,
-              letterSpacing: "0.1em",
-              textTransform: "uppercase",
+              fontSize: 18,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
               zIndex: 1000,
               transition: "all 0.3s",
             }}
@@ -1106,8 +1152,9 @@ const DustAndDynamite = () => {
               e.currentTarget.style.borderColor = "rgba(255, 255, 255, 0.2)";
               e.currentTarget.style.color = "rgba(255, 255, 255, 0.7)";
             }}
+            title="Toggle Fullscreen"
           >
-            Fullscreen
+            ⛶
           </button>
 
           {/* Dev Menu - Toggle with ~ key */}

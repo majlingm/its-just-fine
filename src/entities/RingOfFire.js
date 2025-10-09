@@ -96,8 +96,9 @@ export class RingOfFire extends Entity {
       colorType = 'red';
     }
 
-    // Get cached material (cloned so each particle can have independent properties)
-    const material = resourceCache.getRingOfFireMaterial(colorType);
+    // Get cached material and clone it for independent properties
+    const baseMaterial = resourceCache.getRingOfFireMaterial(colorType);
+    const material = baseMaterial.clone();
     const sprite = new THREE.Sprite(material);
 
     // Larger, varied scale for more visible fire
@@ -223,8 +224,9 @@ export class RingOfFire extends Entity {
           } else {
             colorType = 'red';
           }
-          // Update material with cached version
-          destroyed.sprite.material = resourceCache.getRingOfFireMaterial(colorType);
+          // Update material with cached version (cloned)
+          const baseMaterial = resourceCache.getRingOfFireMaterial(colorType);
+          destroyed.sprite.material = baseMaterial.clone();
         }
       }
     }

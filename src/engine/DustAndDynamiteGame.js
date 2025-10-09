@@ -199,9 +199,27 @@ export class DustAndDynamiteGame {
     this.player.handleInput(this.keys, dt);
     this.player.update(dt);
 
-    // Adjust camera distance based on screen size
-    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) || window.innerWidth < 768;
-    const cameraDistance = isMobile ? 18 : 12;
+    // Adjust camera distance based on device type
+    const userAgent = navigator.userAgent;
+    const width = window.innerWidth;
+
+    // Detect device type (same logic as GameEngine)
+    const isIPhone = /iPhone/i.test(userAgent);
+    const isIPad = /iPad/i.test(userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    const isAndroid = /Android/i.test(userAgent);
+    const isTablet = isIPad || (isAndroid && width >= 768 && width <= 1024);
+    const isMobile = (isIPhone || (isAndroid && width < 768)) && !isTablet;
+
+    // Set camera distance based on device
+    let cameraDistance;
+    if (isMobile) {
+      cameraDistance = 18;  // Mobile phones
+    } else if (isTablet) {
+      cameraDistance = 14;  // Tablets - more zoomed in
+    } else {
+      cameraDistance = 15;  // Desktop - more zoomed out
+    }
+
     this.engine.camera.position.x = this.player.x;
     this.engine.camera.position.z = this.player.z + cameraDistance;
     this.engine.camera.lookAt(this.player.x, 0, this.player.z);

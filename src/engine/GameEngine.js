@@ -95,9 +95,25 @@ export class GameEngine {
     const aspect = window.innerWidth / window.innerHeight;
     this.camera = new THREE.PerspectiveCamera(50, aspect, 0.1, 1000);
 
-    // Adjust camera distance for mobile
-    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) || window.innerWidth < 768;
-    this.cameraDistance = isMobile ? 18 : 12;
+    // Adjust camera distance based on device type
+    const userAgent = navigator.userAgent;
+    const width = window.innerWidth;
+
+    // Detect device type
+    const isIPhone = /iPhone/i.test(userAgent);
+    const isIPad = /iPad/i.test(userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    const isAndroid = /Android/i.test(userAgent);
+    const isTablet = isIPad || (isAndroid && width >= 768 && width <= 1024);
+    const isMobile = (isIPhone || (isAndroid && width < 768)) && !isTablet;
+
+    // Set camera distance based on device
+    if (isMobile) {
+      this.cameraDistance = 18;  // Mobile phones - current setting
+    } else if (isTablet) {
+      this.cameraDistance = 14;  // Tablets - more zoomed in than current mobile
+    } else {
+      this.cameraDistance = 15;  // Desktop - more zoomed out than current
+    }
 
     // Position camera for isometric-like view
     this.camera.position.set(0, this.cameraDistance * 1.5, this.cameraDistance * 0.5);

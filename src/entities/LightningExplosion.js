@@ -33,8 +33,9 @@ export class LightningExplosion extends Entity {
         colorType = 'purple';
       }
 
-      // Get cached material (cloned for independent properties)
-      const material = resourceCache.getLightningParticleMaterial(colorType);
+      // Get cached material and clone it for independent properties
+      const baseMaterial = resourceCache.getLightningParticleMaterial(colorType);
+      const material = baseMaterial.clone();
       const sprite = new THREE.Sprite(material);
 
       const angle = (i / numParticles) * Math.PI * 2;
