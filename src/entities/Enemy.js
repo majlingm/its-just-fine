@@ -2,7 +2,6 @@ import * as THREE from 'three';
 import { Entity } from './Entity.js';
 import { createEnemySprite, createEliteGlow } from '../utils/sprites.js';
 import { loadCharacterModel, CHARACTER_MODELS } from '../utils/modelLoader.js';
-import { EnemyProjectile } from './EnemyProjectile.js';
 
 export class Enemy extends Entity {
   constructor(engine, x, z, type = 'bandit') {
@@ -421,18 +420,21 @@ export class Enemy extends Entity {
     const projectileZ = this.z + dirZ * spawnOffsetDist;
     const projectileY = 0.5; // Waist height
 
-    const projectile = new EnemyProjectile(
-      this.engine,
-      projectileX,
-      projectileY,
-      projectileZ,
-      finalDirX,
-      finalDirZ,
-      this.projectileDamage,
-      this.projectileSpeed
-    );
-
-    this.engine.addEntity(projectile);
+    // Use projectile pool from game if available
+    if (this.engine.game && this.engine.game.enemyProjectilePool) {
+      const projectile = this.engine.game.enemyProjectilePool.acquire(
+        projectileX,
+        projectileY,
+        projectileZ,
+        finalDirX,
+        finalDirZ,
+        this.projectileDamage,
+        this.projectileSpeed
+      );
+    } else {
+      // Fallback (shouldn't happen in normal gameplay)
+      console.warn('Enemy projectile pool not available');
+    }
 
     // Play sound effect if available
     if (this.engine.sound && this.engine.sound.playShoot) {

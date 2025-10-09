@@ -10,6 +10,8 @@ import { upgradeWeapon, createWeaponUpgradeOption } from '../weapons/weaponUpgra
 import { SaveSystem } from '../systems/SaveSystem.js';
 import { LevelSystem } from '../systems/LevelSystem.js';
 import { WaveSystem } from '../systems/WaveSystem.js';
+import { ProjectilePool } from '../systems/ProjectilePool.js';
+import { EnemyProjectilePool } from '../systems/EnemyProjectilePool.js';
 import { LEVELS } from '../levels/index.js';
 
 export class DustAndDynamiteGame {
@@ -40,6 +42,10 @@ export class DustAndDynamiteGame {
     this.levelSystem = new LevelSystem(engine);
     this.waveSystem = new WaveSystem(this);
     this.currentLevelName = 'Desert Canyon';
+
+    // Initialize projectile pools for performance
+    this.projectilePool = new ProjectilePool(engine, 200);
+    this.enemyProjectilePool = new EnemyProjectilePool(engine, 100);
 
     // Wave system callbacks
     this.onWaveUpdate = null; // New callback for wave UI updates
@@ -212,6 +218,10 @@ export class DustAndDynamiteGame {
 
     // Update wave system (handles enemy spawning)
     this.waveSystem.update(dt);
+
+    // Update projectile pools to recycle inactive projectiles
+    this.projectilePool.update();
+    this.enemyProjectilePool.update();
 
     // Old wave system for levels without wave config (fallback)
     const newWave = Math.floor(this.engine.time / 60) + 1;
@@ -852,9 +862,31 @@ export class DustAndDynamiteGame {
     });
   }
 
+  /**
+   * Create a projectile using the pool for better performance
+   * @param {number} x - Starting X position
+   * @param {number} y - Starting Y position
+   * @param {number} z - Starting Z position
+   * @param {number} dirX - X direction
+   * @param {number} dirZ - Z direction
+   * @param {Object} weapon - Weapon configuration
+   * @param {Object} stats - Player stats
+   * @param {number} dirY - Y direction (optional)
+   * @returns {Object} Pooled projectile
+   */
+  createPooledProjectile(x, y, z, dirX, dirZ, weapon, stats, dirY = 0) {
+    return this.projectilePool.acquire(x, y, z, dirX, dirZ, weapon, stats, dirY);
+  }
+
   cleanup() {
     if (this.levelSystem) {
       this.levelSystem.cleanup();
+    }
+    if (this.projectilePool) {
+      this.projectilePool.dispose();
+    }
+    if (this.enemyProjectilePool) {
+      this.enemyProjectilePool.dispose();
     }
   }
 }

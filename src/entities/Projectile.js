@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { Entity } from './Entity.js';
-import { createProjectileSprite } from '../utils/sprites.js';
+import { resourceCache } from '../systems/ResourceCache.js';
 
 export class Projectile extends Entity {
   constructor(engine, x, y, z, dirX, dirZ, weapon, stats, dirY = 0) {
@@ -27,12 +27,8 @@ export class Projectile extends Entity {
   }
 
   createMesh() {
-    const texture = createProjectileSprite('#ffff00');
-    const material = new THREE.SpriteMaterial({
-      map: texture,
-      transparent: true,
-      blending: THREE.AdditiveBlending
-    });
+    // Use cached material instead of creating new texture every time
+    const material = resourceCache.getProjectileMaterial('#ffff00');
     const sprite = new THREE.Sprite(material);
     sprite.scale.set(0.8, 0.8, 1);
 
