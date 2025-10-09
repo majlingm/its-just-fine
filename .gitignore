@@ -40,3 +40,7 @@ coverage/
 
 # Asset packs (large files - used assets are copied to public/models)
 packs/
+
+# Electron build output
+release/
+dist-electron/

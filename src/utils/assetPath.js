@@ -1,8 +1,11 @@
-// Utility to handle asset paths for both development and GitHub Pages
+// Utility to handle asset paths for development, GitHub Pages, and Electron
 
-// Determine if we're on GitHub Pages by checking the URL
+// Determine environment
 const isGitHubPages = window.location.hostname.includes('github.io') ||
                       window.location.pathname.includes('/its-just-fine');
+
+// Check if we're running in Electron
+const isElectron = window.location.protocol === 'file:';
 
 // Set base path based on environment
 const BASE_PATH = isGitHubPages ? '/its-just-fine' : '';
@@ -16,6 +19,11 @@ export function getAssetPath(path) {
   // If path doesn't start with /, add it
   const normalizedPath = path.startsWith('/') ? path : '/' + path;
 
+  // For Electron, use relative path without leading slash
+  if (isElectron) {
+    return '.' + normalizedPath;
+  }
+
   // Add base path if we're on GitHub Pages
   return BASE_PATH ? BASE_PATH + normalizedPath : normalizedPath;
 }
@@ -26,6 +34,7 @@ export const ASSET_BASE_PATH = BASE_PATH;
 
 console.log('Asset path helper initialized:', {
   isGitHubPages,
+  isElectron,
   basePath: BASE_PATH || '(root)',
   examplePath: getAssetPath('/assets/test.glb')
 });

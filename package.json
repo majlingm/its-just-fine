@@ -1,11 +1,18 @@
 {
-  "name": "bob-rocks",
+  "name": "its-just-fine",
   "version": "1.0.0",
-  "type": "module",
+  "main": "electron.js",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "electron": "electron .",
+    "electron:dev": "ELECTRON_DEV=true electron . --dev",
+    "electron:build": "npm run build && electron .",
+    "dist": "npm run build && electron-builder",
+    "dist:win": "npm run build && electron-builder --win",
+    "dist:mac": "npm run build && electron-builder --mac",
+    "dist:linux": "npm run build && electron-builder --linux"
   },
   "dependencies": {
     "react": "^18.2.0",
@@ -14,6 +21,36 @@
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^4.2.1",
+    "electron": "^38.2.2",
+    "electron-builder": "^26.0.12",
     "vite": "^5.0.11"
+  },
+  "build": {
+    "appId": "com.itsJustFine.game",
+    "productName": "It's Just Fine",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**/*",
+      "electron.js",
+      "package.json"
+    ],
+    "mac": {
+      "category": "public.app-category.games",
+      "icon": "public/vite.svg"
+    },
+    "win": {
+      "target": "nsis",
+      "icon": "public/vite.svg"
+    },
+    "linux": {
+      "target": "AppImage",
+      "category": "Game"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    }
   }
 }

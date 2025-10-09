@@ -9,6 +9,7 @@
  */
 
 import { Enemy } from '../entities/Enemy.js';
+import { BossEnemy } from '../entities/BossEnemy.js';
 
 export class WaveSystem {
   constructor(game) {
@@ -274,9 +275,8 @@ export class WaveSystem {
     // Count directly from engine.entities since game.enemies is only updated once per frame
     let count = 0;
     for (const entity of this.engine.entities) {
-      // Check if it's an Enemy or BossEnemy by checking constructor name
-      const name = entity.constructor.name;
-      if ((name === 'Enemy' || name === 'BossEnemy') && entity.active) {
+      // Use instanceof instead of constructor.name to survive minification
+      if ((entity instanceof Enemy || entity instanceof BossEnemy) && entity.active) {
         count++;
       }
     }
