@@ -34,6 +34,10 @@ export class Player extends Entity {
     this.cameraAngle = 0;  // Horizontal rotation
     this.cameraVerticalAngle = 0.5;  // Vertical angle (0.5 = default, 0 = top-down, 1 = more horizontal)
 
+    // Movement direction locking
+    this.lockedMoveDirection = { x: 0, z: 0 };
+    this.lastKeys = {};
+
     this.stats = {
       damage: 1,
       cooldown: 1,
@@ -157,6 +161,7 @@ export class Player extends Entity {
       const leftY = Math.abs(gamepad.axes[1]) > deadzone ? gamepad.axes[1] : 0;
 
       if (leftX !== 0 || leftY !== 0) {
+        // Gamepad uses direct world coordinates
         dx += leftX;
         dz += leftY;
       }
@@ -189,25 +194,16 @@ export class Player extends Entity {
 
     // Handle dash input (spacebar or gamepad button)
     if ((keys[' '] || gamepadDash) && !this.isDashing && this.dashCooldownTimer <= 0) {
-      // Get current movement direction (keyboard + gamepad)
-      let dashDx = dx; // Start with gamepad input
-      let dashDz = dz;
-
-      // Add keyboard input (WASD only for movement)
-      if (keys['w']) dashDz -= 1;
-      if (keys['s']) dashDz += 1;
-      if (keys['a']) dashDx -= 1;
-      if (keys['d']) dashDx += 1;
-
-      // If moving, dash in movement direction; otherwise dash forward
-      if (dashDx !== 0 || dashDz !== 0) {
-        const mag = Math.sqrt(dashDx * dashDx + dashDz * dashDz);
-        this.dashDirection.x = dashDx / mag;
-        this.dashDirection.z = dashDz / mag;
-      } else if (this.mesh) {
-        // Dash in facing direction
-        this.dashDirection.x = Math.sin(this.mesh.rotation.y);
-        this.dashDirection.z = Math.cos(this.mesh.rotation.y);
+      // Check if player is currently moving
+      if (this.lockedMoveDirection.x !== 0 || this.lockedMoveDirection.z !== 0) {
+        // Dash in current movement direction
+        this.dashDirection.x = this.lockedMoveDirection.x;
+        this.dashDirection.z = this.lockedMoveDirection.z;
+      } else {
+        // Dash forward from camera perspective (negate angle to match movement)
+        const camAngle = -this.cameraAngle;
+        this.dashDirection.x = -Math.sin(camAngle);
+        this.dashDirection.z = -Math.cos(camAngle);
       }
 
       this.isDashing = true;
@@ -220,11 +216,60 @@ export class Player extends Entity {
       }
     }
 
-    // WASD only for movement (arrows now control camera)
-    if (keys['w']) dz -= 1;
-    if (keys['s']) dz += 1;
-    if (keys['a']) dx -= 1;
-    if (keys['d']) dx += 1;
+    // Check for new key presses to update locked direction
+    const movementKeysPressed = keys['w'] || keys['s'] || keys['a'] || keys['d'];
+
+    if (movementKeysPressed) {
+      // Check if this is a new key press or key combination change
+      const keyStateChanged =
+        (keys['w'] !== this.lastKeys['w']) ||
+        (keys['s'] !== this.lastKeys['s']) ||
+        (keys['a'] !== this.lastKeys['a']) ||
+        (keys['d'] !== this.lastKeys['d']);
+
+      if (keyStateChanged) {
+        // Recalculate direction based on current camera angle
+        let inputX = 0, inputZ = 0;
+        if (keys['w']) inputZ = -1;  // Forward
+        if (keys['s']) inputZ = 1;   // Backward
+        if (keys['a']) inputX = -1;  // Left
+        if (keys['d']) inputX = 1;   // Right
+
+        // Apply camera rotation to get world direction
+        // Need to negate angle because camera position uses opposite direction
+        const camAngle = -this.cameraAngle;
+        this.lockedMoveDirection.x = inputX * Math.cos(camAngle) - inputZ * Math.sin(camAngle);
+        this.lockedMoveDirection.z = inputX * Math.sin(camAngle) + inputZ * Math.cos(camAngle);
+
+        // Normalize if diagonal
+        if (inputX !== 0 && inputZ !== 0) {
+          const mag = Math.sqrt(this.lockedMoveDirection.x * this.lockedMoveDirection.x +
+                               this.lockedMoveDirection.z * this.lockedMoveDirection.z);
+          this.lockedMoveDirection.x /= mag;
+          this.lockedMoveDirection.z /= mag;
+        }
+
+        console.log('Direction locked:', {
+          inputX, inputZ,
+          camAngle: (camAngle * 180 / Math.PI).toFixed(1) + '°',
+          lockedDir: { x: this.lockedMoveDirection.x.toFixed(2), z: this.lockedMoveDirection.z.toFixed(2) }
+        });
+      }
+
+      // Use locked direction for movement
+      dx += this.lockedMoveDirection.x;
+      dz += this.lockedMoveDirection.z;
+    } else {
+      // No keys pressed, clear locked direction
+      this.lockedMoveDirection.x = 0;
+      this.lockedMoveDirection.z = 0;
+    }
+
+    // Update last key states
+    this.lastKeys['w'] = keys['w'];
+    this.lastKeys['s'] = keys['s'];
+    this.lastKeys['a'] = keys['a'];
+    this.lastKeys['d'] = keys['d'];
 
     if (game && (game.touchActive || game.mouseActive)) {
       let offsetX, offsetY;
@@ -240,6 +285,7 @@ export class Player extends Entity {
       const deadzone = 10;
       if (Math.abs(offsetX) > deadzone || Math.abs(offsetY) > deadzone) {
         const maxDrag = 100;
+        // Touch/mouse uses direct world coordinates
         dx = Math.max(-1, Math.min(1, offsetX / maxDrag));
         dz = Math.max(-1, Math.min(1, offsetY / maxDrag));
       }
