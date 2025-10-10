@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { Projectile } from './Projectile.js';
 import { resourceCache } from '../systems/ResourceCache.js';
+import { FireExplosion } from './FireExplosion.js';
 
 export class FlameProjectile extends Projectile {
   constructor(engine, x, y, z, dirX, dirZ, weapon, stats, dirY = 0) {
@@ -11,6 +12,7 @@ export class FlameProjectile extends Projectile {
     this.flameSpawnInterval = 0.03;
     this.hitEntities = new Set();
     this.pierceCount = 0;
+    this.hasExploded = false;  // Track if we've already created an explosion
   }
 
   createMesh() {
@@ -68,6 +70,18 @@ export class FlameProjectile extends Projectile {
 
     this.age += dt;
     if (this.age > this.lifetime) {
+      // Only create explosion on expiration if we haven't exploded yet
+      if (!this.hasExploded) {
+        const explosion = new FireExplosion(
+          this.engine,
+          this.x,
+          this.z,
+          1.0,     // Small explosion for expiration
+          0,       // No additional damage
+          10       // Very few particles for expiration
+        );
+        this.engine.addEntity(explosion);
+      }
       this.destroy();
       return;
     }
@@ -116,6 +130,25 @@ export class FlameProjectile extends Projectile {
         this.hitEntities.add(entity);
         this.pierceCount++;
 
+        // Only create explosion on first hit or if no pierce
+        if (!this.hasExploded && (this.pierce === 0 || this.pierceCount === 1)) {
+          this.hasExploded = true;
+          const explosion = new FireExplosion(
+            this.engine,
+            this.x,  // Explosion at projectile position
+            this.z,
+            1.5,     // Small radius for individual fireball
+            0,       // No additional damage (damage already dealt)
+            15       // Fewer particles for impact explosion (15 instead of 30)
+          );
+          this.engine.addEntity(explosion);
+
+          // Play explosion sound
+          if (this.engine.sound && this.engine.sound.playExplosion) {
+            this.engine.sound.playExplosion();
+          }
+        }
+
         const died = entity.takeDamage(this.damage);
         if (died && this.engine.game) {
           this.engine.game.killCount++;
@@ -124,6 +157,16 @@ export class FlameProjectile extends Projectile {
         }
 
         if (this.pierceCount > this.pierce) {
+          // Final explosion when projectile reaches pierce limit
+          const finalExplosion = new FireExplosion(
+            this.engine,
+            this.x,
+            this.z,
+            2.0,     // Slightly larger radius for final explosion
+            0,       // No additional damage
+            20       // Medium particles for final explosion
+          );
+          this.engine.addEntity(finalExplosion);
           this.destroy();
         }
       }

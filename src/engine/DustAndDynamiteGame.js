@@ -1,3 +1,4 @@
+import * as THREE from 'three';
 import { Player } from '../entities/Player.js';
 import { Enemy } from '../entities/Enemy.js';
 import { BossEnemy } from '../entities/BossEnemy.js';
@@ -49,6 +50,14 @@ export class DustAndDynamiteGame {
 
     // Wave system callbacks
     this.onWaveUpdate = null; // New callback for wave UI updates
+
+    // Enemy indicator throttling
+    this.lastIndicatorUpdate = 0;
+    this.indicatorUpdateInterval = 0.2; // Update 5 times per second for better responsiveness
+    this.trackedEnemyId = null; // Track which enemy we're pointing at
+    this.arrowPosition = null; // Store the fixed arrow position
+    this.lastEnemyOnScreenTime = 0; // Track when enemies were last visible
+    this.arrowDelayTime = 1; // Seconds to wait before showing arrow (reduced for testing)
 
     engine.game = this;
     this.setupInput();
@@ -199,29 +208,13 @@ export class DustAndDynamiteGame {
     this.player.handleInput(this.keys, dt);
     this.player.update(dt);
 
-    // Adjust camera distance based on device type
-    const userAgent = navigator.userAgent;
-    const width = window.innerWidth;
+    // Use the engine's camera distance (which Q/E keys modify)
+    const cameraDistance = this.engine.cameraDistance;
 
-    // Detect device type (same logic as GameEngine)
-    const isIPhone = /iPhone/i.test(userAgent);
-    const isIPad = /iPad/i.test(userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-    const isAndroid = /Android/i.test(userAgent);
-    const isTablet = isIPad || (isAndroid && width >= 768 && width <= 1024);
-    const isMobile = (isIPhone || (isAndroid && width < 768)) && !isTablet;
-
-    // Set camera distance based on device
-    let cameraDistance;
-    if (isMobile) {
-      cameraDistance = 18;  // Mobile phones
-    } else if (isTablet) {
-      cameraDistance = 14;  // Tablets - more zoomed in
-    } else {
-      cameraDistance = 15;  // Desktop - more zoomed out
-    }
-
+    // Update camera to follow player using the current zoom level
     this.engine.camera.position.x = this.player.x;
-    this.engine.camera.position.z = this.player.z + cameraDistance;
+    this.engine.camera.position.y = cameraDistance * 1.5;
+    this.engine.camera.position.z = this.player.z + cameraDistance * 0.5;
     this.engine.camera.lookAt(this.player.x, 0, this.player.z);
 
     this.updateWeapons(dt);
@@ -252,8 +245,156 @@ export class DustAndDynamiteGame {
       this.currentBoss = null;
     }
 
+    // Calculate nearest enemy direction for off-screen indicator (throttled)
+    let nearestEnemyDirection = null;
+    let nearestEnemyDistance = Infinity;
+
+    // Only update indicator periodically
+    const currentTime = this.engine.time;
+    if (currentTime - this.lastIndicatorUpdate >= this.indicatorUpdateInterval) {
+      this.lastIndicatorUpdate = currentTime;
+
+      // Step 1: Find THE nearest enemy (only one!)
+      let nearestEnemy = null;
+      let nearestDist = Infinity;
+      let anyEnemyOnScreen = false;
+
+      this.enemies.forEach(enemy => {
+        if (!enemy.active) return;
+
+        const dx = enemy.x - this.player.x;
+        const dz = enemy.z - this.player.z;
+        const dist = Math.sqrt(dx * dx + dz * dz);
+
+        if (dist < nearestDist) {
+          nearestDist = dist;
+          nearestEnemy = enemy;
+        }
+      });
+
+      // Step 2: Check if ANY enemy is visible on screen
+      const camera = this.engine.camera;
+      const zoomFactor = this.engine.cameraDistance / 10; // Normalize around 10
+      const visibilityMargin = 1.0 + Math.min(0.3, zoomFactor * 0.1);
+
+      this.enemies.forEach(enemy => {
+        if (!enemy.active || anyEnemyOnScreen) return;
+
+        const enemyWorldPos = new THREE.Vector3(enemy.x, 1, enemy.z);
+        const screenPos = enemyWorldPos.clone();
+        screenPos.project(camera);
+
+        const isOnScreen = screenPos.z > 0 &&
+                          screenPos.z < 1 &&
+                          Math.abs(screenPos.x) < visibilityMargin &&
+                          Math.abs(screenPos.y) < visibilityMargin;
+
+        if (isOnScreen) {
+          anyEnemyOnScreen = true;
+          this.lastEnemyOnScreenTime = currentTime; // Update last seen time
+        }
+      });
+
+      // Step 3: Check if THE NEAREST enemy is visible
+      if (nearestEnemy) {
+        // Project enemy position to screen space
+        const enemyWorldPos = new THREE.Vector3(nearestEnemy.x, 1, nearestEnemy.z);
+        const screenPos = enemyWorldPos.clone();
+        screenPos.project(camera);
+
+        // Check if enemy is actually visible on screen with margin
+        // screenPos.x and .y are in normalized device coordinates (-1 to 1)
+        // screenPos.z < 0 means behind camera
+        const isOnScreen = screenPos.z > 0 &&
+                          screenPos.z < 1 &&
+                          Math.abs(screenPos.x) < visibilityMargin &&
+                          Math.abs(screenPos.y) < visibilityMargin;
+
+        // Step 4: Show arrow ONLY if nearest enemy is off-screen AND 7 seconds have passed
+        const timeSinceEnemyOnScreen = currentTime - this.lastEnemyOnScreenTime;
+        const shouldShowArrow = !isOnScreen && !anyEnemyOnScreen && timeSinceEnemyOnScreen >= this.arrowDelayTime;
+
+        if (shouldShowArrow && screenPos.z > 0 && screenPos.z < 1) {
+          // Track if we switched enemies
+          const enemyChanged = this.trackedEnemyId !== nearestEnemy.id;
+          if (enemyChanged) {
+            this.trackedEnemyId = nearestEnemy.id;
+          }
+
+          // Always recalculate arrow position based on current enemy position
+          const screenWidth = window.innerWidth;
+          const screenHeight = window.innerHeight;
+          const centerX = screenWidth / 2;
+          const centerY = screenHeight / 2;
+
+          // Enemy position in screen pixels
+          const enemyScreenX = (screenPos.x * centerX) + centerX;
+          const enemyScreenY = (-screenPos.y * centerY) + centerY;
+
+          // Direction from center to enemy
+          const dirX = enemyScreenX - centerX;
+          const dirY = enemyScreenY - centerY;
+          const length = Math.sqrt(dirX * dirX + dirY * dirY);
+
+          if (length > 1) {
+            const normX = dirX / length;
+            const normY = dirY / length;
+
+            // Calculate arrow position on screen edge (adjusted for larger arrow)
+            const padding = 35; // 35 pixels from edge to account for 50x50 arrow
+            const scaleX = Math.abs(normX) > 0.001 ? (centerX - padding) / Math.abs(normX) : Infinity;
+            const scaleY = Math.abs(normY) > 0.001 ? (centerY - padding) / Math.abs(normY) : Infinity;
+            const scale = Math.min(scaleX, scaleY);
+
+            this.arrowPosition = {
+              x: centerX + normX * scale,
+              y: centerY + normY * scale
+            };
+
+            // Pass both arrow position and current enemy screen coordinates
+            nearestEnemyDirection = {
+              arrowPosition: this.arrowPosition,
+              enemyScreenPos: screenPos // Current enemy position for rotation calculation
+            };
+            nearestEnemyDistance = nearestDist;
+            this.cachedEnemyChanged = enemyChanged;
+          } else {
+            // Enemy is too close to center, don't show arrow
+            nearestEnemyDirection = null;
+            nearestEnemyDistance = Infinity;
+            this.arrowPosition = null;
+            this.cachedEnemyChanged = false;
+          }
+
+        } else {
+          // Nearest enemy IS on screen, no arrow needed
+          nearestEnemyDirection = null;
+          nearestEnemyDistance = Infinity;
+          this.trackedEnemyId = null;
+          this.arrowPosition = null; // Clear arrow position
+          this.cachedEnemyChanged = false;
+        }
+      } else {
+        // No enemies at all
+        nearestEnemyDirection = null;
+        nearestEnemyDistance = Infinity;
+        this.trackedEnemyId = null;
+        this.arrowPosition = null; // Clear arrow position
+        this.cachedEnemyChanged = false;
+      }
+
+      // Store the calculated values for use until next update
+      this.cachedEnemyDirection = nearestEnemyDirection;
+      this.cachedEnemyDistance = nearestEnemyDistance;
+    } else {
+      // Use cached values between updates
+      nearestEnemyDirection = this.cachedEnemyDirection;
+      nearestEnemyDistance = this.cachedEnemyDistance;
+    }
+
     if (this.onUpdate) {
       const waveInfo = this.waveSystem.getWaveInfo();
+
       this.onUpdate({
         health: Math.max(0, Math.floor(this.player.health)),
         maxHealth: this.player.maxHealth,
@@ -271,7 +412,11 @@ export class DustAndDynamiteGame {
         totalWaves: waveInfo.totalWaves,
         waveActive: waveInfo.waveActive,
         allWavesCompleted: waveInfo.allWavesCompleted,
-        enemiesRemaining: waveInfo.enemiesRemaining
+        enemiesRemaining: waveInfo.enemiesRemaining,
+        // Enemy indicator info
+        nearestEnemyDirection: nearestEnemyDirection,
+        nearestEnemyDistance: nearestEnemyDistance,
+        enemyChanged: this.cachedEnemyChanged || false
       });
     }
   }

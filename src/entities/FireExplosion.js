@@ -3,13 +3,14 @@ import { Entity } from './Entity.js';
 import { resourceCache } from '../systems/ResourceCache.js';
 
 export class FireExplosion extends Entity {
-  constructor(engine, x, z, radius, damage) {
+  constructor(engine, x, z, radius, damage, particleCount = 30) {
     super();
     this.engine = engine;
     this.x = x;
     this.z = z;
     this.radius = radius;
     this.damage = damage;
+    this.particleCount = particleCount; // Allow customizable particle count
     this.lifetime = 0.6;
     this.age = 0;
     this.particles = [];
@@ -19,7 +20,7 @@ export class FireExplosion extends Entity {
 
   createExplosion() {
     // Create fire explosion with expanding particles
-    const numParticles = 30;
+    const numParticles = this.particleCount;
 
     for (let i = 0; i < numParticles; i++) {
       // Use cached materials for fire explosion particles

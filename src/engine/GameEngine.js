@@ -51,6 +51,8 @@ export class GameEngine {
 
     // Camera settings
     this.cameraDistance = 12;
+    this.cameraAngle = 0; // Rotation angle in radians
+    this.targetCameraAngle = 0; // Target angle for smooth rotation
   }
 
   /**
@@ -116,8 +118,7 @@ export class GameEngine {
     }
 
     // Position camera for isometric-like view
-    this.camera.position.set(0, this.cameraDistance * 1.5, this.cameraDistance * 0.5);
-    this.camera.lookAt(0, 0, 0);
+    this.updateCameraPosition();
   }
 
   /**
@@ -193,7 +194,7 @@ export class GameEngine {
   }
 
   /**
-   * Setup zoom controls (Q/E keys)
+   * Setup zoom and rotation controls (Q/E for zoom, Z/C for rotation)
    */
   setupControls() {
     window.addEventListener('keydown', (e) => {
@@ -205,17 +206,24 @@ export class GameEngine {
         // Zoom in
         this.cameraDistance = Math.max(5, this.cameraDistance - 2);
         this.updateCameraPosition();
+      } else if (e.key === 'z' || e.key === 'Z') {
+        // Rotate camera left
+        this.targetCameraAngle += Math.PI / 4; // 45 degrees
+      } else if (e.key === 'c' || e.key === 'C') {
+        // Rotate camera right
+        this.targetCameraAngle -= Math.PI / 4; // 45 degrees
       }
     });
   }
 
   /**
-   * Update camera position based on distance
+   * Update camera position based on distance and angle
    */
   updateCameraPosition() {
-    this.camera.position.set(0, this.cameraDistance * 1.5, this.cameraDistance * 0.5);
+    const x = Math.sin(this.cameraAngle) * this.cameraDistance * 0.5;
+    const z = Math.cos(this.cameraAngle) * this.cameraDistance * 0.5;
+    this.camera.position.set(x, this.cameraDistance * 1.5, z);
     this.camera.lookAt(0, 0, 0);
-    console.log('Camera distance:', this.cameraDistance);
   }
 
   /**
@@ -387,6 +395,14 @@ export class GameEngine {
    * @param {number} dt - Delta time in seconds
    */
   update(dt) {
+    // Smooth camera rotation
+    if (Math.abs(this.targetCameraAngle - this.cameraAngle) > 0.01) {
+      const rotationSpeed = 5.0; // Rotation speed multiplier
+      const diff = this.targetCameraAngle - this.cameraAngle;
+      this.cameraAngle += diff * rotationSpeed * dt;
+      this.updateCameraPosition();
+    }
+
     // Update particle system
     if (this.particles) {
       this.particles.update(dt);

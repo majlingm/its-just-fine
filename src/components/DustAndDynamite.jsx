@@ -59,6 +59,10 @@ const DustAndDynamite = () => {
     hasBoss: false,
     bossHealth: 0,
     bossMaxHealth: 0,
+    // Enemy indicator
+    nearestEnemyDirection: null,
+    nearestEnemyDistance: 0,
+    enemyChanged: false,
   });
 
   const [showWeaponPanel, setShowWeaponPanel] = useState(false);
@@ -71,6 +75,13 @@ const DustAndDynamite = () => {
   const [selectedGround, setSelectedGround] = useState('checkerboard'); // Default ground for survival
   const [loading, setLoading] = useState(false);
   const [loadingProgress, setLoadingProgress] = useState({ loaded: 0, total: 0, current: '' });
+  const [isPaused, setIsPaused] = useState(false); // Track pause state
+
+  // Arrow rotation and position tracking for smooth interpolation
+  const arrowRotationRef = useRef(0);
+  const [arrowRotation, setArrowRotation] = useState(0);
+  const arrowPositionRef = useRef({ x: 0, y: 0 });
+  const [arrowPosition, setArrowPosition] = useState({ x: 0, y: 0 });
 
   const userAgent = navigator.userAgent;
   const width = window.innerWidth;
@@ -345,13 +356,113 @@ const DustAndDynamite = () => {
         triggerRingBurst();
       }
       if (e.key === 'p' || e.key === 'P') {
-        setShowDevMenu(prev => !prev);
+        setShowDevMenu(prev => {
+          const newValue = !prev;
+          // Auto-pause when opening dev menu, resume when closing
+          if (engineRef.current) {
+            if (newValue) {
+              engineRef.current.pause();
+              setIsPaused(true);
+            } else {
+              engineRef.current.resume();
+              setIsPaused(false);
+            }
+          }
+          return newValue;
+        });
       }
     };
 
     window.addEventListener('keydown', handleKeyPress);
     return () => window.removeEventListener('keydown', handleKeyPress);
   }, [gameStarted]);
+
+  // Smooth arrow rotation and position animation
+  useEffect(() => {
+    if (!uiState.nearestEnemyDirection || !uiState.nearestEnemyDirection.enemyScreenPos) return;
+
+    // Reset when enemy changes (new arrow position)
+    if (uiState.enemyChanged) {
+      const arrowPos = uiState.nearestEnemyDirection.arrowPosition;
+      const enemyScreenPos = uiState.nearestEnemyDirection.enemyScreenPos;
+
+      if (arrowPos && enemyScreenPos) {
+        // Set initial position and rotation for new enemy
+        arrowPositionRef.current = { ...arrowPos };
+        setArrowPosition({ ...arrowPos });
+
+        const screenWidth = window.innerWidth;
+        const screenHeight = window.innerHeight;
+        const centerX = screenWidth / 2;
+        const centerY = screenHeight / 2;
+
+        const enemyScreenX = (enemyScreenPos.x * centerX) + centerX;
+        const enemyScreenY = (-enemyScreenPos.y * centerY) + centerY;
+
+        const dirX = enemyScreenX - arrowPos.x;
+        const dirY = enemyScreenY - arrowPos.y;
+
+        const initialRotation = Math.atan2(dirY, dirX) * (180 / Math.PI) + 90;
+        arrowRotationRef.current = initialRotation;
+        setArrowRotation(initialRotation);
+      }
+    }
+
+    let animationId;
+
+    const animate = () => {
+      const targetArrowPos = uiState.nearestEnemyDirection.arrowPosition;
+      const enemyScreenPos = uiState.nearestEnemyDirection.enemyScreenPos;
+
+      if (!targetArrowPos || !enemyScreenPos) return;
+
+      // Smooth position interpolation
+      const currentPos = arrowPositionRef.current;
+      const positionSpeed = 0.12; // Smooth position transition speed
+      const newX = currentPos.x + (targetArrowPos.x - currentPos.x) * positionSpeed;
+      const newY = currentPos.y + (targetArrowPos.y - currentPos.y) * positionSpeed;
+
+      arrowPositionRef.current = { x: newX, y: newY };
+      setArrowPosition({ x: newX, y: newY });
+
+      // Calculate target rotation using interpolated position
+      const screenWidth = window.innerWidth;
+      const screenHeight = window.innerHeight;
+      const centerX = screenWidth / 2;
+      const centerY = screenHeight / 2;
+
+      const enemyScreenX = (enemyScreenPos.x * centerX) + centerX;
+      const enemyScreenY = (-enemyScreenPos.y * centerY) + centerY;
+
+      const dirX = enemyScreenX - newX;
+      const dirY = enemyScreenY - newY;
+
+      const targetRotation = Math.atan2(dirY, dirX) * (180 / Math.PI) + 90;
+
+      // Smooth rotation interpolation
+      const currentRotation = arrowRotationRef.current;
+
+      // Calculate shortest angular distance
+      let diff = targetRotation - currentRotation;
+      if (diff > 180) diff -= 360;
+      if (diff < -180) diff += 360;
+
+      // Interpolate rotation
+      const rotationSpeed = 0.15;
+      const newRotation = currentRotation + diff * rotationSpeed;
+
+      arrowRotationRef.current = newRotation;
+      setArrowRotation(newRotation);
+
+      animationId = requestAnimationFrame(animate);
+    };
+
+    animate();
+
+    return () => {
+      if (animationId) cancelAnimationFrame(animationId);
+    };
+  }, [uiState.nearestEnemyDirection, uiState.enemyChanged]);
 
   // Wave notification system
   useEffect(() => {
@@ -867,6 +978,94 @@ const DustAndDynamite = () => {
             </div>
           </div>
 
+          {/* Enemy Direction Indicator */}
+          {uiState.nearestEnemyDirection !== null && typeof uiState.nearestEnemyDirection === 'object' ? (
+            (() => {
+              // nearestEnemyDirection now contains both arrow position and enemy screen position
+              const targetArrowPos = uiState.nearestEnemyDirection.arrowPosition;
+              const enemyScreenPos = uiState.nearestEnemyDirection.enemyScreenPos;
+
+              // Safety checks
+              if (!targetArrowPos || !enemyScreenPos) return null;
+              if (targetArrowPos.x === undefined || targetArrowPos.y === undefined) return null;
+              if (enemyScreenPos.x === undefined || enemyScreenPos.y === undefined) return null;
+
+              // Use the smoothly interpolated arrow position
+              const x = arrowPosition.x || targetArrowPos.x;
+              const y = arrowPosition.y || targetArrowPos.y;
+
+              // Use the smoothly interpolated rotation
+              const rotation = arrowRotation;
+
+              return (
+                <div
+                  style={{
+                    position: "absolute",
+                    left: x,
+                    top: y,
+                    transform: `translate(-50%, -50%)`,
+                    pointerEvents: "none",
+                    zIndex: 500,
+                  }}
+                >
+                  {/* Triangle arrow container with directional bounce */}
+                  <div
+                    style={{
+                      transform: `rotate(${rotation}deg)`,
+                      transition: "none", // No CSS transition needed, we're using JS animation
+                      animation: "arrowBounce 0.8s ease-out infinite",
+                    }}
+                  >
+                    {/* Sharp triangle arrow */}
+                    <svg width="50" height="50" viewBox="0 0 50 50">
+                      <defs>
+                        <filter id="arrowGlow">
+                          <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+                          <feMerge>
+                            <feMergeNode in="coloredBlur"/>
+                            <feMergeNode in="SourceGraphic"/>
+                          </feMerge>
+                        </filter>
+                      </defs>
+                      {/* Sharp triangle - less bright green */}
+                      <path
+                        d="M 25 8
+                           L 38 38
+                           L 12 38
+                           Z"
+                        fill="#00cc00"
+                        fillOpacity="0.95"
+                        filter="url(#arrowGlow)"
+                      />
+                      {/* Inner highlight - matching green */}
+                      <path
+                        d="M 25 14
+                           L 33 32
+                           L 17 32
+                           Z"
+                        fill="#00dd00"
+                        fillOpacity="0.9"
+                      />
+                    </svg>
+                  </div>
+
+                  <style>
+                    {`
+                      @keyframes arrowBounce {
+                        0%, 100% {
+                          transform: rotate(${rotation}deg) translateY(0);
+                        }
+                        50% {
+                          transform: rotate(${rotation}deg) translateY(-12px);
+                        }
+                      }
+                    `}
+                  </style>
+                </div>
+              );
+            })()
+          ) : null}
+
           {/* Wave and Enemy Count - Upper Right - minimalist */}
           <div
             style={{
@@ -1160,6 +1359,48 @@ const DustAndDynamite = () => {
           {/* Dev Menu - Toggle with ~ key */}
           {showDevMenu && (
             <>
+              {/* Pause/Resume Button */}
+              <button
+                onClick={() => {
+                  if (engineRef.current) {
+                    if (isPaused) {
+                      engineRef.current.resume();
+                      setIsPaused(false);
+                    } else {
+                      engineRef.current.pause();
+                      setIsPaused(true);
+                    }
+                  }
+                }}
+                style={{
+                  position: "absolute",
+                  bottom: 20,
+                  left: 20,
+                  padding: "8px 16px",
+                  background: "rgba(0, 0, 0, 0.3)",
+                  color: isPaused ? "rgba(255, 200, 0, 0.9)" : "rgba(255, 255, 255, 0.7)",
+                  border: isPaused ? "1px solid rgba(255, 200, 0, 0.5)" : "1px solid rgba(255, 255, 255, 0.2)",
+                  cursor: "pointer",
+                  fontFamily: "'Inter', sans-serif",
+                  fontSize: 12,
+                  fontWeight: 200,
+                  letterSpacing: "0.1em",
+                  textTransform: "uppercase",
+                  zIndex: 1000,
+                  transition: "all 0.3s",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.borderColor = isPaused ? "rgba(255, 200, 0, 0.7)" : "rgba(255, 255, 255, 0.5)";
+                  e.currentTarget.style.color = "rgba(255, 255, 255, 1)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.borderColor = isPaused ? "rgba(255, 200, 0, 0.5)" : "rgba(255, 255, 255, 0.2)";
+                  e.currentTarget.style.color = isPaused ? "rgba(255, 200, 0, 0.9)" : "rgba(255, 255, 255, 0.7)";
+                }}
+              >
+                {isPaused ? "Resume" : "Pause"}
+              </button>
+
               {/* God Mode Button */}
               <button
                 onClick={() => {
@@ -1279,12 +1520,16 @@ const DustAndDynamite = () => {
                       <option value="pink-clouds">Pink Clouds</option>
                       <option value="rainbow">Rainbow</option>
                       <option value="psychedelic">Psychedelic</option>
+                      <option value="aurora">Aurora Borealis</option>
+                      <option value="nebula">Nebula</option>
                     </optgroup>
                     <optgroup label="Reflective">
                       <option value="mirror">Mirror</option>
                       <option value="glass">Glass</option>
                       <option value="ice">Ice</option>
                       <option value="water">Water</option>
+                      <option value="crystal">Crystal Cave</option>
+                      <option value="chrome">Chrome</option>
                     </optgroup>
                     <optgroup label="Animated">
                       <option value="lava">Lava</option>
@@ -1292,13 +1537,26 @@ const DustAndDynamite = () => {
                       <option value="neon">Neon Grid</option>
                       <option value="void">Void</option>
                       <option value="matrix">Matrix</option>
+                      <option value="portal">Portal Swirl</option>
+                      <option value="plasma">Plasma Field</option>
+                    </optgroup>
+                    <optgroup label="Nature">
+                      <option value="realistic-grass">Realistic Grass (3D)</option>
+                      <option value="grass">Grass</option>
+                      <option value="desert">Desert</option>
+                      <option value="ocean">Ocean Waves</option>
+                      <option value="forest">Forest Floor</option>
+                      <option value="snow">Snow</option>
+                    </optgroup>
+                    <optgroup label="Tech">
+                      <option value="circuit">Circuit Board</option>
+                      <option value="hologram">Hologram Grid</option>
+                      <option value="datastream">Data Stream</option>
                     </optgroup>
                     <optgroup label="Simple">
                       <option value="bright">Bright</option>
                       <option value="dark">Dark</option>
                       <option value="checkerboard">Checkerboard</option>
-                      <option value="grass">Grass</option>
-                      <option value="desert">Desert</option>
                     </optgroup>
                   </select>
                 </div>
