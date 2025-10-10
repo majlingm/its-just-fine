@@ -18,6 +18,7 @@ class GameEngine {
 
   init(container) {
     // Scene
+    console.log('Initializing Three.js scene');
     this.scene = new THREE.Scene();
     this.scene.background = new THREE.Color(0x6b5344);
     this.scene.fog = new THREE.Fog(0x6b5344, 30, 100);

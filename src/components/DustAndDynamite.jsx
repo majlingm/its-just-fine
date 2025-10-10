@@ -75,7 +75,6 @@ const DustAndDynamite = () => {
   const [selectedGround, setSelectedGround] = useState('checkerboard'); // Default ground for survival
   const [loading, setLoading] = useState(false);
   const [loadingProgress, setLoadingProgress] = useState({ loaded: 0, total: 0, current: '' });
-  const [isPaused, setIsPaused] = useState(false); // Track pause state
 
   // Arrow rotation and position tracking for smooth interpolation
   const arrowRotationRef = useRef(0);
@@ -357,18 +356,18 @@ const DustAndDynamite = () => {
       }
       if (e.key === 'p' || e.key === 'P') {
         setShowDevMenu(prev => {
-          const newValue = !prev;
-          // Auto-pause when opening dev menu, resume when closing
-          if (engineRef.current) {
-            if (newValue) {
-              engineRef.current.pause();
-              setIsPaused(true);
-            } else {
-              engineRef.current.resume();
-              setIsPaused(false);
+          const newState = !prev;
+          // Auto-pause when opening dev menu
+          if (newState && gameRef.current) {
+            gameRef.current.setPause(true);
+            // Update pause button text if it exists
+            const btn = document.getElementById('pause-btn');
+            if (btn) {
+              btn.textContent = 'PAUSED';
+              btn.style.borderColor = 'rgba(255, 200, 0, 0.5)';
             }
           }
-          return newValue;
+          return newState;
         });
       }
     };
@@ -1027,24 +1026,27 @@ const DustAndDynamite = () => {
                           </feMerge>
                         </filter>
                       </defs>
-                      {/* Sharp triangle - less bright green */}
+                      {/* Sharp triangle - white with black border */}
                       <path
                         d="M 25 8
                            L 38 38
                            L 12 38
                            Z"
-                        fill="#00cc00"
-                        fillOpacity="0.95"
+                        fill="#ffffff"
+                        fillOpacity="1"
+                        stroke="#000000"
+                        strokeWidth="1.5"
+                        strokeLinejoin="round"
                         filter="url(#arrowGlow)"
                       />
-                      {/* Inner highlight - matching green */}
+                      {/* Inner highlight - light gray for depth */}
                       <path
                         d="M 25 14
                            L 33 32
                            L 17 32
                            Z"
-                        fill="#00dd00"
-                        fillOpacity="0.9"
+                        fill="#f0f0f0"
+                        fillOpacity="0.7"
                       />
                     </svg>
                   </div>
@@ -1359,48 +1361,6 @@ const DustAndDynamite = () => {
           {/* Dev Menu - Toggle with ~ key */}
           {showDevMenu && (
             <>
-              {/* Pause/Resume Button */}
-              <button
-                onClick={() => {
-                  if (engineRef.current) {
-                    if (isPaused) {
-                      engineRef.current.resume();
-                      setIsPaused(false);
-                    } else {
-                      engineRef.current.pause();
-                      setIsPaused(true);
-                    }
-                  }
-                }}
-                style={{
-                  position: "absolute",
-                  bottom: 20,
-                  left: 20,
-                  padding: "8px 16px",
-                  background: "rgba(0, 0, 0, 0.3)",
-                  color: isPaused ? "rgba(255, 200, 0, 0.9)" : "rgba(255, 255, 255, 0.7)",
-                  border: isPaused ? "1px solid rgba(255, 200, 0, 0.5)" : "1px solid rgba(255, 255, 255, 0.2)",
-                  cursor: "pointer",
-                  fontFamily: "'Inter', sans-serif",
-                  fontSize: 12,
-                  fontWeight: 200,
-                  letterSpacing: "0.1em",
-                  textTransform: "uppercase",
-                  zIndex: 1000,
-                  transition: "all 0.3s",
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.borderColor = isPaused ? "rgba(255, 200, 0, 0.7)" : "rgba(255, 255, 255, 0.5)";
-                  e.currentTarget.style.color = "rgba(255, 255, 255, 1)";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.borderColor = isPaused ? "rgba(255, 200, 0, 0.5)" : "rgba(255, 255, 255, 0.2)";
-                  e.currentTarget.style.color = isPaused ? "rgba(255, 200, 0, 0.9)" : "rgba(255, 255, 255, 0.7)";
-                }}
-              >
-                {isPaused ? "Resume" : "Pause"}
-              </button>
-
               {/* God Mode Button */}
               <button
                 onClick={() => {
@@ -1441,6 +1401,48 @@ const DustAndDynamite = () => {
                 }}
               >
                 God Mode: OFF
+              </button>
+
+              {/* Pause Button */}
+              <button
+                onClick={() => {
+                  if (gameRef.current) {
+                    const isPaused = gameRef.current.togglePause();
+                    const btn = document.getElementById('pause-btn');
+                    if (btn) {
+                      btn.textContent = isPaused ? 'PAUSED' : 'PAUSE';
+                      btn.style.borderColor = isPaused ? 'rgba(255, 200, 0, 0.5)' : 'rgba(255, 255, 255, 0.2)';
+                    }
+                  }
+                }}
+                id="pause-btn"
+                style={{
+                  position: "absolute",
+                  bottom: 60,
+                  left: 140,
+                  padding: "8px 16px",
+                  background: "rgba(0, 0, 0, 0.3)",
+                  color: "rgba(255, 255, 255, 0.7)",
+                  border: "1px solid rgba(255, 200, 0, 0.5)",  // Yellow border since it starts paused
+                  cursor: "pointer",
+                  fontFamily: "'Inter', sans-serif",
+                  fontSize: 12,
+                  fontWeight: 200,
+                  letterSpacing: "0.1em",
+                  textTransform: "uppercase",
+                  zIndex: 1000,
+                  transition: "all 0.3s",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.borderColor = gameRef.current?.isPaused ? "rgba(255, 200, 0, 0.7)" : "rgba(255, 255, 255, 0.5)";
+                  e.currentTarget.style.color = "rgba(255, 255, 255, 1)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.borderColor = gameRef.current?.isPaused ? "rgba(255, 200, 0, 0.5)" : "rgba(255, 255, 255, 0.2)";
+                  e.currentTarget.style.color = "rgba(255, 255, 255, 0.7)";
+                }}
+              >
+                PAUSED
               </button>
 
               {/* Spell Toggle Panel */}

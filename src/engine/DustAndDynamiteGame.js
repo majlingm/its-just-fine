@@ -28,6 +28,7 @@ export class DustAndDynamiteGame {
     this.killCount = 0;
     this.gameOver = false;
     this.levelingUp = false;
+    this.isPaused = false; // For manual pausing
     this.godMode = false; // Disabled by default (toggle with ~ key)
     this.bossSpawned = false;
     this.currentBoss = null; // Track active boss
@@ -200,8 +201,34 @@ export class DustAndDynamiteGame {
     return this.saveSystem.saveGame(this);
   }
 
+  /**
+   * Toggle pause state
+   */
+  togglePause() {
+    this.isPaused = !this.isPaused;
+    if (this.isPaused) {
+      this.engine.pause();
+    } else {
+      this.engine.resume();
+    }
+    return this.isPaused;
+  }
+
+  /**
+   * Set pause state
+   * @param {boolean} paused - Whether to pause or resume
+   */
+  setPause(paused) {
+    this.isPaused = paused;
+    if (this.isPaused) {
+      this.engine.pause();
+    } else {
+      this.engine.resume();
+    }
+  }
+
   update(dt) {
-    if (this.gameOver || this.levelingUp) return;
+    if (this.gameOver || this.levelingUp || this.isPaused) return;
 
     if (!this.player || !this.player.active) return;
 
