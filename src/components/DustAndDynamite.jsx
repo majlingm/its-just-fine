@@ -853,7 +853,7 @@ const DustAndDynamite = () => {
               letterSpacing: "0.05em",
             }}
           >
-            <p>WASD or Arrow Keys to move • SPACE to dash</p>
+            <p>WASD to move • Arrow Keys to rotate/tilt camera • SPACE to dash</p>
           </div>
         </div>
       )}

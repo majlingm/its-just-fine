@@ -238,10 +238,18 @@ export class DustAndDynamiteGame {
     // Use the engine's camera distance (which Q/E keys modify)
     const cameraDistance = this.engine.cameraDistance;
 
-    // Update camera to follow player using the current zoom level
-    this.engine.camera.position.x = this.player.x;
-    this.engine.camera.position.y = cameraDistance * 1.5;
-    this.engine.camera.position.z = this.player.z + cameraDistance * 0.5;
+    // Update camera to orbit around player based on camera angles
+    const horizontalAngle = this.player.cameraAngle || 0;
+    const verticalAngle = this.player.cameraVerticalAngle || 0.5; // 0 = top-down, 1 = horizontal
+
+    // Calculate height and radius based on vertical angle
+    // Higher vertical angle = lower height, larger radius (more horizontal view)
+    const height = cameraDistance * (2.0 - verticalAngle * 1.5); // Height ranges from 2.0x to 0.5x distance
+    const radius = cameraDistance * (0.3 + verticalAngle * 0.8); // Radius ranges from 0.3x to 1.1x distance
+
+    this.engine.camera.position.x = this.player.x + Math.sin(horizontalAngle) * radius;
+    this.engine.camera.position.y = height;
+    this.engine.camera.position.z = this.player.z + Math.cos(horizontalAngle) * radius;
     this.engine.camera.lookAt(this.player.x, 0, this.player.z);
 
     this.updateWeapons(dt);

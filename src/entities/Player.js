@@ -31,7 +31,8 @@ export class Player extends Entity {
     this.dashDirection = { x: 0, z: 0 };
 
     // Camera rotation
-    this.cameraAngle = 0;
+    this.cameraAngle = 0;  // Horizontal rotation
+    this.cameraVerticalAngle = 0.5;  // Vertical angle (0.5 = default, 0 = top-down, 1 = more horizontal)
 
     this.stats = {
       damage: 1,
@@ -172,17 +173,31 @@ export class Player extends Entity {
       }
     }
 
+    // Handle keyboard camera rotation (arrow keys)
+    if (keys['arrowleft']) {
+      this.cameraAngle -= dt * 2; // Rotate camera left
+    }
+    if (keys['arrowright']) {
+      this.cameraAngle += dt * 2; // Rotate camera right
+    }
+    if (keys['arrowup']) {
+      this.cameraVerticalAngle = Math.max(0.1, this.cameraVerticalAngle - dt * 0.5); // Tilt camera up (more top-down)
+    }
+    if (keys['arrowdown']) {
+      this.cameraVerticalAngle = Math.min(0.9, this.cameraVerticalAngle + dt * 0.5); // Tilt camera down (more horizontal)
+    }
+
     // Handle dash input (spacebar or gamepad button)
     if ((keys[' '] || gamepadDash) && !this.isDashing && this.dashCooldownTimer <= 0) {
       // Get current movement direction (keyboard + gamepad)
       let dashDx = dx; // Start with gamepad input
       let dashDz = dz;
 
-      // Add keyboard input
-      if (keys['w'] || keys['arrowup']) dashDz -= 1;
-      if (keys['s'] || keys['arrowdown']) dashDz += 1;
-      if (keys['a'] || keys['arrowleft']) dashDx -= 1;
-      if (keys['d'] || keys['arrowright']) dashDx += 1;
+      // Add keyboard input (WASD only for movement)
+      if (keys['w']) dashDz -= 1;
+      if (keys['s']) dashDz += 1;
+      if (keys['a']) dashDx -= 1;
+      if (keys['d']) dashDx += 1;
 
       // If moving, dash in movement direction; otherwise dash forward
       if (dashDx !== 0 || dashDz !== 0) {
@@ -205,10 +220,11 @@ export class Player extends Entity {
       }
     }
 
-    if (keys['w'] || keys['arrowup']) dz -= 1;
-    if (keys['s'] || keys['arrowdown']) dz += 1;
-    if (keys['a'] || keys['arrowleft']) dx -= 1;
-    if (keys['d'] || keys['arrowright']) dx += 1;
+    // WASD only for movement (arrows now control camera)
+    if (keys['w']) dz -= 1;
+    if (keys['s']) dz += 1;
+    if (keys['a']) dx -= 1;
+    if (keys['d']) dx += 1;
 
     if (game && (game.touchActive || game.mouseActive)) {
       let offsetX, offsetY;
@@ -331,18 +347,8 @@ export class Player extends Entity {
     this.mesh.position.y = 0 + bobAmount;
     this.mesh.position.z = this.z;
 
-    // Update camera rotation around player
-    if (this.engine && this.engine.camera) {
-      const distance = this.engine.cameraDistance || 12;
-      const angle = this.cameraAngle;
-      const height = distance * 1.5;
-      const radius = distance * 0.5;
-
-      this.engine.camera.position.x = this.x + Math.sin(angle) * radius;
-      this.engine.camera.position.y = height;
-      this.engine.camera.position.z = this.z + Math.cos(angle) * radius;
-      this.engine.camera.lookAt(this.x, 0, this.z);
-    }
+    // Camera rotation is now handled in DustAndDynamiteGame.js
+    // to avoid conflicts with the main camera update
   }
 
   addXP(amount) {
