@@ -674,8 +674,8 @@ export class DustAndDynamiteGame {
             // Center projectile at 0, others spread evenly
             const angleOffset = (i - (totalProjectiles - 1) / 2) * spreadAngleRadians;
 
-            // Calculate the angle to target in XZ plane
-            const targetAngle = Math.atan2(dirX, dirZ);
+            // Calculate the angle to target in XZ plane using the non-normalized dx/dz
+            const targetAngle = Math.atan2(dx, dz);
 
             // Add the offset to create spread
             const finalAngle = targetAngle + angleOffset;
