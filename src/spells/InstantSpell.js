@@ -10,6 +10,9 @@ export class InstantSpell extends Spell {
 
     // Whether this is a continuous spell (fires repeatedly while active)
     this.isContinuous = config.isContinuous || false;
+
+    // Mark as instant spell for compatibility
+    this.isInstant = true;
   }
 
   /**

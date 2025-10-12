@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { Entity } from './Entity.js';
 import { resourceCache } from '../systems/ResourceCache.js';
-import { calculateDamageWithCrit } from '../spells/spellTypes.js';
+import { calculateDamageWithCrit } from '../utils/damageCalculations.js';
 
 export class Projectile extends Entity {
   constructor(engine, x, y, z, dirX, dirZ, weapon, stats, dirY = 0) {

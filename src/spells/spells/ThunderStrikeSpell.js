@@ -1,67 +1,47 @@
 import { InstantSpell } from '../InstantSpell.js';
 import { LightningExplosion } from '../../entities/LightningExplosion.js';
 import { LightningEffect } from '../../effects/LightningEffect.js';
+import spellData from '../spellData.json';
 
 /**
  * Thunder Strike - Sky lightning strikes ground with devastating explosion
  */
 export class ThunderStrikeSpell extends InstantSpell {
   constructor(level = 1) {
+    const data = spellData.THUNDER_STRIKE;
+
     super({
-      name: 'Thunder Strike',
-      description: 'Sky lightning strikes ground with devastating explosion',
-      category: 'lightning',
+      spellKey: 'THUNDER_STRIKE',
+      name: data.name,
+      description: data.description,
+      category: data.category,
+      targeting: data.targeting,
       level: level,
 
-      // Damage
-      damage: 200,
-      damageSpread: 15,
-
-      // Crit
-      critChance: 0.1,
-      critMultiplier: 2.0,
-      critDamageSpread: 10,
-
-      // Cooldown (will be randomized)
-      cooldown: 0.8,
-
-      // Targeting
-      targeting: 'random',
-      maxRange: 15
+      // Load base stats from JSON
+      ...data.base
     });
 
     // Thunder Strike specific properties
-    this.baseCooldownMin = 0.8;
-    this.baseCooldownMax = 1.5;
-    this.radius = 5;
+    this.hasRandomCooldown = true;
+    this.baseCooldownMin = data.base.cooldownMin;
+    this.baseCooldownMax = data.base.cooldownMax;
     this.lastGlobalStrike = 0;
 
     // Lightning effect configuration
     this.lightningEffect = new LightningEffect({
       color: 0xffff00,
       glowColor: 0xffffaa,
-      width: 1.2,
+      width: data.base.lightningWidth,
       taper: true,
       gradientColor: 0xffffff,
       lifetime: 0.3,
-      branches: 4,
+      branches: data.base.branchCountMin,
       branchWidth: 0.4
     });
 
-    // Apply level scaling
+    // Apply level scaling using base class method
     this.applyLevelScaling(level);
-  }
-
-  /**
-   * Apply level scaling to spell stats
-   * @param {number} level - Spell level (1-7)
-   */
-  applyLevelScaling(level) {
-    const damageScaling = [200, 250, 300, 360, 430, 510, 600];
-    const radiusScaling = [5, 5.5, 6, 6.5, 7, 7.5, 8];
-
-    this.damage = damageScaling[level - 1] || this.damage;
-    this.radius = radiusScaling[level - 1] || this.radius;
   }
 
   /**
@@ -84,8 +64,10 @@ export class ThunderStrikeSpell extends InstantSpell {
     const offsetX = (Math.random() - 0.5) * 3;
     const offsetZ = (Math.random() - 0.5) * 3;
 
-    // Update effect config
-    this.lightningEffect.config.branches = 2 + Math.floor(Math.random() * 4);
+    // Update effect config with level-scaled branch count
+    const branchRange = this.branchCountMax - this.branchCountMin;
+    this.lightningEffect.config.branches = this.branchCountMin + Math.floor(Math.random() * branchRange);
+    this.lightningEffect.config.width = this.lightningWidth;
 
     const lightning = this.lightningEffect.spawn(engine, {
       startX: target.x + offsetX,

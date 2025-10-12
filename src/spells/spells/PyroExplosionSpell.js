@@ -1,37 +1,25 @@
 import { InstantSpell } from '../InstantSpell.js';
 import { FireEffect } from '../../effects/FireEffect.js';
+import spellData from '../spellData.json';
 
 /**
  * Pyro Explosion - Explosive fire area damage
  */
 export class PyroExplosionSpell extends InstantSpell {
   constructor(level = 1) {
+    const data = spellData.PYRO_EXPLOSION;
+
     super({
-      name: 'Pyro Explosion',
-      description: 'Explosive fire area damage',
-      category: 'fire',
+      spellKey: 'PYRO_EXPLOSION',
+      name: data.name,
+      description: data.description,
+      category: data.category,
+      targeting: data.targeting,
       level: level,
 
-      // Damage
-      damage: 30,
-      damageSpread: 20,
-
-      // Crit (high for big hits)
-      critChance: 0.2,
-      critMultiplier: 2.5,
-      critDamageSpread: 15,
-
-      // Cooldown
-      cooldown: 1.5,
-
-      // Targeting
-      targeting: 'nearest',
-      maxRange: 20
+      // Load base stats from JSON
+      ...data.base
     });
-
-    // Pyro Explosion specific properties
-    this.radius = 3.5;
-    this.particleCount = 20;
 
     // Fire effect for visual
     this.fireEffect = new FireEffect({
@@ -41,24 +29,10 @@ export class PyroExplosionSpell extends InstantSpell {
       color: 0xff4400
     });
 
-    // Apply level scaling
+    // Apply level scaling using base class method
     this.applyLevelScaling(level);
-  }
 
-  /**
-   * Apply level scaling to spell stats
-   * @param {number} level - Spell level (1-7)
-   */
-  applyLevelScaling(level) {
-    const damageScaling = [30, 38, 46, 56, 68, 82, 100];
-    const radiusScaling = [3.5, 3.8, 4.1, 4.4, 4.7, 5.0, 5.5];
-    const particleScaling = [20, 22, 24, 26, 28, 30, 35];
-
-    this.damage = damageScaling[level - 1] || this.damage;
-    this.radius = radiusScaling[level - 1] || this.radius;
-    this.particleCount = particleScaling[level - 1] || this.particleCount;
-
-    // Update fire effect config
+    // Update fire effect with scaled values
     this.fireEffect.config.radius = this.radius;
     this.fireEffect.config.particleCount = this.particleCount;
   }

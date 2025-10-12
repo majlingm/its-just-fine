@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { Entity } from './Entity.js';
-import { calculateDamageWithCrit } from '../spells/spellTypes.js';
+import { calculateDamageWithCrit } from '../utils/damageCalculations.js';
 
 export class RingOfIce extends Entity {
   constructor(engine, player, damage, spell = null) {

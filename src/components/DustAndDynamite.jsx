@@ -1,8 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { GameEngine } from "../engine/GameEngine.js";
 import { DustAndDynamiteGame } from "../engine/DustAndDynamiteGame.js";
-import { SPELL_TYPES, upgradeSpell, createSpellInstance } from "../spells/spellTypes.js";
-import { getUpgradeCost } from "../spells/spellLevelScaling.js";
+import { spellRegistry } from "../spells/SpellRegistry.js";
 import { LEVELS, GAME_MODES, getAllLevels } from "../levels/index.js";
 import { preloadAllModels } from "../utils/modelLoader.js";
 import { getAssetPath } from "../utils/assetPath.js";
@@ -164,7 +163,10 @@ const DustAndDynamite = () => {
           upgradeChoices: prev.upgradeChoices,
           gameOver: prev.gameOver,
           gameOverTime: prev.gameOverTime,
-          weapons: game.player ? game.player.weapons.map((w) => w.type.name) : [],
+          weapons: game.player ? game.player.weapons.map((w) => {
+            const spell = spellRegistry.createSpell(w.spellKey, w.level);
+            return spell ? spell.name : w.spellKey;
+          }) : [],
         }));
       };
 
@@ -260,57 +262,61 @@ const DustAndDynamite = () => {
     }
   };
 
-  const toggleWeapon = (weaponType) => {
+  const toggleWeapon = (spellKey) => {
     if (!gameRef.current || !gameRef.current.player) return;
 
     const player = gameRef.current.player;
     const existingIndex = player.weapons.findIndex(
-      (w) => w.type === weaponType,
+      (w) => w.spellKey === spellKey,
     );
 
     if (existingIndex >= 0) {
       // Remove weapon
       player.weapons.splice(existingIndex, 1);
     } else {
-      // Add weapon
-      player.weapons.push({ type: weaponType, level: 1, lastShot: 0 });
+      // Add weapon with spell key
+      player.weapons.push({ spellKey: spellKey, level: 1, lastShot: 0 });
     }
   };
 
-  const hasWeapon = (weaponType) => {
+  const hasWeapon = (spellKey) => {
     if (!gameRef.current || !gameRef.current.player) return false;
-    return gameRef.current.player.weapons.some((w) => w.type === weaponType);
+    return gameRef.current.player.weapons.some((w) => w.spellKey === spellKey);
   };
 
-  const getWeaponLevel = (weaponType) => {
+  const getWeaponLevel = (spellKey) => {
     if (!gameRef.current || !gameRef.current.player) return 1;
-    const weapon = gameRef.current.player.weapons.find((w) => w.type === weaponType);
-    return weapon?.type?.level || 1;
+    const weapon = gameRef.current.player.weapons.find((w) => w.spellKey === spellKey);
+    return weapon?.level || 1;
   };
 
-  const handleSpellUpgrade = (weaponType, event) => {
+  const handleSpellUpgrade = (spellKey, event) => {
     event.stopPropagation(); // Prevent toggle when clicking upgrade button
 
     if (!gameRef.current || !gameRef.current.player) return;
 
     const player = gameRef.current.player;
-    const weapon = player.weapons.find((w) => w.type === weaponType);
+    const weapon = player.weapons.find((w) => w.spellKey === spellKey);
 
     if (!weapon) return;
 
-    // Find the spell key (e.g., 'THUNDER_STRIKE')
-    const spellKey = Object.keys(SPELL_TYPES).find(key => SPELL_TYPES[key] === weaponType);
+    // Increment level (max level 7)
+    if (weapon.level < 7) {
+      weapon.level++;
 
-    if (!spellKey) return;
+      // Clear cached spell instance so it gets recreated with new level
+      weapon.spellInstance = null;
 
-    // Attempt to upgrade
-    const success = upgradeSpell(weapon.type, spellKey);
-
-    if (success) {
-      // If this is a ring spell, destroy and recreate it with new stats
-      if (weapon.type.activeRing && weapon.type.activeRing.active) {
-        weapon.type.activeRing.destroy();
-        weapon.type.activeRing = null;
+      // If this is a ring spell, find the ring entity and destroy it so it recreates with new stats
+      const isRingSpell = spellKey === 'RING_OF_FIRE' || spellKey === 'RING_OF_ICE';
+      if (isRingSpell && gameRef.current.engine) {
+        const ringEntity = gameRef.current.engine.entities.find(entity =>
+          entity.active &&
+          (entity.constructor.name === 'RingOfFire' || entity.constructor.name === 'RingOfIce')
+        );
+        if (ringEntity) {
+          ringEntity.destroy();
+        }
       }
     }
   };
@@ -325,8 +331,8 @@ const DustAndDynamite = () => {
   const getRingSpells = () => {
     if (!gameRef.current || !gameRef.current.player) return [];
     const rings = [];
-    const ringFire = gameRef.current.player.weapons.find((w) => w.type === SPELL_TYPES.RING_OF_FIRE);
-    const ringIce = gameRef.current.player.weapons.find((w) => w.type === SPELL_TYPES.RING_OF_ICE);
+    const ringFire = gameRef.current.player.weapons.find((w) => w.spellKey === 'RING_OF_FIRE');
+    const ringIce = gameRef.current.player.weapons.find((w) => w.spellKey === 'RING_OF_ICE');
     if (ringFire) rings.push(ringFire);
     if (ringIce) rings.push(ringIce);
     return rings;
@@ -334,16 +340,34 @@ const DustAndDynamite = () => {
 
   // Check if any ring is full
   const isAnyRingFull = () => {
-    const rings = getRingSpells();
-    return rings.some(ring => ring.type.activeRing && ring.type.activeRing.isRingFull());
+    if (!engineRef.current || !engineRef.current.entities) return false;
+
+    // Find ring entities in the engine's entity list
+    const ringEntities = engineRef.current.entities.filter(entity =>
+      entity.active &&
+      entity.isRingFull &&
+      typeof entity.isRingFull === 'function'
+    );
+
+    return ringEntities.some(ring => ring.isRingFull());
   };
 
   // Trigger ring burst for all active rings
   const triggerRingBurst = () => {
-    const rings = getRingSpells();
-    rings.forEach(ring => {
-      if (ring.type.activeRing && ring.type.activeRing.isRingFull()) {
-        ring.type.activeRing.triggerBurst();
+    if (!engineRef.current || !engineRef.current.entities) return;
+
+    // Find ring entities in the engine's entity list
+    const ringEntities = engineRef.current.entities.filter(entity =>
+      entity.active &&
+      entity.isRingFull &&
+      entity.triggerBurst &&
+      typeof entity.isRingFull === 'function' &&
+      typeof entity.triggerBurst === 'function'
+    );
+
+    ringEntities.forEach(ring => {
+      if (ring.isRingFull()) {
+        ring.triggerBurst();
       }
     });
   };
@@ -1165,7 +1189,7 @@ const DustAndDynamite = () => {
                   background: isAnyRingFull()
                     ? getRingSpells().length === 2
                       ? "radial-gradient(circle, #ff8800 0%, #88ddff 50%, #ff4400 100%)" // Mixed fire + ice
-                      : getRingSpells()[0].type === SPELL_TYPES.RING_OF_FIRE
+                      : getRingSpells()[0].spellKey === 'RING_OF_FIRE'
                         ? "radial-gradient(circle, #ff8800, #ff4400)" // Fire only
                         : "radial-gradient(circle, #88ddff, #4499ff)" // Ice only
                     : "#333",
@@ -1590,15 +1614,16 @@ const DustAndDynamite = () => {
               </h3>
               <button
                 onClick={() => {
-                  // Add all spells
+                  // Add all spells using spell registry
                   if (gameRef.current && gameRef.current.player) {
-                    Object.values(SPELL_TYPES).forEach((spell) => {
+                    const allSpellKeys = spellRegistry.getAvailableSpells();
+                    allSpellKeys.forEach((spellKey) => {
                       const hasSpell = gameRef.current.player.weapons.some(
-                        (w) => w.type === spell
+                        (w) => w.spellKey === spellKey
                       );
                       if (!hasSpell) {
                         gameRef.current.player.weapons.push({
-                          type: spell,
+                          spellKey: spellKey,
                           level: 1,
                           lastShot: 0,
                         });
@@ -1631,14 +1656,17 @@ const DustAndDynamite = () => {
                 Turn On All Spells
               </button>
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                {Object.values(SPELL_TYPES).map((spell) => {
-                  const active = hasWeapon(spell);
-                  const level = getWeaponLevel(spell);
+                {spellRegistry.getAvailableSpells().map((spellKey) => {
+                  const spell = spellRegistry.createSpell(spellKey, 1);
+                  if (!spell) return null;
+
+                  const active = hasWeapon(spellKey);
+                  const level = getWeaponLevel(spellKey);
                   const canUpgrade = level < 7;
 
                   return (
                     <div
-                      key={spell.name}
+                      key={spellKey}
                       style={{
                         display: "flex",
                         gap: 8,
@@ -1646,7 +1674,7 @@ const DustAndDynamite = () => {
                       }}
                     >
                       <button
-                        onClick={() => toggleWeapon(spell)}
+                        onClick={() => toggleWeapon(spellKey)}
                         style={{
                           flex: 1,
                           padding: "10px 12px",
@@ -1683,7 +1711,7 @@ const DustAndDynamite = () => {
                       </button>
                       {active && canUpgrade && (
                         <button
-                          onClick={(e) => handleSpellUpgrade(spell, e)}
+                          onClick={(e) => handleSpellUpgrade(spellKey, e)}
                           style={{
                             padding: "10px 12px",
                             background: "transparent",

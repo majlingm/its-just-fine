@@ -2,7 +2,6 @@ import * as THREE from 'three';
 import { Entity } from './Entity.js';
 import { createPlayerSprite } from '../utils/sprites.js';
 import { loadCharacterModel, CHARACTER_MODELS } from '../utils/modelLoader.js';
-import { SPELL_TYPES } from '../spells/spellTypes.js';
 import { gameSettings } from '../systems/GameSettings.js';
 
 export class Player extends Entity {
@@ -49,7 +48,7 @@ export class Player extends Entity {
     };
 
     this.weapons = [
-      { type: SPELL_TYPES.FIREBALL, level: 1, lastShot: 0 }
+      { spellKey: 'FIREBALL', level: 1, lastShot: 0 }
     ];
 
     this.createMesh();

@@ -65,7 +65,6 @@ export class ProjectileSpell extends Spell {
    * @param {object} stats - Player stats
    */
   cast(engine, player, stats) {
-    if (!this.isReady()) return;
     if (!this.projectileClass) {
       console.error('ProjectileSpell: No projectileClass defined');
       return;
@@ -93,6 +92,28 @@ export class ProjectileSpell extends Spell {
       engine.addEntity(projectile);
     }
 
-    this.triggerCooldown();
+    // Note: cooldown is managed by the game loop via weaponInstance.lastShot
+    // Don't call this.triggerCooldown() here as it uses a separate cooldown system
+  }
+
+  /**
+   * Create a projectile (for backward compatibility)
+   * @param {object} engine - Game engine
+   * @param {number} x - Start X position
+   * @param {number} y - Start Y position
+   * @param {number} z - Start Z position
+   * @param {number} dirX - X direction
+   * @param {number} dirZ - Z direction
+   * @param {object} weapon - Weapon (this spell)
+   * @param {object} stats - Player stats
+   * @param {number} dirY - Y direction (optional)
+   * @returns {object} Projectile entity
+   */
+  createProjectile(engine, x, y, z, dirX, dirZ, weapon, stats, dirY = 0) {
+    if (!this.projectileClass) {
+      console.error('ProjectileSpell: No projectileClass defined');
+      return null;
+    }
+    return new this.projectileClass(engine, x, y, z, dirX, dirZ, this, stats, dirY);
   }
 }

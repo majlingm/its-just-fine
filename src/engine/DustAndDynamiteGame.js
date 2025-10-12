@@ -6,14 +6,13 @@ import { Projectile } from '../entities/Projectile.js';
 import { DynamiteProjectile } from '../entities/DynamiteProjectile.js';
 import { OrbitProjectile } from '../entities/OrbitProjectile.js';
 import { Pickup } from '../entities/Pickup.js';
-import { SPELL_TYPES } from '../spells/spellTypes.js';
+import { spellRegistry } from '../spells/SpellRegistry.js';
 import { upgradeWeapon, createWeaponUpgradeOption } from '../weapons/weaponUpgrades.js';
 import { SaveSystem } from '../systems/SaveSystem.js';
 import { LevelSystem } from '../systems/LevelSystem.js';
 import { WaveSystem } from '../systems/WaveSystem.js';
 import { ProjectilePool } from '../systems/ProjectilePool.js';
 import { EnemyProjectilePool } from '../systems/EnemyProjectilePool.js';
-import { spellCaster } from '../systems/SpellCaster.js';
 import { LEVELS } from '../levels/index.js';
 
 export class DustAndDynamiteGame {
@@ -184,7 +183,7 @@ export class DustAndDynamiteGame {
     this.player.maxHealth = saveData.player.maxHealth;
     this.player.stats = { ...saveData.player.stats };
     this.player.weapons = saveData.player.weapons.map(w => ({
-      type: w.type,
+      spellKey: w.spellKey || w.type, // Support old saves
       level: w.level,
       lastShot: 0
     }));
@@ -459,8 +458,12 @@ export class DustAndDynamiteGame {
 
   updateWeapons(dt) {
     this.player.weapons.forEach(weaponInstance => {
-      // Get spell instance from the spell caster system
-      const weapon = spellCaster.getSpell(weaponInstance);
+      // Cache spell instance on weaponInstance to avoid creating new instances every frame
+      // This is critical for persistent spells (Ring of Fire/Ice) to maintain their activeEntity state
+      if (!weaponInstance.spellInstance || weaponInstance.spellInstance.level !== weaponInstance.level) {
+        weaponInstance.spellInstance = spellRegistry.createSpell(weaponInstance.spellKey, weaponInstance.level);
+      }
+      const weapon = weaponInstance.spellInstance;
 
       if (weapon.targeting === 'orbit') {
         const existingOrbits = this.engine.entities.filter(
@@ -496,7 +499,7 @@ export class DustAndDynamiteGame {
 
         // Handle pattern weapons (don't need target)
         if (weapon.isPattern && weapon.execute) {
-          spellCaster.executeSpell(weapon, this.engine, this.player, null, this.player.stats);
+          weapon.execute(this.engine, this.player, null, this.player.stats);
           this.engine.sound.playShoot();
           weaponInstance.lastShot = this.engine.time;
           return;
@@ -549,7 +552,7 @@ export class DustAndDynamiteGame {
           }
 
           if (target) {
-            spellCaster.executeSpell(weapon, this.engine, this.player, target, this.player.stats);
+            weapon.execute(this.engine, this.player, target, this.player.stats);
             // Use special sounds for different weapons
             if (weapon.name === 'Thunder Strike' && this.engine.sound.playThunder) {
               this.engine.sound.playThunder();
@@ -565,35 +568,15 @@ export class DustAndDynamiteGame {
 
         // Handle persistent spells (like Ring of Fire - orbits player)
         if (weapon.isPersistent && weapon.execute) {
-          spellCaster.executeSpell(weapon, this.engine, this.player, null, this.player.stats);
+          weapon.execute(this.engine, this.player, null, this.player.stats);
           weaponInstance.lastShot = this.engine.time;
           return;
         }
 
         // Handle spells with no targeting (like Magic Bullet - shoots in random directions)
         if (weapon.targeting === 'none') {
-          // Calculate player center height
-          const playerScale = this.player.mesh?.scale.y || 1.0;
-          const baseHeight = 3.0; // Base model height in units
-          const playerHeight = baseHeight * playerScale;
-          const playerCenterY = playerHeight / 2;
-
-          const totalProjectiles = weapon.projectileCount || 1;
-
-          for (let i = 0; i < totalProjectiles; i++) {
-            const proj = weapon.createProjectile(
-              this.engine,
-              this.player.x,
-              playerCenterY, // Spawn at player center height
-              this.player.z,
-              0, // Direction will be randomized in createProjectile
-              0,
-              weapon,
-              this.player.stats
-            );
-            this.engine.addEntity(proj);
-          }
-
+          // Use the spell's cast method which properly handles direction calculation
+          weapon.cast(this.engine, this.player, this.player.stats);
           this.player.showMuzzleFlash();
           this.engine.sound.playShoot();
           weaponInstance.lastShot = this.engine.time;
@@ -991,16 +974,8 @@ export class DustAndDynamiteGame {
       { id: 'radius', name: 'Pickup Radius', desc: '+40% pickup range', type: 'stat', apply: (p) => p.stats.pickupRadius *= 1.4 },
     ];
 
-    // All available spell types
-    const allSpellTypes = [
-      SPELL_TYPES.THUNDER_STRIKE,
-      SPELL_TYPES.CHAIN_LIGHTNING,
-      SPELL_TYPES.FIREBALL,
-      SPELL_TYPES.PYRO_EXPLOSION,
-      SPELL_TYPES.RING_OF_FIRE,
-      SPELL_TYPES.ICE_LANCE,
-      SPELL_TYPES.MAGIC_BULLET
-    ];
+    // All available spell keys
+    const allSpellKeys = spellRegistry.getAvailableSpells();
 
     // Create weapon upgrade options (new weapons or upgrades)
     const weaponUpgrades = [];
@@ -1008,14 +983,14 @@ export class DustAndDynamiteGame {
     // Add upgrade options for existing spells
     this.player.weapons.forEach(weaponInstance => {
       if (weaponInstance.level < 5) {
-        weaponUpgrades.push(createWeaponUpgradeOption(weaponInstance.type, weaponInstance.level));
+        weaponUpgrades.push(createWeaponUpgradeOption(weaponInstance.spellKey, weaponInstance.level));
       }
     });
 
     // Add new spell options
-    allSpellTypes.forEach(spellType => {
-      if (!this.player.weapons.find(w => w.type === spellType)) {
-        weaponUpgrades.push(createWeaponUpgradeOption(spellType, 0));
+    allSpellKeys.forEach(spellKey => {
+      if (!this.player.weapons.find(w => w.spellKey === spellKey)) {
+        weaponUpgrades.push(createWeaponUpgradeOption(spellKey, 0));
       }
     });
 

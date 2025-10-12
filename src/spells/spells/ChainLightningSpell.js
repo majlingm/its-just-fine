@@ -1,56 +1,31 @@
 import { InstantSpell } from '../InstantSpell.js';
 import { ColoredLightning } from '../../entities/ColoredLightning.js';
+import spellData from '../spellData.json';
 
 /**
  * Chain Lightning - Continuous lightning that chains between enemies
  */
 export class ChainLightningSpell extends InstantSpell {
   constructor(level = 1) {
+    const data = spellData.CHAIN_LIGHTNING;
+
     super({
-      name: 'Chain Lightning',
-      description: 'Continuous lightning that chains between enemies',
-      category: 'lightning',
+      spellKey: 'CHAIN_LIGHTNING',
+      name: data.name,
+      description: data.description,
+      category: data.category,
+      targeting: data.targeting,
       level: level,
 
-      // Damage
-      damage: 12,
-      damageSpread: 10,
-
-      // Crit
-      critChance: 0.15,
-      critMultiplier: 1.5,
-      critDamageSpread: 5,
-
-      // Cooldown
-      cooldown: 0.15,
-
-      // Targeting
-      targeting: 'random',
-      maxRange: 15,
+      // Load base stats from JSON
+      ...data.base,
 
       // Mark as continuous
       isContinuous: true
     });
 
-    // Chain Lightning specific properties
-    this.chainCount = 3;
-    this.chainRange = 8;
-    this.lightningWidth = 1.2;
-
-    // Apply level scaling
+    // Apply level scaling using base class method
     this.applyLevelScaling(level);
-  }
-
-  /**
-   * Apply level scaling to spell stats
-   * @param {number} level - Spell level (1-7)
-   */
-  applyLevelScaling(level) {
-    const damageScaling = [12, 14, 16, 19, 22, 26, 30];
-    const chainScaling = [3, 3, 4, 4, 5, 5, 6];
-
-    this.damage = damageScaling[level - 1] || this.damage;
-    this.chainCount = chainScaling[level - 1] || this.chainCount;
   }
 
   /**

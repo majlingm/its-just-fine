@@ -1,58 +1,32 @@
 import { ProjectileSpell } from '../ProjectileSpell.js';
 import { MagicBullet } from '../../entities/MagicBullet.js';
+import spellData from '../spellData.json';
 
 /**
  * Magic Bullet - Fast rainbow bullets that spray in random directions
  */
 export class MagicBulletSpell extends ProjectileSpell {
   constructor(level = 1) {
+    const data = spellData.MAGIC_BULLET;
+
     super({
-      name: 'Magic Bullet',
-      description: 'Fast rainbow bullets that spray in random directions',
-      category: 'magic',
+      spellKey: 'MAGIC_BULLET',
+      name: data.name,
+      description: data.description,
+      category: data.category,
+      targeting: data.targeting,
       level: level,
 
-      // Damage
-      damage: 8,
-      damageSpread: 15,
+      // Load base stats from JSON
+      ...data.base,
 
-      // Crit
-      critChance: 0.1,
-      critMultiplier: 2.0,
-      critDamageSpread: 10,
-
-      // Cooldown
-      cooldown: 0.08,
-
-      // Projectile properties
-      speed: 30,
-      pierce: 1,
-      projectileCount: 1,
+      // Additional config
       spread: Math.PI * 2, // Full 360 degrees
-      lifetime: 0.6,
-
-      // Targeting
-      targeting: 'none', // Random directions
-      maxRange: 20,
-
-      // Projectile class
       projectileClass: MagicBullet
     });
 
-    // Apply level scaling
+    // Apply level scaling using base class method
     this.applyLevelScaling(level);
-  }
-
-  /**
-   * Apply level scaling to spell stats
-   * @param {number} level - Spell level (1-7)
-   */
-  applyLevelScaling(level) {
-    const damageScaling = [8, 10, 12, 14, 17, 20, 24];
-    const pierceScaling = [1, 1, 2, 2, 3, 3, 4];
-
-    this.damage = damageScaling[level - 1] || this.damage;
-    this.pierce = pierceScaling[level - 1] || this.pierce;
   }
 
   /**

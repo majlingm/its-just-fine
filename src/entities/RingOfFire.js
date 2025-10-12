@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { Entity } from './Entity.js';
 import { resourceCache } from '../systems/ResourceCache.js';
-import { calculateDamageWithCrit } from '../spells/spellTypes.js';
+import { calculateDamageWithCrit } from '../utils/damageCalculations.js';
 
 export class RingOfFire extends Entity {
   constructor(engine, player, damage, spell = null) {

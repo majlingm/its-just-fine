@@ -16,6 +16,9 @@ export class PersistentSpell extends Spell {
 
     // No cooldown for persistent spells
     this.cooldown = 0;
+
+    // Mark as persistent spell for compatibility
+    this.isPersistent = true;
   }
 
   /**
@@ -61,6 +64,21 @@ export class PersistentSpell extends Spell {
    */
   performSpecialAction(engine, player, stats) {
     // Override in subclass for special actions
+  }
+
+  /**
+   * Execute the persistent spell (for compatibility)
+   * @param {object} engine - Game engine
+   * @param {object} player - Player object
+   * @param {object} target - Target entity (unused)
+   * @param {object} stats - Player stats
+   */
+  execute(engine, player, target, stats) {
+    this.cast(engine, player, stats);
+    // Keep track of active entity in old format
+    if (this.activeEntity) {
+      this.activeRing = this.activeEntity;
+    }
   }
 
   /**

@@ -1,3 +1,5 @@
+import { applySpellLevelScaling } from './spellLevelScaling.js';
+
 /**
  * Base Spell class
  * All spells should extend this class
@@ -9,6 +11,7 @@ export class Spell {
     this.description = config.description || '';
     this.category = config.category || 'magic';
     this.level = config.level || 1;
+    this.spellKey = config.spellKey || null; // Key for scaling lookup
 
     // Damage properties
     this.damage = config.damage || 10;
@@ -163,5 +166,20 @@ export class Spell {
    */
   update(dt) {
     this.updateCooldown(dt);
+  }
+
+  /**
+   * Apply level scaling using centralized scaling data
+   * Subclasses can override this, but by default it uses spellLevelScaling.js
+   * @param {number} level - Spell level (1-7)
+   */
+  applyLevelScaling(level) {
+    if (!this.spellKey) {
+      console.warn(`Spell ${this.name} has no spellKey set for level scaling`);
+      return;
+    }
+
+    // Use centralized scaling function
+    applySpellLevelScaling(this, this.spellKey, level);
   }
 }
