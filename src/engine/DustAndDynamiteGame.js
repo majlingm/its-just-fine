@@ -13,6 +13,7 @@ import { LevelSystem } from '../systems/LevelSystem.js';
 import { WaveSystem } from '../systems/WaveSystem.js';
 import { ProjectilePool } from '../systems/ProjectilePool.js';
 import { EnemyProjectilePool } from '../systems/EnemyProjectilePool.js';
+import { StatsTracker } from '../systems/StatsTracker.js';
 import { LEVELS } from '../levels/index.js';
 
 export class DustAndDynamiteGame {
@@ -48,6 +49,10 @@ export class DustAndDynamiteGame {
     // Initialize projectile pools for performance
     this.projectilePool = new ProjectilePool(engine, 200);
     this.enemyProjectilePool = new EnemyProjectilePool(engine, 100);
+
+    // Initialize stats tracker
+    this.statsTracker = new StatsTracker();
+    this.showStats = false; // Toggle with a key
 
     // Wave system callbacks
     this.onWaveUpdate = null; // New callback for wave UI updates
@@ -269,6 +274,9 @@ export class DustAndDynamiteGame {
     this.projectilePool.update();
     this.enemyProjectilePool.update();
 
+    // Update stats tracker
+    this.statsTracker.update(dt, this.engine.time);
+
     // Old wave system for levels without wave config (fallback)
     const newWave = Math.floor(this.engine.time / 60) + 1;
     if (newWave > this.wave) {
@@ -429,6 +437,16 @@ export class DustAndDynamiteGame {
 
     if (this.onUpdate) {
       const waveInfo = this.waveSystem.getWaveInfo();
+      const performanceStats = this.statsTracker.getStats();
+
+      // Get THREE.js renderer info
+      const rendererInfo = this.engine.renderer?.info;
+      const threeStats = rendererInfo ? {
+        geometries: rendererInfo.memory?.geometries || 0,
+        textures: rendererInfo.memory?.textures || 0,
+        drawCalls: rendererInfo.render?.calls || 0,
+        triangles: rendererInfo.render?.triangles || 0
+      } : null;
 
       this.onUpdate({
         health: Math.max(0, Math.floor(this.player.health)),
@@ -451,7 +469,20 @@ export class DustAndDynamiteGame {
         // Enemy indicator info
         nearestEnemyDirection: nearestEnemyDirection,
         nearestEnemyDistance: nearestEnemyDistance,
-        enemyChanged: this.cachedEnemyChanged || false
+        enemyChanged: this.cachedEnemyChanged || false,
+        // Performance stats
+        showStats: this.showStats,
+        stats: {
+          currentDPS: performanceStats.currentDPS,
+          rollingAverageDPS: performanceStats.rollingAverageDPS,
+          totalDamageDealt: performanceStats.totalDamageDealt,
+          fps: performanceStats.fps,
+          entityCount: this.engine.entities.length,
+          projectileCount: this.projectiles.length,
+          enemyCount: this.enemies.length,
+          memory: performanceStats.memory,
+          three: threeStats
+        }
       });
     }
   }
@@ -636,14 +667,22 @@ export class DustAndDynamiteGame {
           const dirZ = dz / mag;
 
           const totalProjectiles = weapon.projectileCount || 1;
-          const spread = weapon.spread || 0;
+          const spreadAngleRadians = weapon.spread || 0;
 
           for (let i = 0; i < totalProjectiles; i++) {
-            const spreadAngle = (i - (totalProjectiles - 1) / 2) * spread;
-            const cos = Math.cos(spreadAngle);
-            const sin = Math.sin(spreadAngle);
-            const newDirX = dirX * cos - dirZ * sin;
-            const newDirZ = dirX * sin + dirZ * cos;
+            // Calculate the angular offset for this projectile
+            // Center projectile at 0, others spread evenly
+            const angleOffset = (i - (totalProjectiles - 1) / 2) * spreadAngleRadians;
+
+            // Calculate the angle to target in XZ plane
+            const targetAngle = Math.atan2(dirX, dirZ);
+
+            // Add the offset to create spread
+            const finalAngle = targetAngle + angleOffset;
+
+            // Convert back to direction vector (all projectiles still aim generally at target)
+            const newDirX = Math.sin(finalAngle);
+            const newDirZ = Math.cos(finalAngle);
 
             const proj = weapon.createProjectile(
               this.engine,
@@ -686,7 +725,12 @@ export class DustAndDynamiteGame {
         const hitRadius = proj instanceof OrbitProjectile ? 1.5 : 1;
 
         if (dx * dx + dz * dz < hitRadius * hitRadius) {
-          if (enemy.takeDamage(proj.damage * (proj instanceof OrbitProjectile ? dt : 1))) {
+          const damageDealt = proj.damage * (proj instanceof OrbitProjectile ? dt : 1);
+
+          // Record damage for DPS tracking
+          this.statsTracker.recordDamage(damageDealt, this.engine.time);
+
+          if (enemy.takeDamage(damageDealt)) {
             this.killCount++;
             this.engine.sound.playHit();
             this.dropXP(enemy.x, enemy.z, enemy.isElite);

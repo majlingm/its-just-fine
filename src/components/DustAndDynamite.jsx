@@ -381,14 +381,25 @@ const DustAndDynamite = () => {
       if (e.key === 'p' || e.key === 'P') {
         setShowDevMenu(prev => {
           const newState = !prev;
-          // Auto-pause when opening dev menu
-          if (newState && gameRef.current) {
-            gameRef.current.setPause(true);
-            // Update pause button text if it exists
-            const btn = document.getElementById('pause-btn');
-            if (btn) {
-              btn.textContent = 'PAUSED';
-              btn.style.borderColor = 'rgba(255, 200, 0, 0.5)';
+          if (gameRef.current) {
+            if (newState) {
+              // Auto-pause when opening dev menu
+              gameRef.current.setPause(true);
+              // Update pause button text if it exists
+              const btn = document.getElementById('pause-btn');
+              if (btn) {
+                btn.textContent = 'PAUSED';
+                btn.style.borderColor = 'rgba(255, 200, 0, 0.5)';
+              }
+            } else {
+              // Auto-unpause when closing dev menu
+              gameRef.current.setPause(false);
+              // Update pause button text if it exists
+              const btn = document.getElementById('pause-btn');
+              if (btn) {
+                btn.textContent = 'PAUSE';
+                btn.style.borderColor = 'rgba(255, 255, 255, 0.2)';
+              }
             }
           }
           return newState;
@@ -1127,6 +1138,134 @@ const DustAndDynamite = () => {
             </div>
           </div>
 
+          {/* Performance Stats - Toggle in Dev Menu */}
+          {uiState.showStats && uiState.stats && (
+            <div
+              style={{
+                position: "absolute",
+                top: 140,
+                left: 40,
+                fontFamily: "'Inter', sans-serif",
+                color: "rgba(255, 255, 255, 0.9)",
+                pointerEvents: "none",
+                background: "rgba(0, 0, 0, 0.3)",
+                padding: 16,
+                border: "1px solid rgba(255, 255, 255, 0.1)",
+              }}
+            >
+              <div style={{ fontSize: 10, fontWeight: 200, letterSpacing: "0.2em", textTransform: "uppercase", opacity: 0.5, marginBottom: 12 }}>
+                Stats
+              </div>
+
+              {/* DPS Metrics */}
+              <div style={{ marginBottom: 8 }}>
+                <div style={{ fontSize: 10, fontWeight: 200, opacity: 0.6, marginBottom: 4 }}>
+                  Current DPS
+                </div>
+                <div style={{ fontSize: 18, fontWeight: 200, letterSpacing: "0.05em" }}>
+                  {uiState.stats.currentDPS}
+                </div>
+              </div>
+
+              <div style={{ marginBottom: 8 }}>
+                <div style={{ fontSize: 10, fontWeight: 200, opacity: 0.6, marginBottom: 4 }}>
+                  Avg DPS (5s)
+                </div>
+                <div style={{ fontSize: 18, fontWeight: 200, letterSpacing: "0.05em" }}>
+                  {uiState.stats.rollingAverageDPS}
+                </div>
+              </div>
+
+              <div style={{ marginBottom: 12 }}>
+                <div style={{ fontSize: 10, fontWeight: 200, opacity: 0.6, marginBottom: 4 }}>
+                  Total Damage
+                </div>
+                <div style={{ fontSize: 14, fontWeight: 200, letterSpacing: "0.05em" }}>
+                  {uiState.stats.totalDamageDealt.toLocaleString()}
+                </div>
+              </div>
+
+              {/* Divider */}
+              <div style={{ width: "100%", height: 1, background: "rgba(255, 255, 255, 0.1)", marginBottom: 12 }} />
+
+              {/* Performance Metrics */}
+              <div style={{ marginBottom: 8 }}>
+                <div style={{ fontSize: 10, fontWeight: 200, opacity: 0.6, marginBottom: 4 }}>
+                  FPS
+                </div>
+                <div style={{ fontSize: 18, fontWeight: 200, letterSpacing: "0.05em" }}>
+                  {uiState.stats.fps}
+                </div>
+              </div>
+
+              <div style={{ marginBottom: 4 }}>
+                <div style={{ fontSize: 10, fontWeight: 200, opacity: 0.6 }}>
+                  Entities: {uiState.stats.entityCount}
+                </div>
+              </div>
+
+              <div style={{ marginBottom: 4 }}>
+                <div style={{ fontSize: 10, fontWeight: 200, opacity: 0.6 }}>
+                  Projectiles: {uiState.stats.projectileCount}
+                </div>
+              </div>
+
+              <div>
+                <div style={{ fontSize: 10, fontWeight: 200, opacity: 0.6 }}>
+                  Enemies: {uiState.stats.enemyCount}
+                </div>
+              </div>
+
+              {/* Memory Stats (Chrome/Edge only) */}
+              {uiState.stats.memory && (
+                <>
+                  {/* Divider */}
+                  <div style={{ width: "100%", height: 1, background: "rgba(255, 255, 255, 0.1)", marginTop: 12, marginBottom: 12 }} />
+
+                  <div style={{ marginBottom: 8 }}>
+                    <div style={{ fontSize: 10, fontWeight: 200, opacity: 0.6, marginBottom: 4 }}>
+                      Heap Usage
+                    </div>
+                    <div style={{ fontSize: 14, fontWeight: 200, letterSpacing: "0.05em", minWidth: 180 }}>
+                      {uiState.stats.memory.usedJSHeapSize}MB / {uiState.stats.memory.jsHeapSizeLimit}MB ({uiState.stats.memory.heapUsagePercent}%)
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {/* THREE.js Stats */}
+              {uiState.stats.three && (
+                <>
+                  {/* Divider */}
+                  <div style={{ width: "100%", height: 1, background: "rgba(255, 255, 255, 0.1)", marginTop: 12, marginBottom: 12 }} />
+
+                  <div style={{ marginBottom: 4 }}>
+                    <div style={{ fontSize: 10, fontWeight: 200, opacity: 0.6 }}>
+                      Geometries: {uiState.stats.three.geometries}
+                    </div>
+                  </div>
+
+                  <div style={{ marginBottom: 4 }}>
+                    <div style={{ fontSize: 10, fontWeight: 200, opacity: 0.6 }}>
+                      Textures: {uiState.stats.three.textures}
+                    </div>
+                  </div>
+
+                  <div style={{ marginBottom: 4 }}>
+                    <div style={{ fontSize: 10, fontWeight: 200, opacity: 0.6 }}>
+                      Draw Calls: {uiState.stats.three.drawCalls}
+                    </div>
+                  </div>
+
+                  <div>
+                    <div style={{ fontSize: 10, fontWeight: 200, opacity: 0.6 }}>
+                      Triangles: {uiState.stats.three.triangles.toLocaleString()}
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+          )}
 
           {/* Wave Notification - minimalist */}
           {waveNotification && (
@@ -1467,6 +1606,48 @@ const DustAndDynamite = () => {
                 }}
               >
                 PAUSED
+              </button>
+
+              {/* Stats Toggle Button */}
+              <button
+                onClick={() => {
+                  if (gameRef.current) {
+                    gameRef.current.showStats = !gameRef.current.showStats;
+                    const btn = document.getElementById('stats-btn');
+                    if (btn) {
+                      btn.textContent = gameRef.current.showStats ? 'Stats: ON' : 'Stats: OFF';
+                      btn.style.borderColor = gameRef.current.showStats ? 'rgba(0, 200, 255, 0.5)' : 'rgba(255, 255, 255, 0.2)';
+                    }
+                  }
+                }}
+                id="stats-btn"
+                style={{
+                  position: "absolute",
+                  bottom: 100,
+                  left: 140,
+                  padding: "8px 16px",
+                  background: "rgba(0, 0, 0, 0.3)",
+                  color: "rgba(255, 255, 255, 0.7)",
+                  border: "1px solid rgba(255, 255, 255, 0.2)",
+                  cursor: "pointer",
+                  fontFamily: "'Inter', sans-serif",
+                  fontSize: 12,
+                  fontWeight: 200,
+                  letterSpacing: "0.1em",
+                  textTransform: "uppercase",
+                  zIndex: 1000,
+                  transition: "all 0.3s",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.borderColor = gameRef.current?.showStats ? "rgba(0, 200, 255, 0.7)" : "rgba(255, 255, 255, 0.5)";
+                  e.currentTarget.style.color = "rgba(255, 255, 255, 1)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.borderColor = gameRef.current?.showStats ? "rgba(0, 200, 255, 0.5)" : "rgba(255, 255, 255, 0.2)";
+                  e.currentTarget.style.color = "rgba(255, 255, 255, 0.7)";
+                }}
+              >
+                Stats: OFF
               </button>
 
               {/* Spell Toggle Panel */}
