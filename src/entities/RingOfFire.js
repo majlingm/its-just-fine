@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { Entity } from './Entity.js';
 import { resourceCache } from '../systems/ResourceCache.js';
+import { calculateDamageWithSpread } from '../spells/spellTypes.js';
 
 export class RingOfFire extends Entity {
   constructor(engine, player, damage, spell = null) {
@@ -8,6 +9,7 @@ export class RingOfFire extends Entity {
     this.engine = engine;
     this.player = player;
     this.baseDamage = damage * 0.09; // Each particle does 9% of base damage
+    this.damageSpread = spell?.damageSpread || 0; // Store damage spread for later use
     this.fireParticles = [];
 
     // Use spell level stats if provided, otherwise use defaults
@@ -60,6 +62,11 @@ export class RingOfFire extends Entity {
         const x = this.player.x + Math.cos(angle) * radius;
         const z = this.player.z + Math.sin(angle) * radius;
 
+        const burstDamage = calculateDamageWithSpread(
+          this.baseDamage * this.burstDamageMultiplier,
+          this.damageSpread
+        );
+
         this.burstProjectiles.push({
           sprite: particle.sprite,
           x: x,
@@ -71,7 +78,7 @@ export class RingOfFire extends Entity {
           currentSpeed: 50, // Current speed (will decelerate)
           lifetime: 2.0,
           age: 0,
-          damage: this.baseDamage * this.burstDamageMultiplier,
+          damage: burstDamage,
           hitEntities: new Set()
         });
 
@@ -286,7 +293,8 @@ export class RingOfFire extends Entity {
           if (currentTime - lastDamage >= this.damageInterval) {
             this.lastDamageTime.set(entity, currentTime);
 
-            const died = entity.takeDamage(this.baseDamage);
+            const damage = calculateDamageWithSpread(this.baseDamage, this.damageSpread);
+            const died = entity.takeDamage(damage);
             if (died && this.engine.game) {
               this.engine.game.killCount++;
               this.engine.sound.playHit();

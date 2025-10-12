@@ -13,6 +13,24 @@ import { FireEffect } from '../effects/FireEffect.js';
 import { applySpellLevelScaling } from './spellLevelScaling.js';
 import * as THREE from 'three';
 
+/**
+ * Calculate spell damage with randomized spread
+ * @param {number} baseDamage - Base damage value
+ * @param {number} damageSpread - Spread percentage (e.g., 10 = 10% variance)
+ * @returns {number} Damage with random variance applied
+ */
+export function calculateDamageWithSpread(baseDamage, damageSpread = 0) {
+  if (damageSpread <= 0) return baseDamage;
+
+  // Convert spread to decimal (10% = 0.10)
+  const spreadDecimal = damageSpread / 100;
+
+  // Random variance: -spread to +spread
+  const variance = (Math.random() * 2 - 1) * spreadDecimal;
+
+  return baseDamage * (1 + variance);
+}
+
 // Configure reusable effects
 const thunderStrikeEffect = new LightningEffect({
   color: 0xffff00,
@@ -43,6 +61,7 @@ export const SPELL_TYPES = {
     baseCooldownMin: 0.8,
     baseCooldownMax: 1.5,
     damage: 200,
+    damageSpread: 15, // 15% damage variance
     targeting: 'random',
     maxRange: 15,
     isInstant: true,
@@ -82,12 +101,16 @@ export const SPELL_TYPES = {
 
       // Create ground explosion at impact with spell level radius
       const explosionRadius = spell.radius || 5;
+      const finalDamage = calculateDamageWithSpread(
+        spell.damage * stats.damage,
+        spell.damageSpread
+      );
       const explosion = new LightningExplosion(
         engine,
         target.x,
         target.z,
         explosionRadius,
-        spell.damage * stats.damage
+        finalDamage
       );
       engine.addEntity(explosion);
     }
@@ -100,6 +123,7 @@ export const SPELL_TYPES = {
     level: 1, // Default level
     cooldown: 0.15, // Fast continuous fire rate
     damage: 12,
+    damageSpread: 10, // 10% damage variance
     targeting: 'random', // Random target within zone
     isInstant: true,
     isContinuous: true, // Mark as continuous spell
@@ -109,7 +133,7 @@ export const SPELL_TYPES = {
     execute: (engine, player, target, spell, stats) => {
       if (!target) return;
 
-      const damage = spell.damage * stats.damage;
+      const baseDamage = spell.damage * stats.damage;
       let currentTarget = target;
       const hitEnemies = new Set();
       let prevX = player.x;
@@ -117,6 +141,9 @@ export const SPELL_TYPES = {
 
       for (let i = 0; i < spell.chainCount; i++) {
         if (!currentTarget || hitEnemies.has(currentTarget)) break;
+
+        // Calculate damage with spread for each chain
+        const damage = calculateDamageWithSpread(baseDamage, spell.damageSpread);
 
         // Create dark purple lightning bolt with spell level width
         const lightningWidth = spell.lightningWidth || 1.2;
@@ -176,6 +203,7 @@ export const SPELL_TYPES = {
     level: 1, // Default level
     cooldown: 0.25,
     damage: 16,
+    damageSpread: 10, // 10% damage variance
     speed: 20,
     pierce: 2,
     projectileCount: 1,
@@ -195,6 +223,7 @@ export const SPELL_TYPES = {
     level: 1, // Default level
     cooldown: 1.5,
     damage: 30,
+    damageSpread: 20, // 20% damage variance (more random for explosions)
     targeting: 'nearest',
     isInstant: true,
     execute: (engine, player, target, spell, stats) => {
@@ -204,11 +233,16 @@ export const SPELL_TYPES = {
       pyroExplosionEffect.config.radius = spell.radius || 3.5;
       pyroExplosionEffect.config.particleCount = spell.particleCount || 20;
 
+      const finalDamage = calculateDamageWithSpread(
+        spell.damage * stats.damage,
+        spell.damageSpread
+      );
+
       pyroExplosionEffect.spawn(engine, {
         x: target.x,
         y: 0, // Ground explosion
         z: target.z,
-        damage: spell.damage * stats.damage
+        damage: finalDamage
       });
     }
   },
@@ -220,6 +254,7 @@ export const SPELL_TYPES = {
     level: 1, // Default level
     cooldown: 0, // No cooldown - continuous effect
     damage: 15, // Total DPS spread across many particles
+    damageSpread: 5, // 5% damage variance (low for consistency)
     targeting: 'self',
     isInstant: false,
     isContinuous: true,
@@ -244,6 +279,7 @@ export const SPELL_TYPES = {
     baseCooldownMin: 0.3,
     baseCooldownMax: 0.8,
     damage: 20,
+    damageSpread: 12, // 12% damage variance
     speed: 25,
     pierce: 3,
     projectileCount: 1,
@@ -264,6 +300,7 @@ export const SPELL_TYPES = {
     level: 1, // Default level
     cooldown: 0, // No cooldown - continuous effect
     damage: 10, // Lower damage than Ring of Fire
+    damageSpread: 5, // 5% damage variance (low for consistency)
     targeting: 'self',
     isInstant: false,
     isContinuous: true,
@@ -286,6 +323,7 @@ export const SPELL_TYPES = {
     level: 1, // Default level
     cooldown: 0.08, // Very fast fire rate
     damage: 8,
+    damageSpread: 15, // 15% damage variance
     speed: 30, // Very fast
     pierce: 1,
     projectileCount: 1,

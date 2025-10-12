@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { Entity } from './Entity.js';
 import { resourceCache } from '../systems/ResourceCache.js';
+import { calculateDamageWithSpread } from '../spells/spellTypes.js';
 
 export class Projectile extends Entity {
   constructor(engine, x, y, z, dirX, dirZ, weapon, stats, dirY = 0) {
@@ -13,7 +14,12 @@ export class Projectile extends Entity {
     this.dirY = dirY; // Support 3D direction
     this.dirZ = dirZ;
     this.speed = weapon.speed * stats.projectileSpeed;
-    this.damage = weapon.damage * stats.damage;
+
+    // Calculate damage with spread if available
+    const baseDamage = weapon.damage * stats.damage;
+    const damageSpread = weapon.damageSpread || 0;
+    this.damage = calculateDamageWithSpread(baseDamage, damageSpread);
+
     this.pierce = weapon.pierce + stats.pierce;
     this.pierceCount = 0;
     this.lifetime = weapon.lifetime || 3;

@@ -2,6 +2,8 @@ import * as THREE from 'three';
 import { Entity } from './Entity.js';
 import { createEnemySprite, createEliteGlow } from '../utils/sprites.js';
 import { loadCharacterModel, CHARACTER_MODELS } from '../utils/modelLoader.js';
+import { DamageNumber } from '../effects/DamageNumber.js';
+import { gameSettings } from '../systems/GameSettings.js';
 
 export class Enemy extends Entity {
   constructor(engine, x, z, type = 'bandit') {
@@ -442,12 +444,24 @@ export class Enemy extends Entity {
     }
   }
 
-  takeDamage(amount) {
+  takeDamage(amount, isCritical = false) {
     this.health -= amount;
 
     // Track total damage dealt
     if (this.engine.game) {
       this.engine.game.totalDamageDealt += amount;
+    }
+
+    // Show damage number if enabled
+    if (gameSettings.get('gameplay.showDamageNumbers')) {
+      const damageNumber = new DamageNumber(
+        Math.round(amount),
+        this.x,
+        1.5, // Height above ground
+        this.z,
+        isCritical
+      );
+      this.engine.addEntity(damageNumber);
     }
 
     if (this.health <= 0) {

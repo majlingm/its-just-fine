@@ -3,6 +3,7 @@ import { Entity } from './Entity.js';
 import { createPlayerSprite } from '../utils/sprites.js';
 import { loadCharacterModel, CHARACTER_MODELS } from '../utils/modelLoader.js';
 import { SPELL_TYPES } from '../spells/spellTypes.js';
+import { gameSettings } from '../systems/GameSettings.js';
 
 export class Player extends Entity {
   constructor(engine) {
@@ -216,27 +217,20 @@ export class Player extends Entity {
       }
     }
 
-    // Check for new key presses to update locked direction
+    // Get camera movement mode from settings
+    const cameraMovementMode = gameSettings.get('controls.cameraMovementMode');
     const movementKeysPressed = keys['w'] || keys['s'] || keys['a'] || keys['d'];
 
     if (movementKeysPressed) {
-      // Check if this is a new key press or key combination change
-      const keyStateChanged =
-        (keys['w'] !== this.lastKeys['w']) ||
-        (keys['s'] !== this.lastKeys['s']) ||
-        (keys['a'] !== this.lastKeys['a']) ||
-        (keys['d'] !== this.lastKeys['d']);
+      // Calculate input direction
+      let inputX = 0, inputZ = 0;
+      if (keys['w']) inputZ = -1;  // Forward
+      if (keys['s']) inputZ = 1;   // Backward
+      if (keys['a']) inputX = -1;  // Left
+      if (keys['d']) inputX = 1;   // Right
 
-      if (keyStateChanged) {
-        // Recalculate direction based on current camera angle
-        let inputX = 0, inputZ = 0;
-        if (keys['w']) inputZ = -1;  // Forward
-        if (keys['s']) inputZ = 1;   // Backward
-        if (keys['a']) inputX = -1;  // Left
-        if (keys['d']) inputX = 1;   // Right
-
-        // Apply camera rotation to get world direction
-        // Need to negate angle because camera position uses opposite direction
+      if (cameraMovementMode === 'continuous') {
+        // Continuous mode: Update direction every frame based on camera
         const camAngle = -this.cameraAngle;
         this.lockedMoveDirection.x = inputX * Math.cos(camAngle) - inputZ * Math.sin(camAngle);
         this.lockedMoveDirection.z = inputX * Math.sin(camAngle) + inputZ * Math.cos(camAngle);
@@ -248,12 +242,34 @@ export class Player extends Entity {
           this.lockedMoveDirection.x /= mag;
           this.lockedMoveDirection.z /= mag;
         }
+      } else {
+        // Locked mode: Only update direction when key state changes
+        const keyStateChanged =
+          (keys['w'] !== this.lastKeys['w']) ||
+          (keys['s'] !== this.lastKeys['s']) ||
+          (keys['a'] !== this.lastKeys['a']) ||
+          (keys['d'] !== this.lastKeys['d']);
 
-        console.log('Direction locked:', {
-          inputX, inputZ,
-          camAngle: (camAngle * 180 / Math.PI).toFixed(1) + '°',
-          lockedDir: { x: this.lockedMoveDirection.x.toFixed(2), z: this.lockedMoveDirection.z.toFixed(2) }
-        });
+        if (keyStateChanged) {
+          // Recalculate direction based on current camera angle
+          const camAngle = -this.cameraAngle;
+          this.lockedMoveDirection.x = inputX * Math.cos(camAngle) - inputZ * Math.sin(camAngle);
+          this.lockedMoveDirection.z = inputX * Math.sin(camAngle) + inputZ * Math.cos(camAngle);
+
+          // Normalize if diagonal
+          if (inputX !== 0 && inputZ !== 0) {
+            const mag = Math.sqrt(this.lockedMoveDirection.x * this.lockedMoveDirection.x +
+                                 this.lockedMoveDirection.z * this.lockedMoveDirection.z);
+            this.lockedMoveDirection.x /= mag;
+            this.lockedMoveDirection.z /= mag;
+          }
+
+          console.log('Direction locked:', {
+            inputX, inputZ,
+            camAngle: (camAngle * 180 / Math.PI).toFixed(1) + '°',
+            lockedDir: { x: this.lockedMoveDirection.x.toFixed(2), z: this.lockedMoveDirection.z.toFixed(2) }
+          });
+        }
       }
 
       // Use locked direction for movement
