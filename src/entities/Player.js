@@ -58,9 +58,7 @@ export class Player extends Entity {
   async createMesh() {
     try {
       // Load 3D model with animations
-      console.log('Loading player model:', CHARACTER_MODELS.player);
       const { scene: model, animations } = await loadCharacterModel(CHARACTER_MODELS.player);
-      console.log('Player model loaded successfully');
 
       model.scale.set(2.0, 2.0, 2.0);
       model.rotation.y = Math.PI; // Face forward

@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { Entity } from './Entity.js';
 import { resourceCache } from '../systems/ResourceCache.js';
-import { calculateDamageWithSpread } from '../spells/spellTypes.js';
+import { calculateDamageWithCrit } from '../spells/spellTypes.js';
 
 export class RingOfFire extends Entity {
   constructor(engine, player, damage, spell = null) {
@@ -9,7 +9,7 @@ export class RingOfFire extends Entity {
     this.engine = engine;
     this.player = player;
     this.baseDamage = damage * 0.09; // Each particle does 9% of base damage
-    this.damageSpread = spell?.damageSpread || 0; // Store damage spread for later use
+    this.spell = spell; // Store spell for crit calculation
     this.fireParticles = [];
 
     // Use spell level stats if provided, otherwise use defaults
@@ -62,9 +62,11 @@ export class RingOfFire extends Entity {
         const x = this.player.x + Math.cos(angle) * radius;
         const z = this.player.z + Math.sin(angle) * radius;
 
-        const burstDamage = calculateDamageWithSpread(
+        // Calculate burst damage with crit (create temp spell object with burst damage)
+        const burstSpell = {...this.spell, damage: this.baseDamage * this.burstDamageMultiplier};
+        const {damage: burstDamage, isCrit} = calculateDamageWithCrit(
           this.baseDamage * this.burstDamageMultiplier,
-          this.damageSpread
+          this.spell
         );
 
         this.burstProjectiles.push({
@@ -79,6 +81,7 @@ export class RingOfFire extends Entity {
           lifetime: 2.0,
           age: 0,
           damage: burstDamage,
+          isCrit: isCrit,
           hitEntities: new Set()
         });
 
@@ -194,7 +197,7 @@ export class RingOfFire extends Entity {
         if (dist < 0.6) {
           proj.hitEntities.add(entity);
 
-          const died = entity.takeDamage(proj.damage);
+          const died = entity.takeDamage(proj.damage, proj.isCrit);
           if (died && this.engine.game) {
             this.engine.game.killCount++;
             this.engine.sound.playHit();
@@ -293,8 +296,8 @@ export class RingOfFire extends Entity {
           if (currentTime - lastDamage >= this.damageInterval) {
             this.lastDamageTime.set(entity, currentTime);
 
-            const damage = calculateDamageWithSpread(this.baseDamage, this.damageSpread);
-            const died = entity.takeDamage(damage);
+            const {damage, isCrit} = calculateDamageWithCrit(this.baseDamage, this.spell);
+            const died = entity.takeDamage(damage, isCrit);
             if (died && this.engine.game) {
               this.engine.game.killCount++;
               this.engine.sound.playHit();

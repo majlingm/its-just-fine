@@ -3,13 +3,14 @@ import { Entity } from './Entity.js';
 import { resourceCache } from '../systems/ResourceCache.js';
 
 export class FireExplosion extends Entity {
-  constructor(engine, x, z, radius, damage, particleCount = 30) {
+  constructor(engine, x, z, radius, damage, particleCount = 30, isCrit = false) {
     super();
     this.engine = engine;
     this.x = x;
     this.z = z;
     this.radius = radius;
     this.damage = damage;
+    this.isCrit = isCrit;
     this.particleCount = particleCount; // Allow customizable particle count
     this.lifetime = 0.6;
     this.age = 0;
@@ -119,7 +120,7 @@ export class FireExplosion extends Entity {
         const dist = Math.sqrt(dx * dx + dz * dz);
 
         if (dist <= this.radius) {
-          const died = entity.takeDamage(this.damage);
+          const died = entity.takeDamage(this.damage, this.isCrit);
           if (died && this.engine.game) {
             this.engine.game.killCount++;
             this.engine.sound.playHit();

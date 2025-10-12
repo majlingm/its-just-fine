@@ -149,7 +149,7 @@ export class FlameProjectile extends Projectile {
           }
         }
 
-        const died = entity.takeDamage(this.damage);
+        const died = entity.takeDamage(this.damage, this.isCrit);
         if (died && this.engine.game) {
           this.engine.game.killCount++;
           this.engine.sound.playHit();

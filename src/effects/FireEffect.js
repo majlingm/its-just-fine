@@ -22,18 +22,20 @@ export class FireEffect {
   /**
    * Spawn a fire explosion
    * @param {Object} engine - Game engine
-   * @param {Object} params - { x, y, z, damage }
+   * @param {Object} params - { x, y, z, damage, isCrit }
    * @returns {FireExplosion} The created fire entity
    */
   spawn(engine, params) {
-    const { x, y, z, damage = 0 } = params;
+    const { x, y, z, damage = 0, isCrit = false } = params;
 
     const explosion = new FireExplosion(
       engine,
       x,
       z, // FireExplosion constructor takes z as second param
       this.config.radius,
-      damage
+      damage,
+      this.config.particleCount,
+      isCrit
     );
     explosion.lifetime = this.config.lifetime;
     engine.addEntity(explosion);

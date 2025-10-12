@@ -24,13 +24,10 @@ export function loadCharacterModel(characterName) {
       modelPath.includes('anime_character_cyberstyle') ||
       modelPath.includes('beautiful_witch');
 
-    console.log('Loading model from path:', modelPath);
+    // Removed logging for cleaner console output
 
-    if (shouldSkipCache) {
-      console.log('(no cache for player models)');
-    } else if (modelCache[cacheKey]) {
+    if (modelCache[cacheKey] && !shouldSkipCache) {
       // Use cached model for all non-player models (including skeletons)
-      console.log('Using cached model for:', characterName);
       const cachedData = modelCache[cacheKey];
       const clone = cachedData.scene.clone(true);
       clone.position.set(0, 0, 0);
@@ -52,7 +49,6 @@ export function loadCharacterModel(characterName) {
             scene: model.clone(true),
             animations: animations
           };
-          console.log('Cached model for future use:', characterName);
         }
 
         resolve({ scene: model, animations: animations });
@@ -77,8 +73,6 @@ export async function preloadAllModels(onProgress = null) {
   const total = uniqueModels.length;
   let preloadComplete = false;
 
-  console.log('Starting model preload (selective caching)...');
-
   for (const modelName of uniqueModels) {
     try {
       // This will cache non-player, non-skeleton models automatically
@@ -93,7 +87,6 @@ export async function preloadAllModels(onProgress = null) {
   }
 
   preloadComplete = true;
-  console.log(`Preloaded ${loaded}/${total} character models (cached all non-player models)`);
   return preloadComplete;
 }
 
@@ -124,12 +117,10 @@ export function clearModelCache(modelName = null) {
         });
       }
       delete modelCache[modelName];
-      console.log(`Cleared cache for model: ${modelName}`);
     }
   } else {
     // Clear all cached models
     Object.keys(modelCache).forEach(key => clearModelCache(key));
-    console.log('Cleared all model cache');
   }
 }
 

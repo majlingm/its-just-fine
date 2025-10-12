@@ -3,13 +3,14 @@ import { Entity } from './Entity.js';
 import { resourceCache } from '../systems/ResourceCache.js';
 
 export class LightningExplosion extends Entity {
-  constructor(engine, x, z, radius, damage) {
+  constructor(engine, x, z, radius, damage, isCrit = false) {
     super();
     this.engine = engine;
     this.x = x;
     this.z = z;
     this.radius = radius;
     this.damage = damage;
+    this.isCrit = isCrit;
     this.lifetime = 0.6;
     this.age = 0;
     this.particles = [];
@@ -125,7 +126,7 @@ export class LightningExplosion extends Entity {
         const dist = Math.sqrt(dx * dx + dz * dz);
 
         if (dist <= this.radius) {
-          const died = entity.takeDamage(this.damage);
+          const died = entity.takeDamage(this.damage, this.isCrit);
           if (died && this.engine.game) {
             this.engine.game.killCount++;
             this.engine.sound.playHit();

@@ -166,7 +166,7 @@ export class MagicBullet extends Projectile {
         this.hitEntities.add(entity);
         this.pierceCount++;
 
-        const died = entity.takeDamage(this.damage);
+        const died = entity.takeDamage(this.damage, this.isCrit);
         if (died && this.engine.game) {
           this.engine.game.killCount++;
           this.engine.sound.playHit();

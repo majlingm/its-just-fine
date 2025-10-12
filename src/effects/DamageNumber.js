@@ -26,22 +26,28 @@ export class DamageNumber {
     // Create canvas for text rendering
     const canvas = document.createElement('canvas');
     const context = canvas.getContext('2d');
-    canvas.width = 128;
-    canvas.height = 64;
+
+    // Larger canvas for crits
+    canvas.width = this.isCritical ? 192 : 128;
+    canvas.height = this.isCritical ? 96 : 64;
 
     // Set font based on critical hit
-    const fontSize = this.isCritical ? 48 : 32;
+    const fontSize = this.isCritical ? 64 : 32;
     context.font = `bold ${fontSize}px Arial`;
     context.textAlign = 'center';
     context.textBaseline = 'middle';
 
-    // Draw shadow
-    context.fillStyle = 'rgba(0, 0, 0, 0.5)';
-    context.fillText(this.damage.toString(), 65, 35);
+    const centerX = canvas.width / 2;
+    const centerY = canvas.height / 2;
 
-    // Draw text (yellow for critical, white for normal)
-    context.fillStyle = this.isCritical ? '#ffff00' : '#ffffff';
-    context.fillText(this.damage.toString(), 64, 32);
+    // Draw shadow
+    context.fillStyle = 'rgba(0, 0, 0, 0.6)';
+    context.fillText(this.damage.toString(), centerX + 2, centerY + 2);
+
+    // Draw text (bright red for critical, white for normal)
+    const textColor = this.isCritical ? '#ff0000' : '#ffffff';
+    context.fillStyle = textColor;
+    context.fillText(this.damage.toString(), centerX, centerY);
 
     // Create texture from canvas
     const texture = new THREE.CanvasTexture(canvas);
@@ -55,7 +61,10 @@ export class DamageNumber {
     });
 
     this.mesh = new THREE.Sprite(material);
-    this.mesh.scale.set(2, 1, 1);
+    // Larger scale for crits
+    const scale = this.isCritical ? 3 : 2;
+    const scaleY = this.isCritical ? 1.5 : 1;
+    this.mesh.scale.set(scale, scaleY, 1);
     this.mesh.position.set(this.x, this.y, this.z);
   }
 

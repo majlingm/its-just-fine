@@ -1,11 +1,15 @@
 import { SPELL_TYPES } from '../spells/spellTypes.js';
+import { spellCaster } from '../systems/SpellCaster.js';
 
 // Spell-specific upgrade logic
 export function upgradeWeapon(weaponInstance) {
   const spell = weaponInstance.type;
   weaponInstance.level++;
 
-  // Apply upgrades based on spell type and level
+  // Notify spell caster to clear cache for this spell
+  spellCaster.upgradeSpell(weaponInstance);
+
+  // Apply upgrades based on spell type and level (temporary compatibility)
   switch (spell) {
     // Lightning Spells
     case SPELL_TYPES.THUNDER_STRIKE:

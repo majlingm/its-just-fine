@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { Entity } from './Entity.js';
-import { calculateDamageWithSpread } from '../spells/spellTypes.js';
+import { calculateDamageWithCrit } from '../spells/spellTypes.js';
 
 export class RingOfIce extends Entity {
   constructor(engine, player, damage, spell = null) {
@@ -8,7 +8,7 @@ export class RingOfIce extends Entity {
     this.engine = engine;
     this.player = player;
     this.baseDamage = damage * 0.05; // Less damage than Ring of Fire (5% vs 9%)
-    this.damageSpread = spell?.damageSpread || 0; // Store damage spread for later use
+    this.spell = spell; // Store spell for crit calculation
     this.iceParticles = [];
 
     // Use spell level stats if provided, otherwise use defaults
@@ -62,9 +62,10 @@ export class RingOfIce extends Entity {
         const x = this.player.x + Math.cos(angle) * radius;
         const z = this.player.z + Math.sin(angle) * radius;
 
-        const burstDamage = calculateDamageWithSpread(
+        // Calculate burst damage with crit
+        const {damage: burstDamage, isCrit} = calculateDamageWithCrit(
           this.baseDamage * this.burstDamageMultiplier,
-          this.damageSpread
+          this.spell
         );
 
         this.burstProjectiles.push({
@@ -79,6 +80,7 @@ export class RingOfIce extends Entity {
           lifetime: 2.0,
           age: 0,
           damage: burstDamage,
+          isCrit: isCrit,
           hitEntities: new Set()
         });
 
@@ -225,7 +227,7 @@ export class RingOfIce extends Entity {
         if (dist < 0.6) {
           proj.hitEntities.add(entity);
 
-          const died = entity.takeDamage(proj.damage);
+          const died = entity.takeDamage(proj.damage, proj.isCrit);
           if (died && this.engine.game) {
             this.engine.game.killCount++;
             this.engine.sound.playHit();
@@ -319,8 +321,8 @@ export class RingOfIce extends Entity {
           if (currentTime - lastDamage >= this.damageInterval) {
             this.lastDamageTime.set(entity, currentTime);
 
-            const damage = calculateDamageWithSpread(this.baseDamage, this.damageSpread);
-            const died = entity.takeDamage(damage);
+            const {damage, isCrit} = calculateDamageWithCrit(this.baseDamage, this.spell);
+            const died = entity.takeDamage(damage, isCrit);
             if (died && this.engine.game) {
               this.engine.game.killCount++;
               this.engine.sound.playHit();

@@ -13,6 +13,7 @@ import { LevelSystem } from '../systems/LevelSystem.js';
 import { WaveSystem } from '../systems/WaveSystem.js';
 import { ProjectilePool } from '../systems/ProjectilePool.js';
 import { EnemyProjectilePool } from '../systems/EnemyProjectilePool.js';
+import { spellCaster } from '../systems/SpellCaster.js';
 import { LEVELS } from '../levels/index.js';
 
 export class DustAndDynamiteGame {
@@ -458,7 +459,8 @@ export class DustAndDynamiteGame {
 
   updateWeapons(dt) {
     this.player.weapons.forEach(weaponInstance => {
-      const weapon = weaponInstance.type;
+      // Get spell instance from the spell caster system
+      const weapon = spellCaster.getSpell(weaponInstance);
 
       if (weapon.targeting === 'orbit') {
         const existingOrbits = this.engine.entities.filter(
@@ -494,7 +496,7 @@ export class DustAndDynamiteGame {
 
         // Handle pattern weapons (don't need target)
         if (weapon.isPattern && weapon.execute) {
-          weapon.execute(this.engine, this.player, weapon, this.player.stats);
+          spellCaster.executeSpell(weapon, this.engine, this.player, null, this.player.stats);
           this.engine.sound.playShoot();
           weaponInstance.lastShot = this.engine.time;
           return;
@@ -547,7 +549,7 @@ export class DustAndDynamiteGame {
           }
 
           if (target) {
-            weapon.execute(this.engine, this.player, target, weapon, this.player.stats);
+            spellCaster.executeSpell(weapon, this.engine, this.player, target, this.player.stats);
             // Use special sounds for different weapons
             if (weapon.name === 'Thunder Strike' && this.engine.sound.playThunder) {
               this.engine.sound.playThunder();
@@ -563,7 +565,7 @@ export class DustAndDynamiteGame {
 
         // Handle persistent spells (like Ring of Fire - orbits player)
         if (weapon.isPersistent && weapon.execute) {
-          weapon.execute(this.engine, this.player, null, weapon, this.player.stats);
+          spellCaster.executeSpell(weapon, this.engine, this.player, null, this.player.stats);
           weaponInstance.lastShot = this.engine.time;
           return;
         }
