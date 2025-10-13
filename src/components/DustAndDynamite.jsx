@@ -109,6 +109,19 @@ const DustAndDynamite = () => {
 
   const uiScale = isMobile ? 0.7 : isTablet ? 0.85 : 1;
 
+  // Mobile detection for dev button
+  const isMobileDetected = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) || window.innerWidth < 768;
+  const isCapacitor = typeof window !== 'undefined' && window.Capacitor !== undefined;
+  const showDevButton = true; // Always show for development - change back to: isMobile || isCapacitor
+
+  // Health bar color based on HP percentage
+  const getHealthColor = (healthPercent) => {
+    if (healthPercent > 0.75) return '#00ff00'; // Green
+    if (healthPercent > 0.5) return '#ffff00'; // Yellow
+    if (healthPercent > 0.25) return '#ff8800'; // Orange
+    return '#ff0000'; // Red
+  };
+
   // Gamepad navigation for upgrades
   useEffect(() => {
     if (!uiState.levelingUp) return;
@@ -1024,6 +1037,181 @@ const DustAndDynamite = () => {
       {/* Game UI - only show when game started */}
       {gameStarted && (
         <>
+          {/* Mobile UI - Grid layout */}
+          {isMobile && (
+            <div
+              style={{
+                position: "absolute",
+                top: 10,
+                left: 10,
+                right: 10,
+                pointerEvents: "none",
+                fontFamily: "'Inter', sans-serif",
+                color: "rgba(255, 255, 255, 0.9)",
+              }}
+            >
+              {/* Row 1: Level Bar with Time and Wave */}
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 8,
+                  marginBottom: 8,
+                }}
+              >
+                {/* Level Bar */}
+                <div style={{ fontSize: 9, fontWeight: 200, letterSpacing: "0.1em", textTransform: "uppercase", opacity: 0.6, minWidth: 30, flexShrink: 0 }}>
+                  Lv {uiState.level}
+                </div>
+                <div
+                  style={{
+                    flex: 1,
+                    height: 5,
+                    background: "rgba(50, 50, 50, 0.5)",
+                    position: "relative",
+                    borderRadius: 2,
+                    border: "1px solid rgba(255, 255, 255, 0.2)",
+                  }}
+                >
+                  <div
+                    style={{
+                      width: `${Math.max(uiState.xpProgress * 100, 2)}%`,
+                      height: "100%",
+                      background: "linear-gradient(90deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #9400d3)",
+                      transition: "width 0.3s",
+                      borderRadius: 2,
+                      boxShadow: "0 0 10px rgba(255, 100, 255, 0.4)",
+                    }}
+                  />
+                </div>
+
+                {/* Time Info */}
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    minWidth: 50,
+                  }}
+                >
+                  <div style={{ fontSize: 9, fontWeight: 200, letterSpacing: "0.1em", textTransform: "uppercase", opacity: 0.6 }}>
+                    Time
+                  </div>
+                  <div style={{ fontSize: 14, fontWeight: 200, letterSpacing: "0.05em" }}>
+                    {Math.floor(uiState.time / 60)}:{(Math.floor(uiState.time) % 60).toString().padStart(2, '0')}
+                  </div>
+                </div>
+
+                {/* Wave Info */}
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    minWidth: 50,
+                  }}
+                >
+                  <div style={{ fontSize: 9, fontWeight: 200, letterSpacing: "0.1em", textTransform: "uppercase", opacity: 0.6 }}>
+                    Wave
+                  </div>
+                  <div style={{ fontSize: 14, fontWeight: 200, letterSpacing: "0.05em" }}>
+                    {uiState.totalWaves > 0 ? (
+                      <>
+                        {uiState.allWavesCompleted ? (
+                          uiState.bossSpawned ? "Boss" : "Done"
+                        ) : (
+                          `${uiState.currentWave}/${uiState.totalWaves === Infinity ? '∞' : uiState.totalWaves}`
+                        )}
+                      </>
+                    ) : (
+                      `${Math.floor(uiState.time / 60) + 1}/∞`
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Row 2: Health Bar with DPS and Mobs */}
+              <div
+                style={{
+                  display: "flex",
+                  gap: 8,
+                  alignItems: "center",
+                }}
+              >
+                {/* Health Bar */}
+                <div
+                  style={{
+                    flex: 1,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 8,
+                  }}
+                >
+                  <div style={{ fontSize: 9, fontWeight: 200, letterSpacing: "0.1em", textTransform: "uppercase", opacity: 0.6, minWidth: 45 }}>
+                    Health
+                  </div>
+                  <div
+                    style={{
+                      flex: 1,
+                      height: 5,
+                      background: "rgba(50, 50, 50, 0.5)",
+                      position: "relative",
+                      borderRadius: 2,
+                      border: "1px solid rgba(255, 255, 255, 0.2)",
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: `${Math.max((uiState.health / uiState.maxHealth) * 100, 2)}%`,
+                        height: "100%",
+                        background: getHealthColor(uiState.health / uiState.maxHealth),
+                        transition: "width 0.3s, background 0.3s",
+                        borderRadius: 2,
+                        boxShadow: `0 0 8px ${getHealthColor(uiState.health / uiState.maxHealth)}80`,
+                      }}
+                    />
+                  </div>
+                </div>
+
+                {/* DPS Info */}
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: 2,
+                    alignItems: "center",
+                    minWidth: 50,
+                  }}
+                >
+                  <div style={{ fontSize: 9, fontWeight: 200, letterSpacing: "0.1em", textTransform: "uppercase", opacity: 0.6 }}>
+                    DPS
+                  </div>
+                  <div style={{ fontSize: 14, fontWeight: 200, letterSpacing: "0.05em" }}>
+                    {uiState.stats?.rollingAverageDPS ? Math.round(uiState.stats.rollingAverageDPS) : '0'}
+                  </div>
+                </div>
+
+                {/* Mobs Info */}
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: 2,
+                    alignItems: "center",
+                    minWidth: 50,
+                  }}
+                >
+                  <div style={{ fontSize: 9, fontWeight: 200, letterSpacing: "0.1em", textTransform: "uppercase", opacity: 0.6 }}>
+                    Mobs
+                  </div>
+                  <div style={{ fontSize: 14, fontWeight: 200, letterSpacing: "0.05em" }}>
+                    {uiState.totalWaves > 0 && !uiState.allWavesCompleted ? uiState.enemiesRemaining : '-'}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Boss Health Bar - minimalist */}
           {uiState.hasBoss && (
             <div
@@ -1064,56 +1252,59 @@ const DustAndDynamite = () => {
             </div>
           )}
 
-          {/* Player Health - minimalist */}
-          <div
-            style={{
-              position: "absolute",
-              top: isMobile ? 20 : 40,
-              left: isMobile ? 20 : 40,
-              pointerEvents: "none",
-              fontFamily: "'Inter', sans-serif",
-              color: "rgba(255, 255, 255, 0.9)",
-            }}
-          >
-            <div style={{ fontSize: isMobile ? 10 : 12, fontWeight: 200, letterSpacing: "0.2em", textTransform: "uppercase", opacity: 0.6, marginBottom: isMobile ? 4 : 8 }}>
-              Health
-            </div>
-            <div style={{ fontSize: isMobile ? 20 : 32, fontWeight: 200, letterSpacing: "0.05em" }}>
-              {uiState.health}
-            </div>
+          {/* Player Health - minimalist - Desktop only (mobile is in top bar) */}
+          {!isMobile && (
             <div
               style={{
-                marginTop: isMobile ? 4 : 8,
-                width: isMobile ? 60 : 100,
-                height: 2,
-                background: "rgba(255, 255, 255, 0.1)",
-                position: "relative",
+                position: "absolute",
+                top: 40,
+                left: 40,
+                pointerEvents: "none",
+                fontFamily: "'Inter', sans-serif",
+                color: "rgba(255, 255, 255, 0.9)",
               }}
             >
+              <div style={{ fontSize: 12, fontWeight: 200, letterSpacing: "0.2em", textTransform: "uppercase", opacity: 0.6, marginBottom: 8 }}>
+                Health
+              </div>
+              <div style={{ fontSize: 32, fontWeight: 200, letterSpacing: "0.05em" }}>
+                {uiState.health}
+              </div>
               <div
                 style={{
-                  width: `${(uiState.health / uiState.maxHealth) * 100}%`,
-                  height: "100%",
-                  background: "rgba(255, 255, 255, 0.9)",
-                  transition: "width 0.3s",
+                  marginTop: 8,
+                  width: 100,
+                  height: 2,
+                  background: "rgba(255, 255, 255, 0.1)",
+                  position: "relative",
                 }}
-              />
+              >
+                <div
+                  style={{
+                    width: `${(uiState.health / uiState.maxHealth) * 100}%`,
+                    height: "100%",
+                    background: getHealthColor(uiState.health / uiState.maxHealth),
+                    transition: "width 0.3s, background 0.3s",
+                  }}
+                />
+              </div>
             </div>
-          </div>
+          )}
 
-          {/* XP Bar - rainbow centered */}
-          <div
-            style={{
-              position: "absolute",
-              bottom: isMobile ? 100 : 40,
-              left: "50%",
-              transform: "translateX(-50%)",
-              pointerEvents: "none",
-              fontFamily: "'Inter', sans-serif",
-              color: "rgba(255, 255, 255, 0.9)",
-              textAlign: "center",
-            }}
-          >
+          {/* XP Bar - rainbow centered - Desktop only */}
+          {!isMobile && (
+            <div
+              style={{
+                position: "absolute",
+                bottom: 40,
+                left: "50%",
+                transform: "translateX(-50%)",
+                pointerEvents: "none",
+                fontFamily: "'Inter', sans-serif",
+                color: "rgba(255, 255, 255, 0.9)",
+                textAlign: "center",
+              }}
+            >
             <div style={{ fontSize: 12, fontWeight: 200, letterSpacing: "0.2em", textTransform: "uppercase", opacity: 0.6, marginBottom: 8 }}>
               Level {uiState.level}
             </div>
@@ -1139,6 +1330,7 @@ const DustAndDynamite = () => {
               />
             </div>
           </div>
+          )}
 
           {/* Enemy Direction Indicator */}
           {uiState.nearestEnemyDirection !== null && typeof uiState.nearestEnemyDirection === 'object' ? (
@@ -1231,19 +1423,20 @@ const DustAndDynamite = () => {
             })()
           ) : null}
 
-          {/* Wave and Enemy Count - Upper Right - minimalist */}
-          <div
-            style={{
-              position: "absolute",
-              top: isMobile ? 20 : 40,
-              right: isMobile ? 20 : 40,
+          {/* Wave and Enemy Count - Upper Right - minimalist - Desktop only */}
+          {!isMobile && (
+            <div
+              style={{
+                position: "absolute",
+                top: 40,
+                right: 40,
               fontFamily: "'Inter', sans-serif",
               color: "rgba(255, 255, 255, 0.9)",
               pointerEvents: "none",
               textAlign: "right",
             }}
           >
-            <div style={{ fontSize: isMobile ? 10 : 12, fontWeight: 200, letterSpacing: "0.2em", textTransform: "uppercase", opacity: 0.6, marginBottom: isMobile ? 4 : 8 }}>
+            <div style={{ fontSize: 12, fontWeight: 200, letterSpacing: "0.2em", textTransform: "uppercase", opacity: 0.6, marginBottom: 8 }}>
               {uiState.totalWaves > 0 ? (
                 <>
                   {uiState.allWavesCompleted ? (
@@ -1257,139 +1450,165 @@ const DustAndDynamite = () => {
               )}
             </div>
             {uiState.totalWaves > 0 && !uiState.allWavesCompleted && (
-              <div style={{ fontSize: isMobile ? 20 : 32, fontWeight: 200, letterSpacing: "0.05em", marginBottom: isMobile ? 6 : 12 }}>
+              <div style={{ fontSize: 32, fontWeight: 200, letterSpacing: "0.05em", marginBottom: 12 }}>
                 {uiState.enemiesRemaining}
               </div>
             )}
-            <div style={{ fontSize: isMobile ? 10 : 12, fontWeight: 200, opacity: 0.6 }}>
+            <div style={{ fontSize: 12, fontWeight: 200, opacity: 0.6 }}>
               {Math.floor(uiState.time / 60)}:{(uiState.time % 60).toString().padStart(2, "0")}
             </div>
           </div>
+          )}
 
           {/* Performance Stats - Toggle in Dev Menu */}
           {uiState.showStats && uiState.stats && (
             <div
               style={{
                 position: "absolute",
-                top: 140,
-                left: 40,
+                top: isMobile ? 100 : 140,
+                right: isMobile ? 10 : "auto",
+                left: isMobile ? "auto" : 40,
                 fontFamily: "'Inter', sans-serif",
                 color: "rgba(255, 255, 255, 0.9)",
                 pointerEvents: "none",
-                background: "rgba(0, 0, 0, 0.3)",
-                padding: 16,
-                border: "1px solid rgba(255, 255, 255, 0.1)",
+                background: "rgba(0, 0, 0, 0.7)",
+                padding: isMobile ? 6 : 16,
+                border: "1px solid rgba(255, 255, 255, 0.2)",
+                fontSize: isMobile ? 8 : 10,
+                minWidth: isMobile ? "120px" : "auto",
+                maxHeight: isMobile ? "200px" : "auto",
+                overflowY: isMobile ? "auto" : "visible",
+                borderRadius: 4,
               }}
             >
-              <div style={{ fontSize: 10, fontWeight: 200, letterSpacing: "0.2em", textTransform: "uppercase", opacity: 0.5, marginBottom: 12 }}>
+              <div style={{ fontSize: isMobile ? 8 : 10, fontWeight: 200, letterSpacing: "0.2em", textTransform: "uppercase", opacity: 0.5, marginBottom: isMobile ? 6 : 12 }}>
                 Stats
               </div>
 
               {/* DPS Metrics */}
-              <div style={{ marginBottom: 8 }}>
-                <div style={{ fontSize: 10, fontWeight: 200, opacity: 0.6, marginBottom: 4 }}>
-                  Current DPS
+              <div style={{ marginBottom: isMobile ? 4 : 8 }}>
+                <div style={{ fontSize: isMobile ? 8 : 10, fontWeight: 200, opacity: 0.6, marginBottom: 2 }}>
+                  Avg DPS
                 </div>
-                <div style={{ fontSize: 18, fontWeight: 200, letterSpacing: "0.05em" }}>
-                  {uiState.stats.currentDPS}
-                </div>
-              </div>
-
-              <div style={{ marginBottom: 8 }}>
-                <div style={{ fontSize: 10, fontWeight: 200, opacity: 0.6, marginBottom: 4 }}>
-                  Avg DPS (5s)
-                </div>
-                <div style={{ fontSize: 18, fontWeight: 200, letterSpacing: "0.05em" }}>
+                <div style={{ fontSize: isMobile ? 12 : 18, fontWeight: 200, letterSpacing: "0.05em" }}>
                   {uiState.stats.rollingAverageDPS}
                 </div>
               </div>
 
-              <div style={{ marginBottom: 12 }}>
-                <div style={{ fontSize: 10, fontWeight: 200, opacity: 0.6, marginBottom: 4 }}>
-                  Total Damage
-                </div>
-                <div style={{ fontSize: 14, fontWeight: 200, letterSpacing: "0.05em" }}>
-                  {uiState.stats.totalDamageDealt.toLocaleString()}
-                </div>
-              </div>
-
-              {/* Divider */}
-              <div style={{ width: "100%", height: 1, background: "rgba(255, 255, 255, 0.1)", marginBottom: 12 }} />
-
-              {/* Performance Metrics */}
-              <div style={{ marginBottom: 8 }}>
-                <div style={{ fontSize: 10, fontWeight: 200, opacity: 0.6, marginBottom: 4 }}>
-                  FPS
-                </div>
-                <div style={{ fontSize: 18, fontWeight: 200, letterSpacing: "0.05em" }}>
-                  {uiState.stats.fps}
-                </div>
-              </div>
-
-              <div style={{ marginBottom: 4 }}>
-                <div style={{ fontSize: 10, fontWeight: 200, opacity: 0.6 }}>
-                  Entities: {uiState.stats.entityCount}
-                </div>
-              </div>
-
-              <div style={{ marginBottom: 4 }}>
-                <div style={{ fontSize: 10, fontWeight: 200, opacity: 0.6 }}>
-                  Projectiles: {uiState.stats.projectileCount}
-                </div>
-              </div>
-
-              <div>
-                <div style={{ fontSize: 10, fontWeight: 200, opacity: 0.6 }}>
-                  Enemies: {uiState.stats.enemyCount}
-                </div>
-              </div>
-
-              {/* Memory Stats (Chrome/Edge only) */}
-              {uiState.stats.memory && (
+              {isMobile ? (
                 <>
-                  {/* Divider */}
-                  <div style={{ width: "100%", height: 1, background: "rgba(255, 255, 255, 0.1)", marginTop: 12, marginBottom: 12 }} />
-
-                  <div style={{ marginBottom: 8 }}>
-                    <div style={{ fontSize: 10, fontWeight: 200, opacity: 0.6, marginBottom: 4 }}>
-                      Heap Usage
+                  {/* Mobile: Only show essential stats */}
+                  <div style={{ marginBottom: 4 }}>
+                    <div style={{ fontSize: 8, fontWeight: 200, opacity: 0.6 }}>
+                      FPS: {uiState.stats.fps}
                     </div>
-                    <div style={{ fontSize: 14, fontWeight: 200, letterSpacing: "0.05em", minWidth: 180 }}>
-                      {uiState.stats.memory.usedJSHeapSize}MB / {uiState.stats.memory.jsHeapSizeLimit}MB ({uiState.stats.memory.heapUsagePercent}%)
+                  </div>
+                  <div style={{ marginBottom: 4 }}>
+                    <div style={{ fontSize: 8, fontWeight: 200, opacity: 0.6 }}>
+                      Enemies: {uiState.stats.enemyCount}
                     </div>
                   </div>
                 </>
-              )}
-
-              {/* THREE.js Stats */}
-              {uiState.stats.three && (
+              ) : (
                 <>
+                  {/* Desktop: Show all stats */}
+                  <div style={{ marginBottom: 8 }}>
+                    <div style={{ fontSize: 10, fontWeight: 200, opacity: 0.6, marginBottom: 4 }}>
+                      Current DPS
+                    </div>
+                    <div style={{ fontSize: 18, fontWeight: 200, letterSpacing: "0.05em" }}>
+                      {uiState.stats.currentDPS}
+                    </div>
+                  </div>
+
+                  <div style={{ marginBottom: 12 }}>
+                    <div style={{ fontSize: 10, fontWeight: 200, opacity: 0.6, marginBottom: 4 }}>
+                      Total Damage
+                    </div>
+                    <div style={{ fontSize: 14, fontWeight: 200, letterSpacing: "0.05em" }}>
+                      {uiState.stats.totalDamageDealt.toLocaleString()}
+                    </div>
+                  </div>
+
                   {/* Divider */}
-                  <div style={{ width: "100%", height: 1, background: "rgba(255, 255, 255, 0.1)", marginTop: 12, marginBottom: 12 }} />
+                  <div style={{ width: "100%", height: 1, background: "rgba(255, 255, 255, 0.1)", marginBottom: 12 }} />
 
-                  <div style={{ marginBottom: 4 }}>
-                    <div style={{ fontSize: 10, fontWeight: 200, opacity: 0.6 }}>
-                      Geometries: {uiState.stats.three.geometries}
+                  {/* Performance Metrics */}
+                  <div style={{ marginBottom: 8 }}>
+                    <div style={{ fontSize: 10, fontWeight: 200, opacity: 0.6, marginBottom: 4 }}>
+                      FPS
+                    </div>
+                    <div style={{ fontSize: 18, fontWeight: 200, letterSpacing: "0.05em" }}>
+                      {uiState.stats.fps}
                     </div>
                   </div>
 
                   <div style={{ marginBottom: 4 }}>
                     <div style={{ fontSize: 10, fontWeight: 200, opacity: 0.6 }}>
-                      Textures: {uiState.stats.three.textures}
+                      Entities: {uiState.stats.entityCount}
                     </div>
                   </div>
 
                   <div style={{ marginBottom: 4 }}>
                     <div style={{ fontSize: 10, fontWeight: 200, opacity: 0.6 }}>
-                      Draw Calls: {uiState.stats.three.drawCalls}
+                      Projectiles: {uiState.stats.projectileCount}
                     </div>
                   </div>
 
                   <div>
                     <div style={{ fontSize: 10, fontWeight: 200, opacity: 0.6 }}>
-                      Triangles: {uiState.stats.three.triangles.toLocaleString()}
+                      Enemies: {uiState.stats.enemyCount}
                     </div>
                   </div>
+
+                  {/* Memory Stats (Chrome/Edge only) */}
+                  {uiState.stats.memory && (
+                    <>
+                      {/* Divider */}
+                      <div style={{ width: "100%", height: 1, background: "rgba(255, 255, 255, 0.1)", marginTop: 12, marginBottom: 12 }} />
+
+                      <div style={{ marginBottom: 8 }}>
+                        <div style={{ fontSize: 10, fontWeight: 200, opacity: 0.6, marginBottom: 4 }}>
+                          Heap Usage
+                        </div>
+                        <div style={{ fontSize: 14, fontWeight: 200, letterSpacing: "0.05em", minWidth: 180 }}>
+                          {uiState.stats.memory.usedJSHeapSize}MB / {uiState.stats.memory.jsHeapSizeLimit}MB ({uiState.stats.memory.heapUsagePercent}%)
+                        </div>
+                      </div>
+                    </>
+                  )}
+
+                  {/* THREE.js Stats */}
+                  {uiState.stats.three && (
+                    <>
+                      {/* Divider */}
+                      <div style={{ width: "100%", height: 1, background: "rgba(255, 255, 255, 0.1)", marginTop: 12, marginBottom: 12 }} />
+
+                      <div style={{ marginBottom: 4 }}>
+                        <div style={{ fontSize: 10, fontWeight: 200, opacity: 0.6 }}>
+                          Geometries: {uiState.stats.three.geometries}
+                        </div>
+                      </div>
+
+                      <div style={{ marginBottom: 4 }}>
+                        <div style={{ fontSize: 10, fontWeight: 200, opacity: 0.6 }}>
+                          Textures: {uiState.stats.three.textures}
+                        </div>
+                      </div>
+
+                      <div style={{ marginBottom: 4 }}>
+                        <div style={{ fontSize: 10, fontWeight: 200, opacity: 0.6 }}>
+                          Draw Calls: {uiState.stats.three.drawCalls}
+                        </div>
+                      </div>
+
+                      <div>
+                        <div style={{ fontSize: 10, fontWeight: 200, opacity: 0.6 }}>
+                          Triangles: {uiState.stats.three.triangles.toLocaleString()}
+                        </div>
+                      </div>
+                    </>
+                  )}
                 </>
               )}
             </div>
@@ -1440,8 +1659,8 @@ const DustAndDynamite = () => {
               disabled={!isAnyRingFull()}
               style={{
                 position: "absolute",
-                bottom: isTablet ? 120 : (isMobile && isLandscape) ? 20 : 240,
-                right: isTablet ? 30 : 20,
+                bottom: isTablet ? 120 : (isMobile && isLandscape) ? 20 : 125,
+                right: isTablet ? 30 : (isMobile ? 45 : 20),
                 width: isMobile ? 60 : 80,
                 height: isMobile ? 60 : 80,
                 borderRadius: "50%",
@@ -1509,12 +1728,12 @@ const DustAndDynamite = () => {
             <button
               style={{
                 position: "absolute",
-                bottom: isMobile ? 160 : isTablet ? 40 : 30,
+                bottom: isMobile ? 45 : isTablet ? 40 : 30,
                 // Move to left side on iPad or landscape mobile to avoid steering controls
                 ...(isTablet || (isMobile && isLandscape) ? {
                   left: isMobile ? 20 : isTablet ? 30 : 30,
                 } : {
-                  right: isMobile ? 20 : 30,
+                  right: isMobile ? 45 : 30,
                 }),
                 width: isMobile ? 60 : 80,
                 height: isMobile ? 60 : 80,
@@ -1697,159 +1916,134 @@ const DustAndDynamite = () => {
           {/* Dev Menu - Toggle with ~ key */}
           {showDevMenu && (
             <>
-              {/* God Mode Button */}
-              <button
-                onClick={() => {
-                  if (gameRef.current && gameRef.current.player) {
-                    gameRef.current.godMode = !gameRef.current.godMode;
-                    const btn = document.getElementById('god-mode-btn');
-                    if (btn) {
-                      btn.textContent = gameRef.current.godMode ? 'God Mode: ON' : 'God Mode: OFF';
-                      btn.style.borderColor = gameRef.current.godMode ? 'rgba(0, 255, 0, 0.5)' : 'rgba(255, 255, 255, 0.2)';
-                    }
-                  }
-                }}
-                id="god-mode-btn"
+              {/* Dev Menu Container - Better mobile layout */}
+              <div
                 style={{
                   position: "absolute",
-                  bottom: 20,
-                  left: 140,
-                  padding: "8px 16px",
-                  background: "rgba(0, 0, 0, 0.3)",
-                  color: "rgba(255, 255, 255, 0.7)",
-                  border: "1px solid rgba(255, 255, 255, 0.2)",
-                  cursor: "pointer",
-                  fontFamily: "'Inter', sans-serif",
-                  fontSize: 12,
-                  fontWeight: 200,
-                  letterSpacing: "0.1em",
-                  textTransform: "uppercase",
+                  bottom: isMobile ? 10 : 20,
+                  left: isMobile ? 10 : 140,
+                  display: "flex",
+                  flexDirection: isMobile ? "column" : "column",
+                  gap: isMobile ? 6 : 10,
                   zIndex: 1000,
-                  transition: "all 0.3s",
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.borderColor = gameRef.current?.godMode ? "rgba(0, 255, 0, 0.7)" : "rgba(255, 255, 255, 0.5)";
-                  e.currentTarget.style.color = "rgba(255, 255, 255, 1)";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.borderColor = gameRef.current?.godMode ? "rgba(0, 255, 0, 0.5)" : "rgba(255, 255, 255, 0.2)";
-                  e.currentTarget.style.color = "rgba(255, 255, 255, 0.7)";
+                  pointerEvents: "auto",
                 }}
               >
-                God Mode: OFF
-              </button>
-
-              {/* Pause Button */}
-              <button
-                onClick={() => {
-                  if (gameRef.current) {
-                    const isPaused = gameRef.current.togglePause();
-                    const btn = document.getElementById('pause-btn');
-                    if (btn) {
-                      btn.textContent = isPaused ? 'PAUSED' : 'PAUSE';
-                      btn.style.borderColor = isPaused ? 'rgba(255, 200, 0, 0.5)' : 'rgba(255, 255, 255, 0.2)';
+                {/* Stats Toggle Button */}
+                <button
+                  onClick={() => {
+                    if (gameRef.current) {
+                      gameRef.current.showStats = !gameRef.current.showStats;
+                      const btn = document.getElementById('stats-btn');
+                      if (btn) {
+                        btn.textContent = gameRef.current.showStats ? 'Stats: ON' : 'Stats: OFF';
+                        btn.style.borderColor = gameRef.current.showStats ? 'rgba(0, 200, 255, 0.5)' : 'rgba(255, 255, 255, 0.2)';
+                      }
                     }
-                  }
-                }}
-                id="pause-btn"
-                style={{
-                  position: "absolute",
-                  bottom: 60,
-                  left: 140,
-                  padding: "8px 16px",
-                  background: "rgba(0, 0, 0, 0.3)",
-                  color: "rgba(255, 255, 255, 0.7)",
-                  border: "1px solid rgba(255, 200, 0, 0.5)",  // Yellow border since it starts paused
-                  cursor: "pointer",
-                  fontFamily: "'Inter', sans-serif",
-                  fontSize: 12,
-                  fontWeight: 200,
-                  letterSpacing: "0.1em",
-                  textTransform: "uppercase",
-                  zIndex: 1000,
-                  transition: "all 0.3s",
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.borderColor = gameRef.current?.isPaused ? "rgba(255, 200, 0, 0.7)" : "rgba(255, 255, 255, 0.5)";
-                  e.currentTarget.style.color = "rgba(255, 255, 255, 1)";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.borderColor = gameRef.current?.isPaused ? "rgba(255, 200, 0, 0.5)" : "rgba(255, 255, 255, 0.2)";
-                  e.currentTarget.style.color = "rgba(255, 255, 255, 0.7)";
-                }}
-              >
-                PAUSED
-              </button>
+                  }}
+                  id="stats-btn"
+                  style={{
+                    padding: isMobile ? "6px 12px" : "8px 16px",
+                    background: "rgba(0, 0, 0, 0.7)",
+                    color: "rgba(255, 255, 255, 0.8)",
+                    border: "1px solid rgba(255, 255, 255, 0.2)",
+                    cursor: "pointer",
+                    fontFamily: "'Inter', sans-serif",
+                    fontSize: isMobile ? 11 : 12,
+                    fontWeight: 200,
+                    letterSpacing: "0.1em",
+                    textTransform: "uppercase",
+                    transition: "all 0.3s",
+                    borderRadius: 4,
+                  }}
+                >
+                  Stats: OFF
+                </button>
 
-              {/* Stats Toggle Button */}
-              <button
-                onClick={() => {
-                  if (gameRef.current) {
-                    gameRef.current.showStats = !gameRef.current.showStats;
-                    const btn = document.getElementById('stats-btn');
-                    if (btn) {
-                      btn.textContent = gameRef.current.showStats ? 'Stats: ON' : 'Stats: OFF';
-                      btn.style.borderColor = gameRef.current.showStats ? 'rgba(0, 200, 255, 0.5)' : 'rgba(255, 255, 255, 0.2)';
+                {/* Pause Button */}
+                <button
+                  onClick={() => {
+                    if (gameRef.current) {
+                      const isPaused = gameRef.current.togglePause();
+                      const btn = document.getElementById('pause-btn');
+                      if (btn) {
+                        btn.textContent = isPaused ? 'PAUSED' : 'PAUSE';
+                        btn.style.borderColor = isPaused ? 'rgba(255, 200, 0, 0.5)' : 'rgba(255, 255, 255, 0.2)';
+                      }
                     }
-                  }
-                }}
-                id="stats-btn"
-                style={{
-                  position: "absolute",
-                  bottom: 100,
-                  left: 140,
-                  padding: "8px 16px",
-                  background: "rgba(0, 0, 0, 0.3)",
-                  color: "rgba(255, 255, 255, 0.7)",
-                  border: "1px solid rgba(255, 255, 255, 0.2)",
-                  cursor: "pointer",
-                  fontFamily: "'Inter', sans-serif",
-                  fontSize: 12,
-                  fontWeight: 200,
-                  letterSpacing: "0.1em",
-                  textTransform: "uppercase",
-                  zIndex: 1000,
-                  transition: "all 0.3s",
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.borderColor = gameRef.current?.showStats ? "rgba(0, 200, 255, 0.7)" : "rgba(255, 255, 255, 0.5)";
-                  e.currentTarget.style.color = "rgba(255, 255, 255, 1)";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.borderColor = gameRef.current?.showStats ? "rgba(0, 200, 255, 0.5)" : "rgba(255, 255, 255, 0.2)";
-                  e.currentTarget.style.color = "rgba(255, 255, 255, 0.7)";
-                }}
-              >
-                Stats: OFF
-              </button>
+                  }}
+                  id="pause-btn"
+                  style={{
+                    padding: isMobile ? "6px 12px" : "8px 16px",
+                    background: "rgba(0, 0, 0, 0.7)",
+                    color: "rgba(255, 255, 255, 0.8)",
+                    border: "1px solid rgba(255, 200, 0, 0.5)",
+                    cursor: "pointer",
+                    fontFamily: "'Inter', sans-serif",
+                    fontSize: isMobile ? 11 : 12,
+                    fontWeight: 200,
+                    letterSpacing: "0.1em",
+                    textTransform: "uppercase",
+                    transition: "all 0.3s",
+                    borderRadius: 4,
+                  }}
+                >
+                  PAUSED
+                </button>
 
-              {/* Spell Toggle Panel */}
+                {/* God Mode Button */}
+                <button
+                  onClick={() => {
+                    if (gameRef.current && gameRef.current.player) {
+                      gameRef.current.godMode = !gameRef.current.godMode;
+                      const btn = document.getElementById('god-mode-btn');
+                      if (btn) {
+                        btn.textContent = gameRef.current.godMode ? 'God Mode: ON' : 'God Mode: OFF';
+                        btn.style.borderColor = gameRef.current.godMode ? 'rgba(0, 255, 0, 0.5)' : 'rgba(255, 255, 255, 0.2)';
+                      }
+                    }
+                  }}
+                  id="god-mode-btn"
+                  style={{
+                    padding: isMobile ? "6px 12px" : "8px 16px",
+                    background: "rgba(0, 0, 0, 0.7)",
+                    color: "rgba(255, 255, 255, 0.8)",
+                    border: "1px solid rgba(255, 255, 255, 0.2)",
+                    cursor: "pointer",
+                    fontFamily: "'Inter', sans-serif",
+                    fontSize: isMobile ? 11 : 12,
+                    fontWeight: 200,
+                    letterSpacing: "0.1em",
+                    textTransform: "uppercase",
+                    transition: "all 0.3s",
+                    borderRadius: 4,
+                  }}
+                >
+                  God Mode: OFF
+                </button>
+              </div>
+
+              {/* Spell Toggle Panel Button */}
               <button
                 onClick={() => setShowWeaponPanel(!showWeaponPanel)}
                 style={{
                   position: "absolute",
-                  bottom: 20,
-                  right: 20,
-                  padding: "8px 16px",
-                  background: "rgba(0, 0, 0, 0.3)",
-                  color: "rgba(255, 255, 255, 0.7)",
+                  bottom: isMobile ? 10 : 20,
+                  right: isMobile ? 10 : 20,
+                  padding: isMobile ? "6px 12px" : "8px 16px",
+                  background: "rgba(0, 0, 0, 0.7)",
+                  color: "rgba(255, 255, 255, 0.8)",
                   border: "1px solid rgba(255, 255, 255, 0.2)",
                   cursor: "pointer",
                   fontFamily: "'Inter', sans-serif",
-                  fontSize: 12,
+                  fontSize: isMobile ? 11 : 12,
                   fontWeight: 200,
                   letterSpacing: "0.1em",
                   textTransform: "uppercase",
                   zIndex: 1000,
                   transition: "all 0.3s",
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.borderColor = "rgba(255, 255, 255, 0.5)";
-                  e.currentTarget.style.color = "rgba(255, 255, 255, 1)";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.borderColor = "rgba(255, 255, 255, 0.2)";
-                  e.currentTarget.style.color = "rgba(255, 255, 255, 0.7)";
+                  borderRadius: 4,
+                  pointerEvents: "auto",
                 }}
               >
                 {showWeaponPanel ? "Hide" : "Spells"}
@@ -1860,19 +2054,22 @@ const DustAndDynamite = () => {
                 <div
                   style={{
                     position: "absolute",
-                    bottom: 20,
-                    left: 300,
+                    bottom: isMobile ? 150 : 20,
+                    left: isMobile ? 10 : 300,
+                    right: isMobile ? 10 : "auto",
                     display: "flex",
-                    alignItems: "center",
-                    gap: "10px",
+                    flexDirection: isMobile ? "column" : "row",
+                    alignItems: isMobile ? "stretch" : "center",
+                    gap: isMobile ? 6 : 10,
                     zIndex: 1000,
+                    pointerEvents: "auto",
                   }}
                 >
                   <label
                     style={{
                       color: "rgba(255, 255, 255, 0.6)",
                       fontFamily: "'Inter', sans-serif",
-                      fontSize: 12,
+                      fontSize: isMobile ? 9 : 12,
                       fontWeight: 200,
                       letterSpacing: "0.1em",
                       textTransform: "uppercase",
@@ -1884,16 +2081,17 @@ const DustAndDynamite = () => {
                     value={selectedGround}
                     onChange={(e) => handleGroundChange(e.target.value)}
                     style={{
-                      padding: "8px 16px",
-                      background: "rgba(0, 0, 0, 0.3)",
+                      padding: isMobile ? "6px 12px" : "8px 16px",
+                      background: "rgba(0, 0, 0, 0.7)",
                       color: "rgba(255, 255, 255, 0.9)",
                       border: "1px solid rgba(255, 255, 255, 0.2)",
                       cursor: "pointer",
                       fontFamily: "'Inter', sans-serif",
-                      fontSize: 12,
+                      fontSize: isMobile ? 11 : 12,
                       fontWeight: 200,
                       outline: "none",
                       transition: "all 0.3s",
+                      borderRadius: 4,
                     }}
                   >
                     <optgroup label="Dreamy">
@@ -1948,17 +2146,22 @@ const DustAndDynamite = () => {
             <div
               style={{
                 position: "absolute",
-                bottom: 70,
-                right: 20,
-                background: "rgba(0, 0, 0, 0.85)",
-                border: "1px solid rgba(255, 255, 255, 0.2)",
-                padding: 20,
-                maxHeight: "70vh",
+                bottom: isMobile ? 50 : 70,
+                top: isMobile ? 100 : "auto",
+                right: isMobile ? 10 : 20,
+                left: isMobile ? 10 : "auto",
+                background: "rgba(0, 0, 0, 0.95)",
+                border: "1px solid rgba(255, 255, 255, 0.3)",
+                padding: isMobile ? 12 : 20,
+                maxHeight: isMobile ? "none" : "70vh",
                 overflowY: "auto",
                 fontFamily: "'Inter', sans-serif",
                 color: "rgba(255, 255, 255, 0.9)",
-                minWidth: 280,
-                zIndex: 999,
+                minWidth: isMobile ? "auto" : 280,
+                zIndex: 9999,
+                borderRadius: 4,
+                pointerEvents: "auto",
+                WebkitOverflowScrolling: "touch",
               }}
             >
               <h3
@@ -2264,6 +2467,64 @@ const DustAndDynamite = () => {
                 </button>
               </div>
             </div>
+          )}
+
+          {/* Mobile/Tablet Dev Menu Button - Top-left, below health */}
+          {(isMobile || isTablet) && gameStarted && (
+            <button
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setShowDevMenu(prev => {
+                  const newState = !prev;
+                  if (gameRef.current) {
+                    if (newState) {
+                      // Auto-pause when opening dev menu
+                      gameRef.current.setPause(true);
+                      // Update pause button text if it exists
+                      const btn = document.getElementById('pause-btn');
+                      if (btn) {
+                        btn.textContent = 'PAUSED';
+                        btn.style.borderColor = 'rgba(255, 200, 0, 0.5)';
+                      }
+                    } else {
+                      // Auto-unpause when closing dev menu
+                      gameRef.current.setPause(false);
+                      // Update pause button text if it exists
+                      const btn = document.getElementById('pause-btn');
+                      if (btn) {
+                        btn.textContent = 'PAUSE';
+                        btn.style.borderColor = 'rgba(255, 255, 255, 0.2)';
+                      }
+                    }
+                  }
+                  return newState;
+                });
+              }}
+              style={{
+                position: "absolute",
+                top: 70,
+                left: 10,
+                width: 32,
+                height: 32,
+                borderRadius: "50%",
+                background: "rgba(0, 0, 0, 0.5)",
+                border: "2px solid rgba(255, 255, 255, 0.3)",
+                color: "rgba(255, 255, 255, 0.8)",
+                fontSize: 16,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                cursor: "pointer",
+                zIndex: 10000,
+                pointerEvents: "auto",
+                transition: "all 0.3s",
+                padding: 0,
+                lineHeight: 1,
+              }}
+            >
+              <span style={{ display: "flex", alignItems: "center", justifyContent: "center", width: "100%", height: "100%" }}>⚙️</span>
+            </button>
           )}
         </>
       )}
