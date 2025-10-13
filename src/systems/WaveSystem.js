@@ -83,7 +83,7 @@ export class WaveSystem {
     this.spawnTimer = 0;
     this.currentDifficultyScale = difficultyScale;
 
-    console.log(`Wave ${this.currentWave + 1}${isSurvival ? ' (Survival)' : '/' + this.totalWaves} started!`);
+    // console.log(`Wave ${this.currentWave + 1}${isSurvival ? ' (Survival)' : '/' + this.totalWaves} started!`);
 
     if (this.onWaveStart) {
       this.onWaveStart(this.currentWave + 1, isSurvival ? 999 : this.totalWaves);
@@ -100,7 +100,7 @@ export class WaveSystem {
 
     const isSurvival = this.game.levelConfig?.isSurvival;
 
-    console.log(`Wave ${this.currentWave}${isSurvival ? ' (Survival)' : '/' + this.totalWaves} completed!`);
+    // console.log(`Wave ${this.currentWave}${isSurvival ? ' (Survival)' : '/' + this.totalWaves} completed!`);
 
     if (this.onWaveComplete) {
       this.onWaveComplete(this.currentWave, isSurvival ? 999 : this.totalWaves);
@@ -120,7 +120,7 @@ export class WaveSystem {
    */
   completeAllWaves() {
     this.allWavesCompleted = true;
-    console.log('All waves completed! Boss incoming...');
+    // console.log('All waves completed! Boss incoming...');
 
     if (this.onAllWavesComplete) {
       this.onAllWavesComplete();
@@ -137,7 +137,7 @@ export class WaveSystem {
     if (this.bossSpawned) return;
 
     this.bossSpawned = true;
-    console.log('Boss spawned!');
+    // console.log('Boss spawned!');
 
     if (this.onBossSpawn) {
       this.onBossSpawn();
@@ -188,7 +188,7 @@ export class WaveSystem {
       if (aliveEnemies === 0) {
         // Check if we should spawn a boss (every 7 waves in survival)
         if (isSurvival && (this.currentWave + 1) % 7 === 0) {
-          console.log(`Wave ${this.currentWave + 1}: Spawning boss!`);
+          // console.log(`Wave ${this.currentWave + 1}: Spawning boss!`);
           // Reset boss spawned flag for survival mode
           this.bossSpawned = false;
           this.spawnBoss();
@@ -247,10 +247,12 @@ export class WaveSystem {
     for (const enemy of enemyTypes) {
       random -= enemy.weight;
       if (random <= 0) {
+        // console.log('Chosen enemy type:', enemy.type);
         return enemy.type;
       }
     }
 
+    // console.log('Fallback enemy type:', enemyTypes[0].type);
     return enemyTypes[0].type; // Fallback
   }
 

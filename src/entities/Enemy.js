@@ -4,6 +4,7 @@ import { createEnemySprite, createEliteGlow } from '../utils/sprites.js';
 import { loadCharacterModel, CHARACTER_MODELS } from '../utils/modelLoader.js';
 import { DamageNumber } from '../effects/DamageNumber.js';
 import { gameSettings } from '../systems/GameSettings.js';
+import { createShadowSilhouetteMaterial } from '../shaders/ShadowSilhouetteShader.js';
 
 export class Enemy extends Entity {
   constructor(engine, x, z, type = 'bandit') {
@@ -17,6 +18,8 @@ export class Enemy extends Entity {
     this.walkCycle = Math.random() * Math.PI * 2; // Random start for variety
     this.mixer = null;
     this.walkAnimation = null;
+    this.shaderMaterial = null; // For shadow type
+    this.timeOffset = Math.random() * 100; // For shadow animation
     this.setupStats();
     this.createMesh();
   }
@@ -33,7 +36,17 @@ export class Enemy extends Entity {
       tiny: { health: 40, speed: 6, damage: 6, color: 0x3a2a1a },
       giant: { health: 400, speed: 1.2, damage: 35, color: 0x5a1a1a },
       skeleton_warrior: { health: 140, speed: 2.8, damage: 20, color: 0xcccccc },
-      skeleton_mage: { health: 90, speed: 2.3, damage: 18, color: 0x8888cc }
+      skeleton_mage: { health: 90, speed: 2.3, damage: 18, color: 0x8888cc },
+      // Shadow variations - 7 different types
+      shadow: { health: 120, speed: 2.0, damage: 18, color: 0x000000 }, // Original: Large, slow, tanky
+      shadow_lurker: { health: 60, speed: 3.5, damage: 12, color: 0x1a0a0a }, // Small, fast, weak
+      shadow_titan: { health: 300, speed: 1.2, damage: 30, color: 0x000000 }, // Huge, very slow, boss-like
+      shadow_wraith: { health: 80, speed: 4.0, damage: 15, color: 0x0a0000 }, // Medium, very fast, red tint
+      shadow_colossus: { health: 200, speed: 1.5, damage: 25, color: 0x050000 }, // Large, slow, dark red
+      shadow_flicker: { health: 40, speed: 5.0, damage: 8, color: 0x1a0000 }, // Tiny, extremely fast, red
+      shadow_void: { health: 150, speed: 1.8, damage: 22, color: 0x000000 }, // Large, slow, pure black
+      shadow_crawler: { health: 70, speed: 4.5, damage: 10, color: 0x0a0000 }, // Fast spider-like crawler
+      shadow_serpent: { health: 90, speed: 3.0, damage: 14, color: 0x1a0000 } // Medium worm/serpent crawler
     };
 
     const stats = typeStats[this.type] || typeStats.bandit;
@@ -64,6 +77,12 @@ export class Enemy extends Entity {
   }
 
   async createMesh() {
+    // Special case: all shadow types use custom shader instead of 3D model
+    if (this.type.startsWith('shadow')) {
+      this.createShadowMesh();
+      return;
+    }
+
     try {
       // Load 3D model based on enemy type
       const characterName = CHARACTER_MODELS[this.type] || CHARACTER_MODELS.bandit;
@@ -177,6 +196,125 @@ export class Enemy extends Entity {
     }
   }
 
+  createShadowMesh() {
+    // Different sizes and properties for each shadow type
+    const shadowConfig = {
+      // Regular humanoid shadow - smooth black with red eyes
+      shadow: {
+        width: 2.5, height: 4.0,
+        eyeColor: 0xff0000, eyeSize: 0.04,
+        flowSpeed: 1.0, flowAmp: 1.0,
+        waveCount: 2, waveType: 0, shapeType: 0,
+        baseColor: 0x000000, gradientColor: 0x000000
+      },
+      // Small blob creature - sharp chaotic waves, black/dark red
+      shadow_lurker: {
+        width: 1.5, height: 2.5,
+        eyeColor: 0xff3333, eyeSize: 0.03,
+        flowSpeed: 1.5, flowAmp: 1.2,
+        waveCount: 3, waveType: 1, shapeType: 2,
+        baseColor: 0x000000, gradientColor: 0x330000
+      },
+      // Huge slow humanoid - pulsing waves, pure black
+      shadow_titan: {
+        width: 4.0, height: 6.0,
+        eyeColor: 0xff0000, eyeSize: 0.06,
+        flowSpeed: 0.5, flowAmp: 0.8,
+        waveCount: 1, waveType: 2, shapeType: 0,
+        baseColor: 0x000000, gradientColor: 0x000000
+      },
+      // Tall thin wraith - smooth waves, BLACK TO RED GRADIENT with red eyes
+      shadow_wraith: {
+        width: 2.0, height: 4.5,
+        eyeColor: 0xff0000, eyeSize: 0.025,
+        flowSpeed: 2.0, flowAmp: 1.5,
+        waveCount: 3, waveType: 0, shapeType: 3,
+        baseColor: 0x000000, gradientColor: 0xff0000  // Black to red!
+      },
+      // Large tanky humanoid - smooth waves, dark
+      shadow_colossus: {
+        width: 3.5, height: 5.0,
+        eyeColor: 0xdd0000, eyeSize: 0.05,
+        flowSpeed: 0.7, flowAmp: 0.9,
+        waveCount: 2, waveType: 0, shapeType: 0,
+        baseColor: 0x000000, gradientColor: 0x1a0000
+      },
+      // Tiny blob - sharp chaotic, dark red tint
+      shadow_flicker: {
+        width: 1.0, height: 1.8,
+        eyeColor: 0xff5555, eyeSize: 0.02,
+        flowSpeed: 2.5, flowAmp: 1.8,
+        waveCount: 3, waveType: 1, shapeType: 2,
+        baseColor: 0x1a0000, gradientColor: 0x330000
+      },
+      // DOCTOR SHAPE - lab coat silhouette, BLACK TO RED GRADIENT with WHITE EYES!
+      shadow_void: {
+        width: 3.0, height: 4.5,
+        eyeColor: 0xffffff, eyeSize: 0.045,  // White eyes!
+        flowSpeed: 0.6, flowAmp: 0.7,
+        waveCount: 1, waveType: 0, shapeType: 1,  // Doctor shape!
+        baseColor: 0x000000, gradientColor: 0xaa0000  // Black to red!
+      },
+      // CRAWLER - spider-like low to ground, sharp chaotic waves
+      shadow_crawler: {
+        width: 3.5, height: 1.5,  // Wide and short!
+        eyeColor: 0xff3333, eyeSize: 0.06,  // Large spider eyes!
+        flowSpeed: 0.5, flowAmp: 1.3,
+        waveCount: 1, waveType: 0, shapeType: 4,  // Spider crawler shape!
+        baseColor: 0x000000, gradientColor: 0x220000,
+        isCrawler: true
+      },
+      // SERPENT - worm/snake crawler, smooth undulating waves
+      shadow_serpent: {
+        width: 4.0, height: 1.2,  // Very wide and flat!
+        eyeColor: 0xff1111, eyeSize: 0.025,
+        flowSpeed: 1.5, flowAmp: 1.1,
+        waveCount: 2, waveType: 0, shapeType: 5,  // Serpent shape!
+        baseColor: 0x1a0000, gradientColor: 0x330000,
+        isCrawler: true
+      }
+    };
+
+    const config = shadowConfig[this.type] || shadowConfig.shadow;
+
+    // High resolution for smooth liquid distortion
+    const geometry = new THREE.PlaneGeometry(config.width, config.height, 64, 64);
+
+    // Create the shadow silhouette material with unique properties
+    const fuzzyAmount = 0.6;
+    this.shaderMaterial = createShadowSilhouetteMaterial(
+      config.eyeColor,
+      fuzzyAmount,
+      config.eyeSize,
+      config.flowSpeed,
+      config.flowAmp,
+      config.waveCount,
+      config.waveType,
+      config.shapeType,
+      config.baseColor,
+      config.gradientColor,
+      config.isCrawler || false
+    );
+
+    this.mesh = new THREE.Mesh(geometry, this.shaderMaterial);
+
+    // Position and rotate to face camera (billboard style)
+    this.mesh.position.set(this.x, config.height / 2, this.z);
+
+    // Crawlers need to lay flat on the ground
+    if (config.isCrawler) {
+      this.mesh.rotation.x = -Math.PI / 2; // Rotate 90 degrees to lay flat
+    }
+
+    // No shadows for shadow creatures
+    this.mesh.castShadow = false;
+    this.mesh.receiveShadow = false;
+
+    if (this.engine && this.engine.scene) {
+      this.engine.scene.add(this.mesh);
+    }
+  }
+
   makeElite(affix) {
     this.isElite = true;
     this.eliteAffix = affix;
@@ -262,6 +400,11 @@ export class Enemy extends Entity {
   update(dt) {
     if (!this.active) return;
     if (!this.mesh) return; // Wait for mesh to load
+
+    // Update shadow shader time for all shadow types
+    if (this.type.startsWith('shadow') && this.shaderMaterial && this.shaderMaterial.uniforms.time) {
+      this.shaderMaterial.uniforms.time.value = performance.now() * 0.001 + this.timeOffset;
+    }
 
     // Update animation mixer
     if (this.mixer) {
@@ -364,26 +507,61 @@ export class Enemy extends Entity {
       // Walking animation
       this.walkCycle += dt * this.speed * 2;
 
-      // Rotate to face player
+      // Rotate to face player (store for non-shadow or crawler types)
       const targetRotation = Math.atan2(dx, dz);
-      this.mesh.rotation.y = targetRotation;
+
+      // Only apply rotation now for non-shadow enemies
+      if (!this.type.startsWith('shadow')) {
+        this.mesh.rotation.y = targetRotation;
+      }
     }
 
     const bobAmount = Math.sin(this.walkCycle) * 0.1;
 
-    this.mesh.position.x = this.x;
-    this.mesh.position.y = 0 + bobAmount;
-    this.mesh.position.z = this.z;
+    // Special handling for shadow entities (2D planes)
+    if (this.type.startsWith('shadow')) {
+      // Get height from mesh (depends on shadow variant)
+      const height = this.mesh.geometry.parameters.height || 4.0;
+      this.mesh.position.x = this.x;
 
-    // Zombie (brute) tilts and drags
-    if (this.type === 'brute') {
-      // Tilt to the side
-      this.mesh.rotation.z = Math.sin(this.engine.time * 0.5) * 0.15;
-      // Slight forward lean
-      this.mesh.rotation.x = 0.2;
+      // Crawler types stay very close to ground
+      if (this.type === 'shadow_crawler' || this.type === 'shadow_serpent') {
+        this.mesh.position.y = height / 2 + bobAmount * 0.3; // Minimal bobbing
+
+        // Crawlers: Only rotate around Y axis to face player, no billboard
+        const dx2 = this.engine.game.player.x - this.x;
+        const dz2 = this.engine.game.player.z - this.z;
+        const targetRotation = Math.atan2(dx2, dz2);
+        this.mesh.rotation.y = targetRotation;
+        // Keep flat on ground - no X or Z rotation
+        this.mesh.rotation.x = 0;
+        this.mesh.rotation.z = 0;
+      } else {
+        this.mesh.position.y = height / 2 + bobAmount;
+
+        // Standing shadows: billboard effect (face camera)
+        if (this.engine.camera) {
+          this.mesh.lookAt(this.engine.camera.position);
+        }
+      }
+
+      this.mesh.position.z = this.z;
     } else {
-      this.mesh.rotation.x = 0;
-      this.mesh.rotation.z = 0;
+      // Normal 3D enemies
+      this.mesh.position.x = this.x;
+      this.mesh.position.y = 0 + bobAmount;
+      this.mesh.position.z = this.z;
+
+      // Zombie (brute) tilts and drags
+      if (this.type === 'brute') {
+        // Tilt to the side
+        this.mesh.rotation.z = Math.sin(this.engine.time * 0.5) * 0.15;
+        // Slight forward lean
+        this.mesh.rotation.x = 0.2;
+      } else {
+        this.mesh.rotation.x = 0;
+        this.mesh.rotation.z = 0;
+      }
     }
 
     if (this.glowMesh) {

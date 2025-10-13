@@ -39,13 +39,16 @@ export const survivalLevel = {
       spawnBatchSize: 5,
       groupSpawnChance: 0.7,
       enemyTypes: [
-        { type: 'bandit', weight: 5 },
-        { type: 'coyote', weight: 3 },
-        { type: 'brute', weight: 2 },
-        { type: 'tiny', weight: 4 },
-        { type: 'giant', weight: 1 },
-        { type: 'skeleton_warrior', weight: 3 },
-        { type: 'skeleton_mage', weight: 2 }
+        // Only shadow variations - 7 different types (crawlers disabled)
+        { type: 'shadow', weight: 3 },           // Original: balanced, medium
+        { type: 'shadow_lurker', weight: 5 },    // Small fast weak - common
+        { type: 'shadow_titan', weight: 1 },     // Huge slow boss-like - rare
+        { type: 'shadow_wraith', weight: 4 },    // Fast medium red - fairly common
+        { type: 'shadow_colossus', weight: 2 },  // Large slow tanky - uncommon
+        { type: 'shadow_flicker', weight: 6 },   // Tiny extremely fast - very common
+        { type: 'shadow_void', weight: 2 }       // Large slow pure black - uncommon
+        // { type: 'shadow_crawler', weight: 5 },   // Spider-like crawler - DISABLED
+        // { type: 'shadow_serpent', weight: 4 }    // Worm/serpent crawler - DISABLED
       ]
     }
   ],

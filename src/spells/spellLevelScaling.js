@@ -75,9 +75,9 @@ export function getSpellLevelStats(spellKey, level) {
  * @param {number} level - The spell level (1-7)
  */
 export function applySpellLevelScaling(spell, spellKey, level) {
-  console.log(`[SCALING DEBUG] Applying scaling for ${spellKey} level ${level}`);
+  // console.log(`[SCALING DEBUG] Applying scaling for ${spellKey} level ${level}`);
   const levelStats = getSpellLevelStats(spellKey, level);
-  console.log(`[SCALING DEBUG] Level stats:`, levelStats);
+  // console.log(`[SCALING DEBUG] Level stats:`, levelStats);
 
   // Apply each stat from the progression
   for (const [attribute, value] of Object.entries(levelStats)) {
@@ -86,40 +86,40 @@ export function applySpellLevelScaling(spell, spellKey, level) {
       case 'spreadAngle':
         // Convert degrees to radians
         spell.spread = value * (Math.PI / 180);
-        console.log(`[SCALING DEBUG] Set spread to ${spell.spread} (from ${value} degrees)`);
+        // console.log(`[SCALING DEBUG] Set spread to ${spell.spread} (from ${value} degrees)`);
         break;
 
       case 'cooldownMin':
         spell.baseCooldownMin = value;
-        console.log(`[SCALING DEBUG] Set baseCooldownMin to ${value}`);
+        // console.log(`[SCALING DEBUG] Set baseCooldownMin to ${value}`);
         break;
 
       case 'cooldownMax':
         spell.baseCooldownMax = value;
-        console.log(`[SCALING DEBUG] Set baseCooldownMax to ${value}`);
+        // console.log(`[SCALING DEBUG] Set baseCooldownMax to ${value}`);
         break;
 
       default:
         // Direct mapping for most attributes
-        const oldValue = spell[attribute];
+        // const oldValue = spell[attribute];
         spell[attribute] = value;
-        console.log(`[SCALING DEBUG] Set ${attribute}: ${oldValue} -> ${value}`);
+        // console.log(`[SCALING DEBUG] Set ${attribute}: ${oldValue} -> ${value}`);
         break;
     }
   }
 
   // Store the current level
   spell.level = level;
-  console.log(`[SCALING DEBUG] Final spell state:`, {
-    level: spell.level,
-    damage: spell.damage,
-    speed: spell.speed,
-    cooldown: spell.cooldown,
-    projectileCount: spell.projectileCount,
-    pierce: spell.pierce,
-    lifetime: spell.lifetime,
-    sizeScale: spell.sizeScale
-  });
+  // console.log(`[SCALING DEBUG] Final spell state:`, {
+  //   level: spell.level,
+  //   damage: spell.damage,
+  //   speed: spell.speed,
+  //   cooldown: spell.cooldown,
+  //   projectileCount: spell.projectileCount,
+  //   pierce: spell.pierce,
+  //   lifetime: spell.lifetime,
+  //   sizeScale: spell.sizeScale
+  // });
 }
 
 /**

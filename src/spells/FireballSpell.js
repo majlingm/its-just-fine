@@ -7,7 +7,7 @@ import spellData from './spellData.json';
  */
 export class FireballSpell extends ProjectileSpell {
   constructor(level = 1) {
-    console.log(`[FIREBALL DEBUG] Creating FireballSpell with level ${level}`);
+    // console.log(`[FIREBALL DEBUG] Creating FireballSpell with level ${level}`);
     const data = spellData.FIREBALL;
 
     super({
@@ -25,11 +25,11 @@ export class FireballSpell extends ProjectileSpell {
       projectileClass: FlameProjectile
     });
 
-    console.log(`[FIREBALL DEBUG] Before scaling - speed: ${this.speed}, cooldown: ${this.cooldown}, projectileCount: ${this.projectileCount}`);
+    // console.log(`[FIREBALL DEBUG] Before scaling - speed: ${this.speed}, cooldown: ${this.cooldown}, projectileCount: ${this.projectileCount}`);
 
     // Apply level scaling using base class method
     this.applyLevelScaling(level);
 
-    console.log(`[FIREBALL DEBUG] After scaling - speed: ${this.speed}, cooldown: ${this.cooldown}, projectileCount: ${this.projectileCount}`);
+    // console.log(`[FIREBALL DEBUG] After scaling - speed: ${this.speed}, cooldown: ${this.cooldown}, projectileCount: ${this.projectileCount}`);
   }
 }

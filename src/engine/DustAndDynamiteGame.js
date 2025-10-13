@@ -859,22 +859,26 @@ export class DustAndDynamiteGame {
     // Map wave enemy types to actual enemy types
     let enemyType;
 
-    // Check if it's already a specific enemy type (bandit, skeleton_warrior, etc.)
-    const validTypes = ['bandit', 'coyote', 'brute', 'gunman', 'charger', 'tiny', 'giant', 'skeleton_warrior', 'skeleton_mage'];
+    // Check if it's already a specific enemy type - ALL SHADOW VARIATIONS
+    const validTypes = ['shadow', 'shadow_lurker', 'shadow_titan', 'shadow_wraith', 'shadow_colossus', 'shadow_flicker', 'shadow_void', 'shadow_crawler', 'shadow_serpent'];
     if (validTypes.includes(type)) {
       // Use the type directly
       enemyType = type;
     } else if (type === 'fast') {
-      // Fast enemies - coyote or charger
-      enemyType = Math.random() < 0.5 ? 'coyote' : 'charger';
+      // Fast enemies - shadow lurkers, wraiths, crawlers
+      const fastTypes = ['shadow_lurker', 'shadow_wraith', 'shadow_crawler'];
+      enemyType = fastTypes[Math.floor(Math.random() * fastTypes.length)];
     } else if (type === 'elite') {
-      // Elite enemies - brute or gunman with elite affix
-      enemyType = Math.random() < 0.5 ? 'brute' : 'gunman';
+      // Elite enemies - titans and colossus
+      enemyType = Math.random() < 0.5 ? 'shadow_titan' : 'shadow_colossus';
     } else {
-      // Normal enemies - bandit or coyote
-      enemyType = Math.random() < 0.6 ? 'bandit' : 'coyote';
+      // Normal enemies - regular shadows, flickers, serpents
+      const normalTypes = ['shadow', 'shadow_flicker', 'shadow_serpent'];
+      enemyType = normalTypes[Math.floor(Math.random() * normalTypes.length)];
     }
 
+    // Create the enemy
+    console.log('🌑 SPAWNING', enemyType, 'at', x, z);
     const enemy = new Enemy(this.engine, x, z, enemyType);
 
     // Apply HP scaling for survival mode (every 7 waves increases HP)
