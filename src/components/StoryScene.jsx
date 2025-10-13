@@ -9,6 +9,10 @@ export function StoryScene({ chapter, onComplete, shouldFadeOut }) {
   const [showTitle, setShowTitle] = useState(false);
   const [showImage, setShowImage] = useState(false);
 
+  // Device detection
+  const isMobile = /iPhone|iPod|Android/i.test(navigator.userAgent) && window.innerWidth < 768;
+  const isTablet = /iPad/i.test(navigator.userAgent) || (window.innerWidth >= 768 && window.innerWidth <= 1024);
+
   // Sequential fade: title in -> title out -> image in
   useEffect(() => {
     // Show title
@@ -44,14 +48,6 @@ export function StoryScene({ chapter, onComplete, shouldFadeOut }) {
       return () => clearTimeout(timer);
     }
   }, [shouldFadeOut, fadingOut, onComplete]);
-
-  const handleSkip = () => {
-    // Just trigger fade out
-    setFadingOut(true);
-    const timer = setTimeout(() => {
-      onComplete();
-    }, 2000);
-  };
 
   if (!chapter) {
     return null;
@@ -90,37 +86,6 @@ export function StoryScene({ chapter, onComplete, shouldFadeOut }) {
         />
       )}
 
-      {/* Skip Button */}
-      <button
-        onClick={handleSkip}
-        style={{
-          position: 'absolute',
-          bottom: 40,
-          right: 40,
-          padding: '12px 24px',
-          background: 'rgba(255, 255, 255, 0.1)',
-          color: 'rgba(255, 255, 255, 0.9)',
-          border: '1px solid rgba(255, 255, 255, 0.3)',
-          cursor: 'pointer',
-          fontFamily: "'Inter', sans-serif",
-          fontSize: 14,
-          fontWeight: 300,
-          letterSpacing: '0.1em',
-          textTransform: 'uppercase',
-          transition: 'all 0.3s',
-        }}
-        onMouseEnter={(e) => {
-          e.target.style.background = 'rgba(255, 255, 255, 0.2)';
-          e.target.style.borderColor = 'rgba(255, 255, 255, 0.5)';
-        }}
-        onMouseLeave={(e) => {
-          e.target.style.background = 'rgba(255, 255, 255, 0.1)';
-          e.target.style.borderColor = 'rgba(255, 255, 255, 0.3)';
-        }}
-      >
-        Skip
-      </button>
-
       {/* Chapter Title - Large centered (fades in then out) */}
       {!showImage && (
         <div
@@ -131,7 +96,7 @@ export function StoryScene({ chapter, onComplete, shouldFadeOut }) {
             transform: 'translate(-50%, -50%)',
             color: 'rgba(255, 255, 255, 0.95)',
             fontFamily: "'Inter', sans-serif",
-            fontSize: 64,
+            fontSize: isMobile ? 32 : isTablet ? 48 : 64,
             fontWeight: 200,
             letterSpacing: '0.1em',
             textTransform: 'uppercase',
@@ -140,6 +105,8 @@ export function StoryScene({ chapter, onComplete, shouldFadeOut }) {
             transition: 'opacity 2s ease-in-out',
             zIndex: 1,
             textShadow: '0 0 40px rgba(0, 0, 0, 0.8), 0 0 20px rgba(0, 0, 0, 0.6)',
+            maxWidth: isMobile ? '90%' : 'auto',
+            padding: isMobile ? '0 20px' : '0',
           }}
         >
           {chapter.name}
@@ -151,11 +118,11 @@ export function StoryScene({ chapter, onComplete, shouldFadeOut }) {
         <div
           style={{
             position: 'absolute',
-            top: 40,
-            left: 40,
+            top: isMobile ? 20 : 40,
+            left: isMobile ? 20 : 40,
             color: 'rgba(255, 255, 255, 0.95)',
             fontFamily: "'Inter', sans-serif",
-            fontSize: 24,
+            fontSize: isMobile ? 16 : isTablet ? 20 : 24,
             fontWeight: 200,
             letterSpacing: '0.1em',
             textTransform: 'uppercase',
@@ -164,6 +131,7 @@ export function StoryScene({ chapter, onComplete, shouldFadeOut }) {
             transition: 'opacity 2s ease-in',
             zIndex: 1,
             textShadow: '0 0 40px rgba(0, 0, 0, 0.8), 0 0 20px rgba(0, 0, 0, 0.6)',
+            maxWidth: isMobile ? '80%' : 'auto',
           }}
         >
           {chapter.name}

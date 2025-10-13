@@ -197,6 +197,10 @@ export class Enemy extends Entity {
   }
 
   createShadowMesh() {
+    // Detect mobile for brighter outline
+    const isMobile = /iPhone|iPod|Android/i.test(navigator.userAgent) && window.innerWidth < 768;
+    const outlineColorValue = isMobile ? 0x333333 : 0x0d0d0d; // Brighter on mobile
+
     // Different sizes and properties for each shadow type
     const shadowConfig = {
       // Regular humanoid shadow - smooth black with red eyes
@@ -205,7 +209,8 @@ export class Enemy extends Entity {
         eyeColor: 0xff0000, eyeSize: 0.04,
         flowSpeed: 1.0, flowAmp: 1.0,
         waveCount: 2, waveType: 0, shapeType: 0,
-        baseColor: 0x000000, gradientColor: 0x000000
+        baseColor: 0x000000, gradientColor: 0x000000,
+        outlineColor: outlineColorValue, outlineWidth: 0.05
       },
       // Small blob creature - sharp chaotic waves, black/dark red
       shadow_lurker: {
@@ -213,7 +218,8 @@ export class Enemy extends Entity {
         eyeColor: 0xff3333, eyeSize: 0.03,
         flowSpeed: 1.5, flowAmp: 1.2,
         waveCount: 3, waveType: 1, shapeType: 2,
-        baseColor: 0x000000, gradientColor: 0x330000
+        baseColor: 0x000000, gradientColor: 0x330000,
+        outlineColor: outlineColorValue, outlineWidth: 0.05
       },
       // Huge slow humanoid - pulsing waves, pure black
       shadow_titan: {
@@ -221,7 +227,8 @@ export class Enemy extends Entity {
         eyeColor: 0xff0000, eyeSize: 0.06,
         flowSpeed: 0.5, flowAmp: 0.8,
         waveCount: 1, waveType: 2, shapeType: 0,
-        baseColor: 0x000000, gradientColor: 0x000000
+        baseColor: 0x000000, gradientColor: 0x000000,
+        outlineColor: outlineColorValue, outlineWidth: 0.05
       },
       // Tall thin wraith - smooth waves, BLACK TO RED GRADIENT with red eyes
       shadow_wraith: {
@@ -229,7 +236,8 @@ export class Enemy extends Entity {
         eyeColor: 0xff0000, eyeSize: 0.025,
         flowSpeed: 2.0, flowAmp: 1.5,
         waveCount: 3, waveType: 0, shapeType: 3,
-        baseColor: 0x000000, gradientColor: 0xff0000  // Black to red!
+        baseColor: 0x000000, gradientColor: 0xff0000,  // Black to red!
+        outlineColor: outlineColorValue, outlineWidth: 0.05
       },
       // Large tanky humanoid - smooth waves, dark
       shadow_colossus: {
@@ -237,7 +245,8 @@ export class Enemy extends Entity {
         eyeColor: 0xdd0000, eyeSize: 0.05,
         flowSpeed: 0.7, flowAmp: 0.9,
         waveCount: 2, waveType: 0, shapeType: 0,
-        baseColor: 0x000000, gradientColor: 0x1a0000
+        baseColor: 0x000000, gradientColor: 0x1a0000,
+        outlineColor: outlineColorValue, outlineWidth: 0.05
       },
       // Tiny blob - sharp chaotic, dark red tint
       shadow_flicker: {
@@ -245,7 +254,8 @@ export class Enemy extends Entity {
         eyeColor: 0xff5555, eyeSize: 0.02,
         flowSpeed: 2.5, flowAmp: 1.8,
         waveCount: 3, waveType: 1, shapeType: 2,
-        baseColor: 0x1a0000, gradientColor: 0x330000
+        baseColor: 0x1a0000, gradientColor: 0x330000,
+        outlineColor: outlineColorValue, outlineWidth: 0.05
       },
       // DOCTOR SHAPE - lab coat silhouette, BLACK TO RED GRADIENT with WHITE EYES!
       shadow_void: {
@@ -253,7 +263,8 @@ export class Enemy extends Entity {
         eyeColor: 0xffffff, eyeSize: 0.045,  // White eyes!
         flowSpeed: 0.6, flowAmp: 0.7,
         waveCount: 1, waveType: 0, shapeType: 1,  // Doctor shape!
-        baseColor: 0x000000, gradientColor: 0xaa0000  // Black to red!
+        baseColor: 0x000000, gradientColor: 0xaa0000,  // Black to red!
+        outlineColor: outlineColorValue, outlineWidth: 0.05
       },
       // CRAWLER - spider-like low to ground, sharp chaotic waves
       shadow_crawler: {
@@ -262,7 +273,8 @@ export class Enemy extends Entity {
         flowSpeed: 0.5, flowAmp: 1.3,
         waveCount: 1, waveType: 0, shapeType: 4,  // Spider crawler shape!
         baseColor: 0x000000, gradientColor: 0x220000,
-        isCrawler: true
+        isCrawler: true,
+        outlineColor: outlineColorValue, outlineWidth: 0.05
       },
       // SERPENT - worm/snake crawler, smooth undulating waves
       shadow_serpent: {
@@ -271,7 +283,8 @@ export class Enemy extends Entity {
         flowSpeed: 1.5, flowAmp: 1.1,
         waveCount: 2, waveType: 0, shapeType: 5,  // Serpent shape!
         baseColor: 0x1a0000, gradientColor: 0x330000,
-        isCrawler: true
+        isCrawler: true,
+        outlineColor: outlineColorValue, outlineWidth: 0.05
       }
     };
 
@@ -293,7 +306,9 @@ export class Enemy extends Entity {
       config.shapeType,
       config.baseColor,
       config.gradientColor,
-      config.isCrawler || false
+      config.isCrawler || false,
+      config.outlineColor,
+      config.outlineWidth
     );
 
     this.mesh = new THREE.Mesh(geometry, this.shaderMaterial);

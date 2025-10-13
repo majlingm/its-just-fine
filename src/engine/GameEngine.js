@@ -98,6 +98,8 @@ export class GameEngine {
     // Adjust camera distance based on device type
     const userAgent = navigator.userAgent;
     const width = window.innerWidth;
+    const height = window.innerHeight;
+    const isLandscape = width > height;
 
     // Detect device type
     const isIPhone = /iPhone/i.test(userAgent);
@@ -106,13 +108,17 @@ export class GameEngine {
     const isTablet = isIPad || (isAndroid && width >= 768 && width <= 1024);
     const isMobile = (isIPhone || (isAndroid && width < 768)) && !isTablet;
 
-    // Set camera distance based on device
+    // Set camera distance based on device and orientation
     if (isMobile) {
-      this.cameraDistance = 18;  // Mobile phones - current setting
+      if (isLandscape) {
+        this.cameraDistance = 28;  // Mobile landscape - zoomed out
+      } else {
+        this.cameraDistance = 32;  // Mobile portrait - zoomed out even more for better view
+      }
     } else if (isTablet) {
-      this.cameraDistance = 14;  // Tablets - more zoomed in than current mobile
+      this.cameraDistance = 20;  // Tablets - medium zoom
     } else {
-      this.cameraDistance = 15;  // Desktop - more zoomed out than current
+      this.cameraDistance = 15;  // Desktop - standard zoom
     }
 
     // Position camera for isometric-like view

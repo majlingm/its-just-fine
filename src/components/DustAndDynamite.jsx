@@ -104,6 +104,9 @@ const DustAndDynamite = () => {
   const isMobile = (isIPhone || (isAndroid && width < 768)) && !isTablet;
   const isLandscape = width > height;
 
+  // Detect if running as native app (Capacitor or standalone PWA)
+  const isNativeApp = window.Capacitor !== undefined || window.matchMedia('(display-mode: standalone)').matches;
+
   const uiScale = isMobile ? 0.7 : isTablet ? 0.85 : 1;
 
   // Gamepad navigation for upgrades
@@ -453,6 +456,21 @@ const DustAndDynamite = () => {
     });
   };
 
+  // Trigger dash by simulating spacebar press
+  const triggerDash = () => {
+    if (!gameRef.current) return;
+
+    // Temporarily set spacebar key to true
+    gameRef.current.keys[' '] = true;
+
+    // Release after a short delay
+    setTimeout(() => {
+      if (gameRef.current) {
+        gameRef.current.keys[' '] = false;
+      }
+    }, 100);
+  };
+
   // Keyboard handler for ring burst (R key) and dev menu toggle (P key)
   useEffect(() => {
     const handleKeyPress = (e) => {
@@ -798,31 +816,33 @@ const DustAndDynamite = () => {
             </p>
           </div>
 
-          {/* Fullscreen Button */}
-          <button
-            onClick={handleFullscreen}
-            style={{
-              position: "absolute",
-              top: 20,
-              right: 20,
-              background: "transparent",
-              border: "none",
-              color: "rgba(255, 255, 255, 0.5)",
-              fontFamily: "'Inter', sans-serif",
-              fontSize: 14,
-              cursor: "pointer",
-              zIndex: 100,
-              transition: "all 0.3s",
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.color = "rgba(255, 255, 255, 1)";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.color = "rgba(255, 255, 255, 0.5)";
-            }}
-          >
-            ⛶ Fullscreen
-          </button>
+          {/* Fullscreen Button - Hide when running as native app */}
+          {!isNativeApp && (
+            <button
+              onClick={handleFullscreen}
+              style={{
+                position: "absolute",
+                top: 20,
+                right: 20,
+                background: "transparent",
+                border: "none",
+                color: "rgba(255, 255, 255, 0.5)",
+                fontFamily: "'Inter', sans-serif",
+                fontSize: 14,
+                cursor: "pointer",
+                zIndex: 100,
+                transition: "all 0.3s",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.color = "rgba(255, 255, 255, 1)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.color = "rgba(255, 255, 255, 0.5)";
+              }}
+            >
+              ⛶ Fullscreen
+            </button>
+          )}
 
           {/* Main Menu */}
           {!showStoryLevels ? (
@@ -1048,23 +1068,23 @@ const DustAndDynamite = () => {
           <div
             style={{
               position: "absolute",
-              top: 40,
-              left: 40,
+              top: isMobile ? 20 : 40,
+              left: isMobile ? 20 : 40,
               pointerEvents: "none",
               fontFamily: "'Inter', sans-serif",
               color: "rgba(255, 255, 255, 0.9)",
             }}
           >
-            <div style={{ fontSize: 12, fontWeight: 200, letterSpacing: "0.2em", textTransform: "uppercase", opacity: 0.6, marginBottom: 8 }}>
+            <div style={{ fontSize: isMobile ? 10 : 12, fontWeight: 200, letterSpacing: "0.2em", textTransform: "uppercase", opacity: 0.6, marginBottom: isMobile ? 4 : 8 }}>
               Health
             </div>
-            <div style={{ fontSize: 32, fontWeight: 200, letterSpacing: "0.05em" }}>
+            <div style={{ fontSize: isMobile ? 20 : 32, fontWeight: 200, letterSpacing: "0.05em" }}>
               {uiState.health}
             </div>
             <div
               style={{
-                marginTop: 8,
-                width: 100,
+                marginTop: isMobile ? 4 : 8,
+                width: isMobile ? 60 : 100,
                 height: 2,
                 background: "rgba(255, 255, 255, 0.1)",
                 position: "relative",
@@ -1215,15 +1235,15 @@ const DustAndDynamite = () => {
           <div
             style={{
               position: "absolute",
-              top: 40,
-              right: 40,
+              top: isMobile ? 20 : 40,
+              right: isMobile ? 20 : 40,
               fontFamily: "'Inter', sans-serif",
               color: "rgba(255, 255, 255, 0.9)",
               pointerEvents: "none",
               textAlign: "right",
             }}
           >
-            <div style={{ fontSize: 12, fontWeight: 200, letterSpacing: "0.2em", textTransform: "uppercase", opacity: 0.6, marginBottom: 8 }}>
+            <div style={{ fontSize: isMobile ? 10 : 12, fontWeight: 200, letterSpacing: "0.2em", textTransform: "uppercase", opacity: 0.6, marginBottom: isMobile ? 4 : 8 }}>
               {uiState.totalWaves > 0 ? (
                 <>
                   {uiState.allWavesCompleted ? (
@@ -1237,11 +1257,11 @@ const DustAndDynamite = () => {
               )}
             </div>
             {uiState.totalWaves > 0 && !uiState.allWavesCompleted && (
-              <div style={{ fontSize: 32, fontWeight: 200, letterSpacing: "0.05em", marginBottom: 12 }}>
+              <div style={{ fontSize: isMobile ? 20 : 32, fontWeight: 200, letterSpacing: "0.05em", marginBottom: isMobile ? 6 : 12 }}>
                 {uiState.enemiesRemaining}
               </div>
             )}
-            <div style={{ fontSize: 12, fontWeight: 200, opacity: 0.6 }}>
+            <div style={{ fontSize: isMobile ? 10 : 12, fontWeight: 200, opacity: 0.6 }}>
               {Math.floor(uiState.time / 60)}:{(uiState.time % 60).toString().padStart(2, "0")}
             </div>
           </div>
@@ -1385,7 +1405,7 @@ const DustAndDynamite = () => {
                 transform: "translate(-50%, -50%)",
                 color: "rgba(255, 255, 255, 0.95)",
                 fontFamily: "'Inter', sans-serif",
-                fontSize: 72,
+                fontSize: isMobile ? 28 : isTablet ? 48 : 72,
                 fontWeight: 200,
                 letterSpacing: "0.1em",
                 zIndex: 5000,
@@ -1393,6 +1413,8 @@ const DustAndDynamite = () => {
                 animation: "fadeInOut 2.5s ease-in-out",
                 textAlign: "center",
                 textTransform: "uppercase",
+                maxWidth: isMobile ? "90%" : "auto",
+                wordWrap: "break-word",
               }}
             >
               {waveNotification}
@@ -1413,71 +1435,60 @@ const DustAndDynamite = () => {
 
           {/* Ring Burst Button */}
           {getRingSpells().length > 0 && (
-            <div
+            <button
+              onClick={triggerRingBurst}
+              disabled={!isAnyRingFull()}
               style={{
                 position: "absolute",
-                bottom: isMobile ? 160 : isTablet ? 40 : 30,
-                // Move to left side on iPad or landscape mobile to avoid steering controls
-                ...(isTablet || (isMobile && isLandscape) ? {
-                  left: isMobile ? 20 : isTablet ? 30 : 30,
-                } : {
-                  right: isMobile ? 20 : 30,
-                }),
+                bottom: isTablet ? 120 : (isMobile && isLandscape) ? 20 : 240,
+                right: isTablet ? 30 : 20,
+                width: isMobile ? 60 : 80,
+                height: isMobile ? 60 : 80,
+                borderRadius: "50%",
+                background: isAnyRingFull()
+                  ? getRingSpells().length === 2
+                    ? "radial-gradient(circle, #ff8800 0%, #88ddff 50%, #ff4400 100%)" // Mixed fire + ice
+                    : getRingSpells()[0].spellKey === 'RING_OF_FIRE'
+                      ? "radial-gradient(circle, #ff8800, #ff4400)" // Fire only
+                      : "radial-gradient(circle, #88ddff, #4499ff)" // Ice only
+                  : "#333",
+                border: isAnyRingFull() ? "4px solid #ffd700" : "3px solid #666",
+                cursor: isAnyRingFull() ? "pointer" : "not-allowed",
+                fontSize: `${isMobile ? 24 : 32}px`,
+                fontFamily: "Georgia, serif",
+                color: isAnyRingFull() ? "#fff" : "#666",
+                textShadow: isAnyRingFull() ? "2px 2px 4px rgba(0,0,0,0.8)" : "none",
+                boxShadow: isAnyRingFull()
+                  ? "0 0 20px rgba(255, 215, 0, 0.8), inset 0 0 10px rgba(255, 255, 255, 0.3)"
+                  : "none",
+                transition: "all 0.3s",
+                opacity: isAnyRingFull() ? 1 : 0.5,
+                animation: isAnyRingFull() ? "pulse 1.5s infinite" : "none",
                 pointerEvents: "auto",
+                touchAction: "none",
               }}
-            >
-              <button
-                onClick={triggerRingBurst}
-                disabled={!isAnyRingFull()}
-                style={{
-                  width: isMobile ? 60 : 80,
-                  height: isMobile ? 60 : 80,
-                  borderRadius: "50%",
-                  background: isAnyRingFull()
-                    ? getRingSpells().length === 2
-                      ? "radial-gradient(circle, #ff8800 0%, #88ddff 50%, #ff4400 100%)" // Mixed fire + ice
-                      : getRingSpells()[0].spellKey === 'RING_OF_FIRE'
-                        ? "radial-gradient(circle, #ff8800, #ff4400)" // Fire only
-                        : "radial-gradient(circle, #88ddff, #4499ff)" // Ice only
-                    : "#333",
-                  border: isAnyRingFull() ? "4px solid #ffd700" : "3px solid #666",
-                  cursor: isAnyRingFull() ? "pointer" : "not-allowed",
-                  fontSize: `${isMobile ? 24 : 32}px`,
-                  fontFamily: "Georgia, serif",
-                  color: isAnyRingFull() ? "#fff" : "#666",
-                  textShadow: isAnyRingFull() ? "2px 2px 4px rgba(0,0,0,0.8)" : "none",
-                  boxShadow: isAnyRingFull()
-                    ? "0 0 20px rgba(255, 215, 0, 0.8), inset 0 0 10px rgba(255, 255, 255, 0.3)"
-                    : "none",
-                  transition: "all 0.3s",
-                  opacity: isAnyRingFull() ? 1 : 0.5,
-                  animation: isAnyRingFull() ? "pulse 1.5s infinite" : "none",
-                }}
-                onMouseEnter={(e) => {
-                  if (isAnyRingFull()) {
-                    e.currentTarget.style.transform = "scale(1.1)";
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = "scale(1)";
-                }}
-              >
-                💥
-              </button>
-              <div
-                style={{
-                  textAlign: "center",
-                  marginTop: 8,
-                  color: "#fff",
-                  fontSize: `${isMobile ? 10 : 12}px`,
-                  fontFamily: "Georgia, serif",
-                  textShadow: "1px 1px 2px rgba(0,0,0,0.8)",
-                  pointerEvents: "none",
-                }}
-              >
-                [R] Burst {getRingSpells().length === 2 ? "(Both)" : ""}
-              </div>
-            </div>
+              onMouseEnter={(e) => {
+                if (isAnyRingFull()) {
+                  e.currentTarget.style.transform = "scale(1.1)";
+                }
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = "scale(1)";
+              }}
+              onTouchStart={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (isAnyRingFull()) {
+                  e.currentTarget.style.transform = "scale(0.95)";
+                  triggerRingBurst();
+                }
+              }}
+              onTouchEnd={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                e.currentTarget.style.transform = "scale(1)";
+              }}
+            />
           )}
 
           <style>
@@ -1492,6 +1503,44 @@ const DustAndDynamite = () => {
               }
             `}
           </style>
+
+          {/* Dash Button - Mobile, Tablet, and Landscape */}
+          {(isMobile || isTablet || (isMobile && isLandscape)) && (
+            <button
+              style={{
+                position: "absolute",
+                bottom: isMobile ? 160 : isTablet ? 40 : 30,
+                // Move to left side on iPad or landscape mobile to avoid steering controls
+                ...(isTablet || (isMobile && isLandscape) ? {
+                  left: isMobile ? 20 : isTablet ? 30 : 30,
+                } : {
+                  right: isMobile ? 20 : 30,
+                }),
+                width: isMobile ? 60 : 80,
+                height: isMobile ? 60 : 80,
+                borderRadius: "50%",
+                background: "radial-gradient(circle, #4488ff, #2244aa)",
+                border: "3px solid #66aaff",
+                cursor: "pointer",
+                boxShadow: "0 0 15px rgba(68, 136, 255, 0.6), inset 0 0 10px rgba(255, 255, 255, 0.2)",
+                transition: "all 0.2s",
+                opacity: 1,
+                touchAction: "none",
+                pointerEvents: "auto",
+              }}
+              onTouchStart={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                e.currentTarget.style.transform = "scale(0.95)";
+                triggerDash();
+              }}
+              onTouchEnd={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                e.currentTarget.style.transform = "scale(1)";
+              }}
+            />
+          )}
 
           {/* Level Up Screen - minimalist */}
           {uiState.levelingUp && (
@@ -1518,26 +1567,28 @@ const DustAndDynamite = () => {
               <div style={{ position: "absolute", bottom: 40, left: 40, width: 60, height: 60, border: "1px solid rgba(255, 255, 255, 0.2)", borderRight: "none", borderTop: "none" }} />
               <div style={{ position: "absolute", bottom: 40, right: 40, width: 60, height: 60, border: "1px solid rgba(255, 255, 255, 0.2)", borderLeft: "none", borderTop: "none" }} />
 
-              <div style={{ fontSize: 12, fontWeight: 200, letterSpacing: "0.3em", textTransform: "uppercase", opacity: 0.6, marginBottom: isMobile ? 30 : 60 }}>
+              <div style={{ fontSize: 12, fontWeight: 200, letterSpacing: "0.3em", textTransform: "uppercase", opacity: 0.6, marginBottom: (isMobile && !isLandscape) ? 30 : isTablet ? 40 : 60 }}>
                 Level {uiState.level}
               </div>
 
               <div style={{
                 display: "flex",
-                gap: isMobile ? 20 : 60,
+                gap: (isMobile && !isLandscape) ? 20 : isTablet ? 30 : 60,
                 alignItems: "stretch",
-                flexDirection: isMobile ? "column" : "row",
-                maxHeight: isMobile ? "60vh" : "auto",
-                overflowY: isMobile ? "auto" : "visible",
-                padding: isMobile ? "0 20px" : 0,
+                flexDirection: (isMobile && !isLandscape) ? "column" : "row",
+                maxHeight: (isMobile && !isLandscape) ? "60vh" : "auto",
+                overflowY: (isMobile && !isLandscape) ? "auto" : "visible",
+                padding: (isMobile && !isLandscape) ? "0 20px" : isTablet || (isMobile && isLandscape) ? "0 10px" : 0,
+                flexWrap: (isMobile && isLandscape) || isTablet ? "wrap" : "nowrap",
+                justifyContent: "center",
               }}>
                 {uiState.upgradeChoices.map((upgrade, i) => (
                   <button
                     key={i}
                     onClick={() => handleUpgradeSelect(upgrade)}
                     style={{
-                      width: isMobile ? "100%" : 280,
-                      minHeight: isMobile ? "auto" : "auto",
+                      width: (isMobile && !isLandscape) ? "100%" : isTablet ? 220 : (isMobile && isLandscape) ? 180 : 280,
+                      minHeight: (isMobile && !isLandscape) ? "auto" : "auto",
                       padding: 0,
                       background: "transparent",
                       border: selectedUpgradeIndex === i ? "1px solid rgba(255, 255, 255, 0.6)" : "1px solid rgba(255, 255, 255, 0.2)",
@@ -1549,29 +1600,29 @@ const DustAndDynamite = () => {
                       position: "relative",
                     }}
                     onMouseEnter={(e) => {
-                      if (!isMobile) {
+                      if (!(isMobile && !isLandscape)) {
                         e.currentTarget.style.opacity = "1";
                         e.currentTarget.style.borderColor = "rgba(255, 255, 255, 0.6)";
                       }
                     }}
                     onMouseLeave={(e) => {
-                      if (!isMobile && selectedUpgradeIndex !== i) {
+                      if (!(isMobile && !isLandscape) && selectedUpgradeIndex !== i) {
                         e.currentTarget.style.opacity = "0.6";
                         e.currentTarget.style.borderColor = "rgba(255, 255, 255, 0.2)";
                       }
                     }}
                     onTouchStart={(e) => {
-                      if (isMobile) {
+                      if (isMobile || isTablet) {
                         // Update selected index on touch
                         setSelectedUpgradeIndex(i);
                       }
                     }}
                   >
-                    <div style={{ padding: isMobile ? "20px" : 40, textAlign: "center" }}>
-                      <div style={{ fontSize: isMobile ? 16 : 18, fontWeight: 300, letterSpacing: "0.1em", marginBottom: isMobile ? 12 : 20 }}>
+                    <div style={{ padding: (isMobile && !isLandscape) ? "20px" : isTablet || (isMobile && isLandscape) ? "16px" : 40, textAlign: "center" }}>
+                      <div style={{ fontSize: (isMobile && !isLandscape) ? 16 : isTablet || (isMobile && isLandscape) ? 14 : 18, fontWeight: 300, letterSpacing: "0.1em", marginBottom: (isMobile && !isLandscape) ? 12 : isTablet || (isMobile && isLandscape) ? 8 : 20 }}>
                         {upgrade.name}
                       </div>
-                      <div style={{ fontSize: isMobile ? 12 : 13, fontWeight: 200, opacity: 0.7, lineHeight: 1.6 }}>
+                      <div style={{ fontSize: (isMobile && !isLandscape) ? 12 : isTablet || (isMobile && isLandscape) ? 11 : 13, fontWeight: 200, opacity: 0.7, lineHeight: 1.6 }}>
                         {upgrade.desc}
                       </div>
                     </div>
@@ -1580,7 +1631,7 @@ const DustAndDynamite = () => {
               </div>
 
               {/* Mobile hint */}
-              {isMobile && (
+              {(isMobile && !isLandscape) && (
                 <div style={{
                   marginTop: 20,
                   fontSize: 11,
@@ -1591,43 +1642,57 @@ const DustAndDynamite = () => {
                   Tap to select • Scroll for more options
                 </div>
               )}
+              {/* Landscape/Tablet hint */}
+              {((isMobile && isLandscape) || isTablet) && (
+                <div style={{
+                  marginTop: 20,
+                  fontSize: 11,
+                  opacity: 0.5,
+                  fontWeight: 200,
+                  textAlign: "center"
+                }}>
+                  Tap to select
+                </div>
+              )}
             </div>
           )}
 
-          {/* Fullscreen Button - Icon Only */}
-          <button
-            onClick={toggleFullscreen}
-            style={{
-              position: "absolute",
-              top: 10,
-              right: 10,
-              width: 32,
-              height: 32,
-              padding: 0,
-              background: "rgba(0, 0, 0, 0.2)",
-              color: "rgba(255, 255, 255, 0.6)",
-              border: "1px solid rgba(255, 255, 255, 0.15)",
-              borderRadius: "4px",
-              cursor: "pointer",
-              fontSize: 16,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              zIndex: 1000,
-              transition: "all 0.3s",
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.borderColor = "rgba(255, 255, 255, 0.5)";
-              e.currentTarget.style.color = "rgba(255, 255, 255, 1)";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.borderColor = "rgba(255, 255, 255, 0.2)";
-              e.currentTarget.style.color = "rgba(255, 255, 255, 0.7)";
-            }}
-            title="Toggle Fullscreen"
-          >
-            ⛶
-          </button>
+          {/* Fullscreen Button - Icon Only - Hide when running as native app */}
+          {!isNativeApp && (
+            <button
+              onClick={toggleFullscreen}
+              style={{
+                position: "absolute",
+                top: 10,
+                right: 10,
+                width: 32,
+                height: 32,
+                padding: 0,
+                background: "rgba(0, 0, 0, 0.2)",
+                color: "rgba(255, 255, 255, 0.6)",
+                border: "1px solid rgba(255, 255, 255, 0.15)",
+                borderRadius: "4px",
+                cursor: "pointer",
+                fontSize: 16,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                zIndex: 1000,
+                transition: "all 0.3s",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.borderColor = "rgba(255, 255, 255, 0.5)";
+                e.currentTarget.style.color = "rgba(255, 255, 255, 1)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.borderColor = "rgba(255, 255, 255, 0.2)";
+                e.currentTarget.style.color = "rgba(255, 255, 255, 0.7)";
+              }}
+              title="Toggle Fullscreen"
+            >
+              ⛶
+            </button>
+          )}
 
           {/* Dev Menu - Toggle with ~ key */}
           {showDevMenu && (

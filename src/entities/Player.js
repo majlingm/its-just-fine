@@ -301,6 +301,13 @@ export class Player extends Entity {
         // Touch/mouse uses direct world coordinates
         dx = Math.max(-1, Math.min(1, offsetX / maxDrag));
         dz = Math.max(-1, Math.min(1, offsetY / maxDrag));
+
+        // Update locked move direction for dash
+        const mag = Math.sqrt(dx * dx + dz * dz);
+        if (mag > 0) {
+          this.lockedMoveDirection.x = dx / mag;
+          this.lockedMoveDirection.z = dz / mag;
+        }
       }
     }
 

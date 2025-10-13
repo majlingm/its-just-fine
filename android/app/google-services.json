@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "964484958595",
+    "project_id": "its-just-fine-game",
+    "storage_bucket": "its-just-fine-game.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:964484958595:android:fdcad73a8c0fb127124eb6",
+        "android_client_info": {
+          "package_name": "com.itsjustfine.game"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCM7cIDD2eKUgmJfl_NuI5KOSHLXxj8SKM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

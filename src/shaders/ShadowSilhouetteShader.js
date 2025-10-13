@@ -80,6 +80,8 @@ export const fragmentShader = `
   uniform vec3 baseColor;
   uniform vec3 gradientColor;
   uniform float isCrawler; // 1.0 for crawlers, 0.0 for standing enemies
+  uniform vec3 outlineColor; // Configurable outline color
+  uniform float outlineWidth; // Configurable outline width
 
   varying vec2 vUv;
   varying vec3 vNormal;
@@ -219,8 +221,11 @@ export const fragmentShader = `
     // Fuzzy edges
     float alpha = 1.0 - smoothstep(-0.02, 0.02, shape);
 
-    // Discard pixels outside silhouette
-    if (alpha < 0.1) discard;
+    // Configurable outline for visibility
+    float outlineAlpha = smoothstep(outlineWidth, 0.02, shape) - smoothstep(0.02, -0.02, shape);
+
+    // Discard pixels outside silhouette and outline
+    if (alpha < 0.1 && outlineAlpha < 0.1) discard;
 
     // Create gradient from bottom to top
     vec3 colorGradient = mix(baseColor, gradientColor, smoothstep(0.0, 1.0, y));
@@ -262,7 +267,11 @@ export const fragmentShader = `
     // Mix in eyes
     vec3 finalColor = mix(colorGradient, eyeColor, eyeGlow + eyeHalo);
 
-    gl_FragColor = vec4(finalColor, alpha * 0.95);
+    // Mix in bright outline for visibility
+    finalColor = mix(finalColor, outlineColor, outlineAlpha * 0.7);
+    float finalAlpha = max(alpha * 0.95, outlineAlpha * 0.6);
+
+    gl_FragColor = vec4(finalColor, finalAlpha);
   }
 `;
 
@@ -278,6 +287,8 @@ export const fragmentShader = `
  * @param {number} shapeType - Shape type (0=humanoid, 1=doctor, 2=blob, 3=tall_thin, 4=spider_crawler, 5=serpent, default: 0)
  * @param {number} baseColorHex - Base color (default: black)
  * @param {number} gradientColorHex - Gradient color (default: black)
+ * @param {number} outlineColorHex - Outline color (default: almost black 0x0d0d0d)
+ * @param {number} outlineWidthValue - Outline width (default: 0.05)
  * @returns {THREE.ShaderMaterial}
  */
 export function createShadowSilhouetteMaterial(
@@ -291,7 +302,9 @@ export function createShadowSilhouetteMaterial(
   shapeType = 0,
   baseColorHex = 0x000000,
   gradientColorHex = 0x000000,
-  isCrawler = false
+  isCrawler = false,
+  outlineColorHex = 0x0d0d0d,
+  outlineWidthValue = 0.05
 ) {
   return new THREE.ShaderMaterial({
     uniforms: {
@@ -306,7 +319,9 @@ export function createShadowSilhouetteMaterial(
       shapeType: { value: shapeType },
       baseColor: { value: new THREE.Color(baseColorHex) },
       gradientColor: { value: new THREE.Color(gradientColorHex) },
-      isCrawler: { value: isCrawler ? 1.0 : 0.0 }
+      isCrawler: { value: isCrawler ? 1.0 : 0.0 },
+      outlineColor: { value: new THREE.Color(outlineColorHex) },
+      outlineWidth: { value: outlineWidthValue }
     },
     vertexShader,
     fragmentShader,

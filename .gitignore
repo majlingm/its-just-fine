@@ -44,3 +44,16 @@ packs/
 # Electron build output
 release/
 dist-electron/
+
+# Android
+android/app/build/
+android/app/release/
+android/app/debug/
+android/build/
+android/.gradle/
+android/local.properties
+android/*.iml
+android/.idea/
+android/captures/
+android/.externalNativeBuild/
+android/.cxx/

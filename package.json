@@ -12,9 +12,18 @@
     "dist": "npm run build && electron-builder",
     "dist:win": "npm run build && electron-builder --win",
     "dist:mac": "npm run build && electron-builder --mac",
-    "dist:linux": "npm run build && electron-builder --linux"
+    "dist:linux": "npm run build && electron-builder --linux",
+    "android:sync": "npx cap sync android",
+    "android:apk": "cd android && export JAVA_HOME=\"/opt/homebrew/opt/openjdk@21\" && export ANDROID_HOME=\"/opt/homebrew/share/android-commandlinetools\" && ./gradlew clean assembleDebug",
+    "android:build": "npm run build && npm run android:sync && npm run android:apk",
+    "android:release": "npm run build && npm run android:sync && cd android && export JAVA_HOME=\"/opt/homebrew/opt/openjdk@21\" && export ANDROID_HOME=\"/opt/homebrew/share/android-commandlinetools\" && ./gradlew clean assembleRelease",
+    "android:distribute": "npm run android:build && firebase appdistribution:distribute android/app/build/outputs/apk/debug/app-debug.apk --app 1:964484958595:android:fdcad73a8c0fb127124eb6 --project its-just-fine-game"
   },
   "dependencies": {
+    "@capacitor/android": "^7.4.3",
+    "@capacitor/cli": "^7.4.3",
+    "@capacitor/core": "^7.4.3",
+    "@capacitor/ios": "^7.4.3",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "three": "^0.160.0"
