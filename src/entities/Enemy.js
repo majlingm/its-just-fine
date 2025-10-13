@@ -6,6 +6,15 @@ import { DamageNumber } from '../effects/DamageNumber.js';
 import { gameSettings } from '../systems/GameSettings.js';
 import { createShadowSilhouetteMaterial } from '../shaders/ShadowSilhouetteShader.js';
 
+// Global caches for optimization
+const geometryCache = new Map(); // Cache geometries by size
+const materialCache = new Map(); // Cache materials by configuration
+
+// Detect mobile once globally
+const isMobileDevice = /iPhone|iPod|Android|iPad/i.test(navigator.userAgent);
+const isNativeApp = typeof window !== 'undefined' && window.Capacitor !== undefined;
+const isMobile = isMobileDevice || isNativeApp;
+
 export class Enemy extends Entity {
   constructor(engine, x, z, type = 'bandit') {
     super();
@@ -385,26 +394,48 @@ export class Enemy extends Entity {
 
     const config = shadowConfig[this.type] || shadowConfig.shadow;
 
-    // High resolution for smooth liquid distortion
-    const geometry = new THREE.PlaneGeometry(config.width, config.height, 64, 64);
+    // Use lower resolution on mobile for better performance
+    const segments = isMobile ? 32 : 64;
 
-    // Create the shadow silhouette material with unique properties
-    const fuzzyAmount = 0.6;
-    this.shaderMaterial = createShadowSilhouetteMaterial(
-      config.eyeColor,
-      fuzzyAmount,
-      config.eyeSize,
-      config.flowSpeed,
-      config.flowAmp,
-      config.waveCount,
-      config.waveType,
-      config.shapeType,
-      config.baseColor,
-      config.gradientColor,
-      config.isCrawler || false,
-      config.outlineColor,
-      config.outlineWidth
-    );
+    // Cache key for geometry based on dimensions and segments
+    const geometryKey = `${config.width}_${config.height}_${segments}`;
+
+    // Reuse cached geometry or create new one
+    let geometry = geometryCache.get(geometryKey);
+    if (!geometry) {
+      geometry = new THREE.PlaneGeometry(config.width, config.height, segments, segments);
+      geometryCache.set(geometryKey, geometry);
+    }
+
+    // Create material configuration string for caching
+    const materialKey = `${config.eyeColor}_${config.eyeSize}_${config.flowSpeed}_${config.flowAmp}_${config.waveCount}_${config.waveType}_${config.shapeType}_${config.baseColor}_${config.gradientColor}_${config.isCrawler}_${config.outlineColor}_${config.outlineWidth}`;
+
+    // Check if we have a cached material with this configuration
+    let baseMaterial = materialCache.get(materialKey);
+    if (!baseMaterial) {
+      // Create new material and cache it
+      const fuzzyAmount = 0.6;
+      baseMaterial = createShadowSilhouetteMaterial(
+        config.eyeColor,
+        fuzzyAmount,
+        config.eyeSize,
+        config.flowSpeed,
+        config.flowAmp,
+        config.waveCount,
+        config.waveType,
+        config.shapeType,
+        config.baseColor,
+        config.gradientColor,
+        config.isCrawler || false,
+        config.outlineColor,
+        config.outlineWidth
+      );
+      materialCache.set(materialKey, baseMaterial);
+    }
+
+    // Clone the material so each enemy can have its own time offset
+    // but share the shader program (expensive to compile)
+    this.shaderMaterial = baseMaterial.clone();
 
     this.mesh = new THREE.Mesh(geometry, this.shaderMaterial);
 
