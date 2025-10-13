@@ -13,16 +13,19 @@ export class GroundSystem {
     this.groundTiles = [];
     this.loadingDesertGround = false;
     this.currentGroundType = null;
+    this.groundSize = null; // Custom ground dimensions { width, length }
   }
 
   /**
    * Update the ground to a specific type
    * @param {string} groundType - Type of ground to create
+   * @param {Object} groundSize - Optional ground size { width, length }
    */
-  updateGround(groundType) {
+  updateGround(groundType, groundSize = null) {
     // Cancel any pending desert ground loading
     this.loadingDesertGround = false;
     this.currentGroundType = groundType;
+    this.groundSize = groundSize;
 
     // Remove existing ground if present
     this.cleanup();
@@ -948,7 +951,10 @@ export class GroundSystem {
     texture.wrapT = THREE.RepeatWrapping;
     texture.repeat.set(1, 1);
 
-    const groundGeo = new THREE.PlaneGeometry(200, 200);
+    // Use custom ground size if provided, otherwise default to 200x200
+    const width = this.groundSize?.width || 200;
+    const length = this.groundSize?.length || 200;
+    const groundGeo = new THREE.PlaneGeometry(width, length);
     const groundMat = new THREE.MeshStandardMaterial({
       map: texture,
       roughness: 0.9,

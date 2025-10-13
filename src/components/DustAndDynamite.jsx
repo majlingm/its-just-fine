@@ -5,6 +5,8 @@ import { spellRegistry } from "../spells/SpellRegistry.js";
 import { LEVELS, GAME_MODES, getAllLevels } from "../levels/index.js";
 import { preloadAllModels } from "../utils/modelLoader.js";
 import { getAssetPath } from "../utils/assetPath.js";
+import { StoryScene } from "./StoryScene.jsx";
+import { STORY_CHAPTERS, getChapter, getNextChapter } from "../story/storyConfig.js";
 
 const DustAndDynamite = () => {
   const mountRef = useRef(null);
@@ -75,6 +77,15 @@ const DustAndDynamite = () => {
   const [loading, setLoading] = useState(false);
   const [loadingProgress, setLoadingProgress] = useState({ loaded: 0, total: 0, current: '' });
 
+  // Story mode state
+  const [showingStoryIntro, setShowingStoryIntro] = useState(false);
+  const [currentChapter, setCurrentChapter] = useState(null);
+  const [storyMode, setStoryMode] = useState(false);
+  const [storyFadeOut, setStoryFadeOut] = useState(false);
+  const [gameLoadedBehindScene, setGameLoadedBehindScene] = useState(false);
+  const introAudioRef = useRef(null);
+  const introTimerRef = useRef(null);
+
   // Arrow rotation and position tracking for smooth interpolation
   const arrowRotationRef = useRef(0);
   const [arrowRotation, setArrowRotation] = useState(0);
@@ -135,16 +146,39 @@ const DustAndDynamite = () => {
     return () => clearInterval(interval);
   }, [uiState.levelingUp, uiState.upgradeChoices, selectedUpgradeIndex]);
 
+  // Start game loading timer when intro scene is showing
+  useEffect(() => {
+    if (showingStoryIntro && currentChapter && !gameStarted) {
+      // Start timer to trigger game loading
+      const startGameAtSecond = currentChapter.intro.startGameAtSecond || 0;
+      if (startGameAtSecond > 0) {
+        introTimerRef.current = setTimeout(() => {
+          handleStartGame(currentChapter.level.levelKey);
+        }, startGameAtSecond * 1000);
+      }
+    }
+
+    return () => {
+      if (introTimerRef.current) {
+        clearTimeout(introTimerRef.current);
+      }
+    };
+  }, [showingStoryIntro, currentChapter, gameStarted]);
+
   useEffect(() => {
     if (!gameStarted || !selectedLevel) return;
 
     const initGame = async () => {
-      // Show loading screen
-      setLoading(true);
+      // Show loading screen (but not for story mode)
+      if (!storyMode) {
+        setLoading(true);
+      }
 
       // Preload all models
       await preloadAllModels((loaded, total, modelName) => {
-        setLoadingProgress({ loaded, total, current: modelName });
+        if (!storyMode) {
+          setLoadingProgress({ loaded, total, current: modelName });
+        }
       });
 
       // Initialize game after preloading
@@ -207,6 +241,20 @@ const DustAndDynamite = () => {
           damage: Math.floor(game.totalDamageDealt || 0),
           ...stats,
         }));
+
+        // Handle story mode progression
+        if (storyMode && currentChapter) {
+          const nextChapter = getNextChapter(currentChapter.id);
+          if (nextChapter) {
+            // Automatically progress to next chapter after a delay
+            setTimeout(() => {
+              setUiState((prev) => ({ ...prev, victory: false }));
+              setCurrentChapter(nextChapter);
+              setShowingStoryIntro(true);
+              setGameStarted(false);
+            }, 3000);
+          }
+        }
       };
 
       const originalUpdate = engine.update.bind(engine);
@@ -217,8 +265,41 @@ const DustAndDynamite = () => {
 
       await game.start(selectedLevel);
 
-      // Hide loading screen
-      setLoading(false);
+      // Hide loading screen or trigger story fade out
+      if (storyMode) {
+        // Story mode: game loaded, trigger scene fade out
+        setGameLoadedBehindScene(true);
+        setStoryFadeOut(true);
+
+        // Stop level music immediately - let intro audio continue
+        if (engine.sound) {
+          engine.sound.stopMusic();
+        }
+
+        // Listen for intro audio to end, then start level music
+        if (introAudioRef.current) {
+          const handleIntroEnd = () => {
+            if (engine.sound && gameRef.current?.levelConfig?.music) {
+              engine.sound.playMusic(gameRef.current.levelConfig.music);
+            }
+          };
+
+          introAudioRef.current.addEventListener('ended', handleIntroEnd);
+
+          // Store cleanup function
+          const cleanup = () => {
+            if (introAudioRef.current) {
+              introAudioRef.current.removeEventListener('ended', handleIntroEnd);
+            }
+          };
+
+          // Return cleanup
+          return cleanup;
+        }
+      } else {
+        // Normal mode: just hide loading
+        setLoading(false);
+      }
     };
 
     initGame();
@@ -782,7 +863,13 @@ const DustAndDynamite = () => {
 
               {/* Story Option */}
               <div
-                onClick={() => setShowStoryLevels(true)}
+                onClick={() => {
+                  // Start story mode from Chapter 1
+                  const firstChapter = STORY_CHAPTERS[0];
+                  setCurrentChapter(firstChapter);
+                  setShowingStoryIntro(true);
+                  setStoryMode(true);
+                }}
                 style={{
                   cursor: "pointer",
                   fontSize: `${36 * uiScale}px`,
@@ -891,6 +978,27 @@ const DustAndDynamite = () => {
             <p>WASD to move • Arrow Keys to rotate/tilt camera • SPACE to dash</p>
           </div>
         </div>
+      )}
+
+      {/* Story Intro Audio - Keep alive even after scene fades */}
+      {storyMode && currentChapter?.intro?.audio && (
+        <audio
+          ref={introAudioRef}
+          src={currentChapter.intro.audio}
+          autoPlay
+          style={{ display: 'none' }}
+        />
+      )}
+
+      {/* Story Intro Scene */}
+      {showingStoryIntro && currentChapter && (
+        <StoryScene
+          chapter={currentChapter}
+          shouldFadeOut={storyFadeOut}
+          onComplete={() => {
+            setShowingStoryIntro(false);
+          }}
+        />
       )}
 
       {/* Game UI - only show when game started */}
@@ -2017,7 +2125,7 @@ const DustAndDynamite = () => {
               <div style={{ position: "absolute", bottom: 40, right: 40, width: 60, height: 60, border: "1px solid rgba(255, 255, 255, 0.2)", borderLeft: "none", borderTop: "none" }} />
 
               <div style={{ fontSize: 12, fontWeight: 200, letterSpacing: "0.3em", textTransform: "uppercase", opacity: 0.6, marginBottom: 40 }}>
-                Victory
+                {storyMode && currentChapter && !getNextChapter(currentChapter.id) ? "Story Complete" : "Victory"}
               </div>
 
               <div style={{ textAlign: "center", marginBottom: 60 }}>
@@ -2037,6 +2145,11 @@ const DustAndDynamite = () => {
                   onClick={() => {
                     setGameStarted(false);
                     setSelectedLevel(null);
+                    setStoryMode(false);
+                    setCurrentChapter(null);
+                    setShowingStoryIntro(false);
+                    setStoryFadeOut(false);
+                    setGameLoadedBehindScene(false);
                   }}
                   style={{
                     padding: "16px 48px",

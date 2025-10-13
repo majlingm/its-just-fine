@@ -4,13 +4,15 @@ import { urbanOutpostLevel } from './urbanOutpost.js';
 import { abandonedTownLevel } from './abandonedTown.js';
 import { bossRushLevel } from './bossRush.js';
 import { survivalLevel } from './survival.js';
+import { chapter1Level } from './chapter1.js';
 
 export const LEVELS = {
   SURVIVAL: survivalLevel,
   DESERT_CANYON: desertCanyonLevel,
   URBAN_OUTPOST: urbanOutpostLevel,
   ABANDONED_TOWN: abandonedTownLevel,
-  BOSS_RUSH: bossRushLevel
+  BOSS_RUSH: bossRushLevel,
+  CHAPTER_1: chapter1Level
 };
 
 export const GAME_MODES = {
@@ -20,7 +22,7 @@ export const GAME_MODES = {
   },
   STORY: {
     name: 'Story',
-    levels: ['DESERT_CANYON', 'URBAN_OUTPOST', 'ABANDONED_TOWN', 'BOSS_RUSH']
+    levels: [] // Story mode now uses chapter system instead
   }
 };
 

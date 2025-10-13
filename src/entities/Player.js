@@ -349,8 +349,10 @@ export class Player extends Entity {
       this.isMoving = false;
     }
 
-    this.x = Math.max(-90, Math.min(90, this.x));
-    this.z = Math.max(-90, Math.min(90, this.z));
+    // Clamp player position to spawn boundaries
+    const boundaries = this.engine.spawnBoundaries || { minX: -90, maxX: 90, minZ: -90, maxZ: 90 };
+    this.x = Math.max(boundaries.minX, Math.min(boundaries.maxX, this.x));
+    this.z = Math.max(boundaries.minZ, Math.min(boundaries.maxZ, this.z));
   }
 
   update(dt) {

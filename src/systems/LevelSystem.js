@@ -23,7 +23,7 @@ export class LevelSystem {
 
     // Update ground based on level type
     if (levelData.groundType) {
-      this.engine.updateGround(levelData.groundType);
+      this.engine.updateGround(levelData.groundType, levelData.groundSize);
     }
 
     // Play level music if specified
@@ -43,6 +43,12 @@ export class LevelSystem {
       minZ: -80,
       maxZ: 80
     };
+
+    // Update fog boundaries to match spawn boundaries
+    if (this.engine.fogSystem) {
+      this.engine.fogSystem.cleanup();
+      this.engine.fogSystem.createBoundaryFog(this.engine.spawnBoundaries);
+    }
 
     return true;
   }

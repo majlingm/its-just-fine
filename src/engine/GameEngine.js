@@ -278,10 +278,11 @@ export class GameEngine {
   /**
    * Update ground type
    * @param {string} groundType - Type of ground to display
+   * @param {Object} groundSize - Optional ground size { width, length }
    */
-  updateGround(groundType) {
+  updateGround(groundType, groundSize) {
     if (this.groundSystem) {
-      this.groundSystem.updateGround(groundType);
+      this.groundSystem.updateGround(groundType, groundSize);
     }
   }
 

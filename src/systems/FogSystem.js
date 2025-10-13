@@ -13,11 +13,22 @@ export class FogSystem {
 
   /**
    * Create boundary fog walls at the edges of the play area
+   * @param {Object} boundaries - Optional spawn boundaries { minX, maxX, minZ, maxZ }
    */
-  createBoundaryFog() {
-    const boundary = 90;
+  createBoundaryFog(boundaries = null) {
+    // Use spawn boundaries if provided, otherwise default to 90x90
+    const maxX = boundaries ? boundaries.maxX : 90;
+    const maxZ = boundaries ? boundaries.maxZ : 90;
+    const minX = boundaries ? boundaries.minX : -90;
+    const minZ = boundaries ? boundaries.minZ : -90;
+
+    // Calculate dimensions
+    const width = maxX - minX;
+    const length = maxZ - minZ;
+    const centerX = (maxX + minX) / 2;
+    const centerZ = (maxZ + minZ) / 2;
+
     const fogHeight = 25;
-    const fogThickness = 15;
 
     // Vertex shader - pass world position
     const vertexShader = `
@@ -145,41 +156,41 @@ export class FogSystem {
 
     this.fogWalls = [];
 
-    // North wall
+    // North wall (at +Z boundary)
     const northWall = new THREE.Mesh(
-      new THREE.PlaneGeometry(boundary * 2, fogHeight, 1, 1),
+      new THREE.PlaneGeometry(width, fogHeight, 1, 1),
       fogMaterial.clone()
     );
-    northWall.position.set(0, fogHeight / 2, boundary + fogThickness / 2);
+    northWall.position.set(centerX, fogHeight / 2, maxZ);
     this.scene.add(northWall);
     this.fogWalls.push(northWall);
 
-    // South wall
+    // South wall (at -Z boundary)
     const southWall = new THREE.Mesh(
-      new THREE.PlaneGeometry(boundary * 2, fogHeight, 1, 1),
+      new THREE.PlaneGeometry(width, fogHeight, 1, 1),
       fogMaterial.clone()
     );
-    southWall.position.set(0, fogHeight / 2, -boundary - fogThickness / 2);
+    southWall.position.set(centerX, fogHeight / 2, minZ);
     southWall.rotation.y = Math.PI;
     this.scene.add(southWall);
     this.fogWalls.push(southWall);
 
-    // East wall
+    // East wall (at +X boundary)
     const eastWall = new THREE.Mesh(
-      new THREE.PlaneGeometry(boundary * 2, fogHeight, 1, 1),
+      new THREE.PlaneGeometry(length, fogHeight, 1, 1),
       fogMaterial.clone()
     );
-    eastWall.position.set(boundary + fogThickness / 2, fogHeight / 2, 0);
+    eastWall.position.set(maxX, fogHeight / 2, centerZ);
     eastWall.rotation.y = Math.PI / 2;
     this.scene.add(eastWall);
     this.fogWalls.push(eastWall);
 
-    // West wall
+    // West wall (at -X boundary)
     const westWall = new THREE.Mesh(
-      new THREE.PlaneGeometry(boundary * 2, fogHeight, 1, 1),
+      new THREE.PlaneGeometry(length, fogHeight, 1, 1),
       fogMaterial.clone()
     );
-    westWall.position.set(-boundary - fogThickness / 2, fogHeight / 2, 0);
+    westWall.position.set(minX, fogHeight / 2, centerZ);
     westWall.rotation.y = -Math.PI / 2;
     this.scene.add(westWall);
     this.fogWalls.push(westWall);
