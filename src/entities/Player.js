@@ -34,6 +34,7 @@ export class Player extends Entity {
     this.invincible = false;
     this.invincibilityTimer = 0;
     this.invincibilityDuration = 0.5; // 0.5 seconds of invincibility after taking damage
+    this.dashInvincible = false; // Separate flag for dash invincibility
 
     // Camera rotation
     this.cameraAngle = 0;  // Horizontal rotation
@@ -55,6 +56,11 @@ export class Player extends Entity {
     this.weapons = [
       { spellKey: 'FIREBALL', level: 1, lastShot: 0 }
     ];
+
+    // Dash shader effect
+    this.originalMaterials = new Map(); // Store original materials
+    this.dashMaterialsApplied = false;
+    this.dashTrails = []; // Store dash trail sprites
 
     this.createMesh();
   }
@@ -212,6 +218,12 @@ export class Player extends Entity {
       this.isDashing = true;
       this.dashTimer = this.dashDuration;
       this.dashCooldownTimer = this.dashCooldown;
+
+      // Make player invincible during dash (separate from damage invincibility)
+      this.dashInvincible = true;
+
+      // Apply dash shader effect
+      this.applyDashShader();
 
       // Play dash sound
       if (this.engine && this.engine.sound) {
@@ -375,12 +387,22 @@ export class Player extends Entity {
       this.dashTimer -= dt;
       if (this.dashTimer <= 0) {
         this.isDashing = false;
+        // Remove dash shader effect
+        this.removeDashShader();
+        // Remove dash invincibility
+        this.dashInvincible = false;
+      } else {
+        // Update dash shader effect (alternating shadow/light)
+        this.updateDashShader();
       }
     }
 
     if (this.dashCooldownTimer > 0) {
       this.dashCooldownTimer -= dt;
     }
+
+    // Update dash trails
+    this.updateDashTrails(dt);
 
     // Update invincibility timer
     if (this.invincible) {
@@ -451,9 +473,161 @@ export class Player extends Entity {
     return false;
   }
 
+  applyDashShader() {
+    if (!this.mesh || this.dashMaterialsApplied) return;
+
+    // Store original materials
+    this.mesh.traverse((child) => {
+      if (child.isMesh && child.material) {
+        this.originalMaterials.set(child, child.material);
+      }
+    });
+
+    this.dashMaterialsApplied = true;
+    this.dashStartTime = this.engine.time;
+  }
+
+  updateDashShader() {
+    if (!this.mesh || !this.dashMaterialsApplied) return;
+
+    const elapsed = this.engine.time - this.dashStartTime;
+    const frequency = 10; // Faster switching for smoother blend
+    const t = (elapsed * frequency) % 1; // 0 to 1 smooth transition
+
+    // Mix between shadow and light using sine wave for smooth transition
+    const shadowWeight = (Math.sin(elapsed * frequency * Math.PI * 2) + 1) / 2; // 0 to 1
+    const lightWeight = 1 - shadowWeight;
+
+    // Blend colors: black -> purple/blue -> white
+    const r = Math.floor(shadowWeight * 0 + lightWeight * 255);
+    const g = Math.floor(shadowWeight * 0 + lightWeight * 255);
+    const b = Math.floor(shadowWeight * 0 + lightWeight * 255);
+    const blendedColor = (r << 16) | (g << 8) | b;
+
+    // Emissive color: purple for shadow, cyan for light, blend between
+    const emissiveR = Math.floor(shadowWeight * 68 + lightWeight * 170); // 0x44 to 0xaa
+    const emissiveG = Math.floor(shadowWeight * 0 + lightWeight * 204); // 0x00 to 0xcc
+    const emissiveB = Math.floor(shadowWeight * 68 + lightWeight * 255); // 0x44 to 0xff
+    const emissiveColor = (emissiveR << 16) | (emissiveG << 8) | emissiveB;
+
+    this.mesh.traverse((child) => {
+      if (child.isMesh && this.originalMaterials.has(child)) {
+        // Blended material with smooth color transition
+        child.material = new THREE.MeshStandardMaterial({
+          color: blendedColor,
+          emissive: emissiveColor,
+          emissiveIntensity: 0.6 + Math.sin(elapsed * 15) * 0.2, // Pulsing glow
+          metalness: 0.2,
+          roughness: 0.5,
+          transparent: true,
+          opacity: 0.85
+        });
+      }
+    });
+
+    // Create dash trail effect
+    this.createDashTrail();
+  }
+
+  createDashTrail() {
+    // Only create trail every few frames
+    if (Math.random() > 0.3) return;
+
+    // Create a sprite that looks like a ghostly afterimage
+    const canvas = document.createElement('canvas');
+    canvas.width = 64;
+    canvas.height = 64;
+    const ctx = canvas.getContext('2d');
+
+    // Determine if this trail is more shadow or light
+    const elapsed = this.engine.time - this.dashStartTime;
+    const frequency = 10;
+    const shadowWeight = (Math.sin(elapsed * frequency * Math.PI * 2) + 1) / 2;
+    const isLight = shadowWeight < 0.5;
+
+    // Create gradient based on current phase
+    const gradient = ctx.createRadialGradient(32, 32, 5, 32, 32, 32);
+    if (isLight) {
+      // Light trail - white to cyan
+      gradient.addColorStop(0, 'rgba(255, 255, 255, 0.8)');
+      gradient.addColorStop(0.4, 'rgba(170, 230, 255, 0.6)');
+      gradient.addColorStop(0.7, 'rgba(100, 180, 255, 0.3)');
+      gradient.addColorStop(1, 'rgba(0, 100, 200, 0)');
+    } else {
+      // Shadow trail - black to purple
+      gradient.addColorStop(0, 'rgba(100, 100, 120, 0.8)');
+      gradient.addColorStop(0.4, 'rgba(68, 0, 68, 0.6)');
+      gradient.addColorStop(0.7, 'rgba(34, 0, 68, 0.3)');
+      gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+    }
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, 64, 64);
+
+    const texture = new THREE.CanvasTexture(canvas);
+    const material = new THREE.SpriteMaterial({
+      map: texture,
+      transparent: true,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false
+    });
+    const sprite = new THREE.Sprite(material);
+    sprite.scale.set(2, 2, 1);
+    sprite.position.set(this.x, 1, this.z);
+
+    this.engine.scene.add(sprite);
+
+    // Store trail data for cleanup
+    this.dashTrails.push({
+      sprite: sprite,
+      life: 0.3, // Trail lasts 0.3 seconds
+      age: 0,
+      initialOpacity: 0.8
+    });
+  }
+
+  updateDashTrails(dt) {
+    // Update and fade out dash trails
+    for (let i = this.dashTrails.length - 1; i >= 0; i--) {
+      const trail = this.dashTrails[i];
+      trail.age += dt;
+
+      if (trail.age >= trail.life) {
+        // Remove expired trail
+        this.engine.scene.remove(trail.sprite);
+        trail.sprite.material.map.dispose();
+        trail.sprite.material.dispose();
+        this.dashTrails.splice(i, 1);
+      } else {
+        // Fade out trail
+        const progress = trail.age / trail.life;
+        trail.sprite.material.opacity = trail.initialOpacity * (1 - progress);
+
+        // Scale down trail slightly as it fades
+        const scale = 2 * (1 - progress * 0.5);
+        trail.sprite.scale.set(scale, scale, 1);
+      }
+    }
+  }
+
+  removeDashShader() {
+    if (!this.mesh || !this.dashMaterialsApplied) return;
+
+    // Restore original materials
+    this.mesh.traverse((child) => {
+      if (child.isMesh && this.originalMaterials.has(child)) {
+        child.material = this.originalMaterials.get(child);
+      }
+    });
+
+    this.originalMaterials.clear();
+    this.dashMaterialsApplied = false;
+
+    // Clean up any remaining trails over time (they'll fade out naturally)
+  }
+
   takeDamage(amount, source = 'unknown') {
-    // Don't take damage if invincible
-    if (this.invincible) {
+    // Don't take damage if invincible (from damage) OR dashing
+    if (this.invincible || this.dashInvincible) {
       return false;
     }
 

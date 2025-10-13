@@ -39,16 +39,27 @@ export const survivalLevel = {
       spawnBatchSize: 5,
       groupSpawnChance: 0.7,
       enemyTypes: [
-        // Only shadow variations - 7 different types (crawlers disabled)
+        // Shadow variations - 7 different types (crawlers disabled)
         { type: 'shadow', weight: 3 },           // Original: balanced, medium
         { type: 'shadow_lurker', weight: 5 },    // Small fast weak - common
         { type: 'shadow_titan', weight: 1 },     // Huge slow boss-like - rare
         { type: 'shadow_wraith', weight: 4 },    // Fast medium red - fairly common
         { type: 'shadow_colossus', weight: 2 },  // Large slow tanky - uncommon
         { type: 'shadow_flicker', weight: 6 },   // Tiny extremely fast - very common
-        { type: 'shadow_void', weight: 2 }       // Large slow pure black - uncommon
+        { type: 'shadow_void', weight: 2 },      // Large slow pure black - uncommon
         // { type: 'shadow_crawler', weight: 5 },   // Spider-like crawler - DISABLED
-        // { type: 'shadow_serpent', weight: 4 }    // Worm/serpent crawler - DISABLED
+        // { type: 'shadow_serpent', weight: 4 },   // Worm/serpent crawler - DISABLED
+
+        // Light variations - white counterparts with black outlines
+        { type: 'light', weight: 3 },            // Original: balanced, medium
+        { type: 'light_lurker', weight: 5 },     // Small fast weak - common
+        { type: 'light_titan', weight: 1 },      // Huge slow boss-like - rare
+        { type: 'light_wraith', weight: 4 },     // Fast medium blue - fairly common
+        { type: 'light_colossus', weight: 2 },   // Large slow tanky - uncommon
+        { type: 'light_flicker', weight: 6 },    // Tiny extremely fast - very common
+        { type: 'light_void', weight: 2 }        // Large slow pure white - uncommon
+        // { type: 'light_crawler', weight: 5 },    // Spider-like crawler - DISABLED
+        // { type: 'light_serpent', weight: 4 }     // Worm/serpent crawler - DISABLED
       ]
     }
   ],

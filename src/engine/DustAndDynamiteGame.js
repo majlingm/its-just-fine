@@ -880,8 +880,11 @@ export class DustAndDynamiteGame {
     // Map wave enemy types to actual enemy types
     let enemyType;
 
-    // Check if it's already a specific enemy type - ALL SHADOW VARIATIONS
-    const validTypes = ['shadow', 'shadow_lurker', 'shadow_titan', 'shadow_wraith', 'shadow_colossus', 'shadow_flicker', 'shadow_void', 'shadow_crawler', 'shadow_serpent'];
+    // Check if it's already a specific enemy type - ALL SHADOW AND LIGHT VARIATIONS
+    const validTypes = [
+      'shadow', 'shadow_lurker', 'shadow_titan', 'shadow_wraith', 'shadow_colossus', 'shadow_flicker', 'shadow_void', 'shadow_crawler', 'shadow_serpent',
+      'light', 'light_lurker', 'light_titan', 'light_wraith', 'light_colossus', 'light_flicker', 'light_void', 'light_crawler', 'light_serpent'
+    ];
     if (validTypes.includes(type)) {
       // Use the type directly
       enemyType = type;

@@ -37,7 +37,7 @@ export class Enemy extends Entity {
       giant: { health: 400, speed: 1.2, damage: 35, color: 0x5a1a1a },
       skeleton_warrior: { health: 140, speed: 2.8, damage: 20, color: 0xcccccc },
       skeleton_mage: { health: 90, speed: 2.3, damage: 18, color: 0x8888cc },
-      // Shadow variations - 7 different types
+      // Shadow variations - 9 different types
       shadow: { health: 120, speed: 2.0, damage: 18, color: 0x000000 }, // Original: Large, slow, tanky
       shadow_lurker: { health: 60, speed: 3.5, damage: 12, color: 0x1a0a0a }, // Small, fast, weak
       shadow_titan: { health: 300, speed: 1.2, damage: 30, color: 0x000000 }, // Huge, very slow, boss-like
@@ -46,7 +46,17 @@ export class Enemy extends Entity {
       shadow_flicker: { health: 40, speed: 5.0, damage: 8, color: 0x1a0000 }, // Tiny, extremely fast, red
       shadow_void: { health: 150, speed: 1.8, damage: 22, color: 0x000000 }, // Large, slow, pure black
       shadow_crawler: { health: 70, speed: 4.5, damage: 10, color: 0x0a0000 }, // Fast spider-like crawler
-      shadow_serpent: { health: 90, speed: 3.0, damage: 14, color: 0x1a0000 } // Medium worm/serpent crawler
+      shadow_serpent: { health: 90, speed: 3.0, damage: 14, color: 0x1a0000 }, // Medium worm/serpent crawler
+      // Light variations - white counterparts with black outlines
+      light: { health: 120, speed: 2.0, damage: 18, color: 0xffffff }, // White version of shadow
+      light_lurker: { health: 60, speed: 3.5, damage: 12, color: 0xf5f5f5 }, // White version of shadow_lurker
+      light_titan: { health: 300, speed: 1.2, damage: 30, color: 0xffffff }, // White version of shadow_titan
+      light_wraith: { health: 80, speed: 4.0, damage: 15, color: 0xfff5f5 }, // White version of shadow_wraith
+      light_colossus: { health: 200, speed: 1.5, damage: 25, color: 0xfffaf0 }, // White version of shadow_colossus
+      light_flicker: { health: 40, speed: 5.0, damage: 8, color: 0xfff5f0 }, // White version of shadow_flicker
+      light_void: { health: 150, speed: 1.8, damage: 22, color: 0xffffff }, // White version of shadow_void
+      light_crawler: { health: 70, speed: 4.5, damage: 10, color: 0xfff5f5 }, // White version of shadow_crawler
+      light_serpent: { health: 90, speed: 3.0, damage: 14, color: 0xfff5f0 } // White version of shadow_serpent
     };
 
     const stats = typeStats[this.type] || typeStats.bandit;
@@ -77,8 +87,8 @@ export class Enemy extends Entity {
   }
 
   async createMesh() {
-    // Special case: all shadow types use custom shader instead of 3D model
-    if (this.type.startsWith('shadow')) {
+    // Special case: all shadow and light types use custom shader instead of 3D model
+    if (this.type.startsWith('shadow') || this.type.startsWith('light')) {
       this.createShadowMesh();
       return;
     }
@@ -286,6 +296,90 @@ export class Enemy extends Entity {
         baseColor: 0x1a0000, gradientColor: 0x330000,
         isCrawler: true,
         outlineColor: outlineColorValue, outlineWidth: 0.05
+      },
+      // LIGHT VARIATIONS - White/gray counterparts with red and black eyes
+      // Regular humanoid light - smooth white with red eyes
+      light: {
+        width: 2.5, height: 4.0,
+        eyeColor: 0xff0000, eyeSize: 0.04,
+        flowSpeed: 1.0, flowAmp: 1.0,
+        waveCount: 2, waveType: 0, shapeType: 0,
+        baseColor: 0xffffff, gradientColor: 0xdddddd,  // White to light gray
+        outlineColor: 0x000000, outlineWidth: 0.08
+      },
+      // Small blob creature - sharp chaotic waves, white/gray
+      light_lurker: {
+        width: 1.5, height: 2.5,
+        eyeColor: 0xff3333, eyeSize: 0.03,
+        flowSpeed: 1.5, flowAmp: 1.2,
+        waveCount: 3, waveType: 1, shapeType: 2,
+        baseColor: 0xffffff, gradientColor: 0xcccccc,  // White to gray
+        outlineColor: 0x000000, outlineWidth: 0.08
+      },
+      // Huge slow humanoid - pulsing waves, pure white
+      light_titan: {
+        width: 4.0, height: 6.0,
+        eyeColor: 0xff0000, eyeSize: 0.06,
+        flowSpeed: 0.5, flowAmp: 0.8,
+        waveCount: 1, waveType: 2, shapeType: 0,
+        baseColor: 0xffffff, gradientColor: 0xeeeeee,  // Pure white to light gray
+        outlineColor: 0x000000, outlineWidth: 0.08
+      },
+      // Tall thin wraith - smooth waves, WHITE TO GRAY GRADIENT with red eyes
+      light_wraith: {
+        width: 2.0, height: 4.5,
+        eyeColor: 0xff0000, eyeSize: 0.025,
+        flowSpeed: 2.0, flowAmp: 1.5,
+        waveCount: 3, waveType: 0, shapeType: 3,
+        baseColor: 0xffffff, gradientColor: 0xaaaaaa,  // White to gray
+        outlineColor: 0x000000, outlineWidth: 0.08
+      },
+      // Large tanky humanoid - smooth waves, light gray
+      light_colossus: {
+        width: 3.5, height: 5.0,
+        eyeColor: 0xdd0000, eyeSize: 0.05,
+        flowSpeed: 0.7, flowAmp: 0.9,
+        waveCount: 2, waveType: 0, shapeType: 0,
+        baseColor: 0xffffff, gradientColor: 0xbbbbbb,  // White to medium gray
+        outlineColor: 0x000000, outlineWidth: 0.08
+      },
+      // Tiny blob - sharp chaotic, light gray tint
+      light_flicker: {
+        width: 1.0, height: 1.8,
+        eyeColor: 0xff5555, eyeSize: 0.02,
+        flowSpeed: 2.5, flowAmp: 1.8,
+        waveCount: 3, waveType: 1, shapeType: 2,
+        baseColor: 0xffffff, gradientColor: 0xcccccc,  // White to gray
+        outlineColor: 0x000000, outlineWidth: 0.08
+      },
+      // ANGEL SHAPE - white silhouette, WHITE TO GRAY GRADIENT with BLACK EYES!
+      light_void: {
+        width: 3.0, height: 4.5,
+        eyeColor: 0x000000, eyeSize: 0.045,  // Black eyes for contrast
+        flowSpeed: 0.6, flowAmp: 0.7,
+        waveCount: 1, waveType: 0, shapeType: 1,  // Doctor/Angel shape!
+        baseColor: 0xffffff, gradientColor: 0xbbbbbb,  // White to gray
+        outlineColor: 0x000000, outlineWidth: 0.08
+      },
+      // CRAWLER - spider-like low to ground, sharp chaotic waves
+      light_crawler: {
+        width: 3.5, height: 1.5,  // Wide and short!
+        eyeColor: 0xff3333, eyeSize: 0.06,  // Large red spider eyes!
+        flowSpeed: 0.5, flowAmp: 1.3,
+        waveCount: 1, waveType: 0, shapeType: 4,  // Spider crawler shape!
+        baseColor: 0xffffff, gradientColor: 0xcccccc,  // White to gray
+        isCrawler: true,
+        outlineColor: 0x000000, outlineWidth: 0.08
+      },
+      // SERPENT - worm/snake crawler, smooth undulating waves
+      light_serpent: {
+        width: 4.0, height: 1.2,  // Very wide and flat!
+        eyeColor: 0xff1111, eyeSize: 0.025,
+        flowSpeed: 1.5, flowAmp: 1.1,
+        waveCount: 2, waveType: 0, shapeType: 5,  // Serpent shape!
+        baseColor: 0xffffff, gradientColor: 0xdddddd,  // White to light gray
+        isCrawler: true,
+        outlineColor: 0x000000, outlineWidth: 0.08
       }
     };
 
@@ -417,8 +511,8 @@ export class Enemy extends Entity {
     if (!this.active) return;
     if (!this.mesh) return; // Wait for mesh to load
 
-    // Update shadow shader time for all shadow types
-    if (this.type.startsWith('shadow') && this.shaderMaterial && this.shaderMaterial.uniforms.time) {
+    // Update shadow/light shader time for all shader-based types
+    if ((this.type.startsWith('shadow') || this.type.startsWith('light')) && this.shaderMaterial && this.shaderMaterial.uniforms.time) {
       this.shaderMaterial.uniforms.time.value = performance.now() * 0.001 + this.timeOffset;
     }
 
@@ -523,25 +617,26 @@ export class Enemy extends Entity {
       // Walking animation
       this.walkCycle += dt * this.speed * 2;
 
-      // Rotate to face player (store for non-shadow or crawler types)
+      // Rotate to face player (store for non-shadow/light or crawler types)
       const targetRotation = Math.atan2(dx, dz);
 
-      // Only apply rotation now for non-shadow enemies
-      if (!this.type.startsWith('shadow')) {
+      // Only apply rotation now for non-shader-based enemies
+      if (!this.type.startsWith('shadow') && !this.type.startsWith('light')) {
         this.mesh.rotation.y = targetRotation;
       }
     }
 
     const bobAmount = Math.sin(this.walkCycle) * 0.1;
 
-    // Special handling for shadow entities (2D planes)
-    if (this.type.startsWith('shadow')) {
-      // Get height from mesh (depends on shadow variant)
+    // Special handling for shader-based entities (2D planes - shadow and light)
+    if (this.type.startsWith('shadow') || this.type.startsWith('light')) {
+      // Get height from mesh (depends on variant)
       const height = this.mesh.geometry.parameters.height || 4.0;
       this.mesh.position.x = this.x;
 
       // Crawler types stay very close to ground
-      if (this.type === 'shadow_crawler' || this.type === 'shadow_serpent') {
+      const isCrawler = this.type.endsWith('_crawler') || this.type.endsWith('_serpent');
+      if (isCrawler) {
         this.mesh.position.y = height / 2 + bobAmount * 0.3; // Minimal bobbing
 
         // Crawlers: Only rotate around Y axis to face player, no billboard
@@ -555,7 +650,7 @@ export class Enemy extends Entity {
       } else {
         this.mesh.position.y = height / 2 + bobAmount;
 
-        // Standing shadows: billboard effect (face camera)
+        // Standing sprites: billboard effect (face camera)
         if (this.engine.camera) {
           this.mesh.lookAt(this.engine.camera.position);
         }
