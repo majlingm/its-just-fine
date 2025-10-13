@@ -36,7 +36,7 @@
     "base": {
       "damage": 200,
       "cooldown": 0.8,
-      "maxRange": 30,
+      "maxRange": 12,
       "radius": 5,
       "lightningWidth": 1.2,
       "branchCountMin": 2,

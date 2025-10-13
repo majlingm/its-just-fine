@@ -17,7 +17,7 @@
     "android:apk": "cd android && export JAVA_HOME=\"/opt/homebrew/opt/openjdk@21\" && export ANDROID_HOME=\"/opt/homebrew/share/android-commandlinetools\" && ./gradlew clean assembleDebug",
     "android:build": "npm run build && npm run android:sync && npm run android:apk",
     "android:release": "npm run build && npm run android:sync && cd android && export JAVA_HOME=\"/opt/homebrew/opt/openjdk@21\" && export ANDROID_HOME=\"/opt/homebrew/share/android-commandlinetools\" && ./gradlew clean assembleRelease",
-    "android:distribute": "npm run android:build && firebase appdistribution:distribute android/app/build/outputs/apk/debug/app-debug.apk --app 1:964484958595:android:fdcad73a8c0fb127124eb6 --project its-just-fine-game"
+    "android:distribute": "npm run android:build && firebase appdistribution:distribute android/app/build/outputs/apk/debug/app-debug.apk --app 1:964484958595:android:fdcad73a8c0fb127124eb6 --project its-just-fine-game --groups testers"
   },
   "dependencies": {
     "@capacitor/android": "^7.4.3",

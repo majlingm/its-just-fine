@@ -197,9 +197,10 @@ export class Enemy extends Entity {
   }
 
   createShadowMesh() {
-    // Detect mobile for brighter outline
-    const isMobile = /iPhone|iPod|Android/i.test(navigator.userAgent) && window.innerWidth < 768;
-    const outlineColorValue = isMobile ? 0x333333 : 0x0d0d0d; // Brighter on mobile
+    // Detect mobile for brighter outline (no width check - all mobile devices)
+    const isMobile = /iPhone|iPod|Android|iPad/i.test(navigator.userAgent);
+    const isNativeApp = window.Capacitor !== undefined;
+    const outlineColorValue = (isMobile || isNativeApp) ? 0x888888 : 0x0d0d0d; // Much brighter on mobile/app
 
     // Different sizes and properties for each shadow type
     const shadowConfig = {

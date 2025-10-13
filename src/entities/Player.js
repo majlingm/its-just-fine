@@ -30,6 +30,11 @@ export class Player extends Entity {
     this.dashCooldownTimer = 0;
     this.dashDirection = { x: 0, z: 0 };
 
+    // Invincibility frames
+    this.invincible = false;
+    this.invincibilityTimer = 0;
+    this.invincibilityDuration = 0.5; // 0.5 seconds of invincibility after taking damage
+
     // Camera rotation
     this.cameraAngle = 0;  // Horizontal rotation
     this.cameraVerticalAngle = 0.5;  // Vertical angle (0.5 = default, 0 = top-down, 1 = more horizontal)
@@ -377,6 +382,22 @@ export class Player extends Entity {
       this.dashCooldownTimer -= dt;
     }
 
+    // Update invincibility timer
+    if (this.invincible) {
+      this.invincibilityTimer -= dt;
+      if (this.invincibilityTimer <= 0) {
+        this.invincible = false;
+      }
+
+      // Flash effect during invincibility
+      if (this.mesh) {
+        const flashSpeed = 10; // Hz
+        this.mesh.visible = Math.floor(this.engine.time * flashSpeed) % 2 === 0;
+      }
+    } else if (this.mesh) {
+      this.mesh.visible = true;
+    }
+
     // Update animation mixer
     if (this.mixer) {
       this.mixer.update(dt);
@@ -431,7 +452,18 @@ export class Player extends Entity {
   }
 
   takeDamage(amount, source = 'unknown') {
+    // Don't take damage if invincible
+    if (this.invincible) {
+      return false;
+    }
+
+    // Apply damage
     this.health -= amount;
+
+    // Activate invincibility frames
+    this.invincible = true;
+    this.invincibilityTimer = this.invincibilityDuration;
+
     return this.health <= 0;
   }
 }

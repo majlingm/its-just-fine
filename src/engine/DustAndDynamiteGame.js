@@ -804,6 +804,13 @@ export class DustAndDynamiteGame {
           if (this.player.addXP(pickup.value)) {
             this.triggerLevelUp();
           }
+        } else if (pickup.type === 'health') {
+          // Heal player
+          const healAmount = pickup.value;
+          if (this.player.health < this.player.maxHealth) {
+            this.player.health = Math.min(this.player.maxHealth, this.player.health + healAmount);
+            this.engine.sound.playPickup();
+          }
         }
         pickup.destroy();
       }
@@ -823,6 +830,20 @@ export class DustAndDynamiteGame {
         1
       );
       this.engine.addEntity(pickup);
+    }
+
+    // Rare health drop (5% chance, 15% for elites)
+    const healthDropChance = isElite ? 0.15 : 0.05;
+    if (Math.random() < healthDropChance) {
+      const healAmount = 10; // Restore 10 HP
+      const healthPickup = new Pickup(
+        this.engine,
+        x + (Math.random() - 0.5) * 2,
+        z + (Math.random() - 0.5) * 2,
+        'health',
+        healAmount
+      );
+      this.engine.addEntity(healthPickup);
     }
   }
 
