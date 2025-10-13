@@ -4,7 +4,7 @@ import { getAssetPath } from '../utils/assetPath.js';
 export const survivalLevel = {
   name: 'Survive!',
   description: 'Endless waves of increasingly difficult enemies',
-  groundType: 'checkerboard',
+  groundType: 'void',
   music: getAssetPath('/assets/music/risinginferno.mp3'),
   isSurvival: true, // Flag for endless mode
 
