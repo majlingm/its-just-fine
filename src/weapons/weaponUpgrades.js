@@ -18,7 +18,9 @@ export function upgradeWeapon(weaponInstance) {
     ICE_LANCE: ['', 'Sharper ice', 'Deep freeze', 'Twin lances', 'Glacial storm', 'Glacial storm', 'Glacial storm'],
     RING_OF_ICE: ['', 'Colder ice', 'Freezing aura', 'Ice fortress', 'Absolute zero', 'Absolute zero', 'Absolute zero'],
     MAGIC_BULLET: ['', 'Empowered magic', 'Rapid fire', 'Piercing magic', 'Arcane barrage', 'Arcane barrage', 'Arcane barrage'],
-    DASH_SHOCKWAVE: ['', 'Increased power', 'Wider shockwave', 'Devastating force', 'Cataclysmic wave', 'Cataclysmic wave', 'Cataclysmic wave']
+    DASH_SHOCKWAVE: ['', 'Increased power', 'Wider shockwave', 'Devastating force', 'Cataclysmic wave', 'Cataclysmic wave', 'Cataclysmic wave'],
+    SHADOW_BOLT: ['', 'Darker shadows', 'Piercing darkness', 'Twin bolts', 'Shadow storm', 'Shadow storm', 'Shadow storm'],
+    SKULL_SHIELD: ['', 'More skulls', 'Stronger push', 'Triple skulls', 'Death circle', 'Death circle', 'Death circle']
   };
 
   // Store upgrade description on weaponInstance for UI
@@ -43,7 +45,9 @@ export function createWeaponUpgradeOption(spellKey, currentLevel = 0) {
     ICE_LANCE: ['', 'Sharper ice', 'Deep freeze', 'Twin lances', 'Glacial storm', 'Glacial storm', 'Glacial storm'],
     RING_OF_ICE: ['', 'Colder ice', 'Freezing aura', 'Ice fortress', 'Absolute zero', 'Absolute zero', 'Absolute zero'],
     MAGIC_BULLET: ['', 'Empowered magic', 'Rapid fire', 'Piercing magic', 'Arcane barrage', 'Arcane barrage', 'Arcane barrage'],
-    DASH_SHOCKWAVE: ['', 'Increased power', 'Wider shockwave', 'Devastating force', 'Cataclysmic wave', 'Cataclysmic wave', 'Cataclysmic wave']
+    DASH_SHOCKWAVE: ['', 'Increased power', 'Wider shockwave', 'Devastating force', 'Cataclysmic wave', 'Cataclysmic wave', 'Cataclysmic wave'],
+    SHADOW_BOLT: ['', 'Darker shadows', 'Piercing darkness', 'Twin bolts', 'Shadow storm', 'Shadow storm', 'Shadow storm'],
+    SKULL_SHIELD: ['', 'More skulls', 'Stronger push', 'Triple skulls', 'Death circle', 'Death circle', 'Death circle']
   };
 
   const upgradeDesc = upgradeDescriptions[spellKey]?.[currentLevel + 1] || '';
