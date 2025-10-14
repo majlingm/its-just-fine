@@ -8,6 +8,7 @@ import { FireExplosion } from '../entities/FireExplosion.js';
 import { LightningExplosion } from '../entities/LightningExplosion.js';
 import { RingOfFire } from '../entities/RingOfFire.js';
 import { RingOfIce } from '../entities/RingOfIce.js';
+import { DashShockwave } from '../entities/DashShockwave.js';
 import { LightningEffect } from '../effects/LightningEffect.js';
 import { FireEffect } from '../effects/FireEffect.js';
 import { applySpellLevelScaling } from './spellLevelScaling.js';
@@ -390,6 +391,32 @@ export const SPELL_TYPES = {
       const randomDirX = Math.cos(randomAngle);
       const randomDirZ = Math.sin(randomAngle);
       return new MagicBullet(engine, x, y, z, randomDirX, randomDirZ, spell, stats, 0); // No Y direction for random bullets
+    }
+  },
+
+  DASH_SHOCKWAVE: {
+    name: 'Dash Shockwave',
+    desc: 'Passive ability that creates a continuous shockwave trail while dashing, pushing back enemies',
+    category: 'magic',
+    level: 1, // Default level
+    cooldown: 0, // No cooldown - triggers on dash
+    damage: 10, // Low damage - focus is on knockback
+    damageSpread: 0, // No damage variance
+    critChance: 0.1, // 10% crit chance
+    critMultiplier: 1.5, // 1.5x damage on crit
+    radius: 5, // Shockwave radius
+    knockbackForce: 12, // Strong knockback distance
+    targeting: 'self',
+    isInstant: false,
+    isContinuous: true,
+    isPersistent: true, // Stays active as long as spell is active
+    activeRing: null, // Store reference to active shockwave handler
+    execute: (engine, player, target, spell, stats) => {
+      // Only create shockwave handler if it doesn't exist
+      if (!spell.activeRing || !spell.activeRing.active) {
+        spell.activeRing = new DashShockwave(engine, player, spell.damage * stats.damage, spell);
+        engine.addEntity(spell.activeRing);
+      }
     }
   }
 };

@@ -7,6 +7,7 @@ import { RingOfFireSpell } from './spells/RingOfFireSpell.js';
 import { PyroExplosionSpell } from './spells/PyroExplosionSpell.js';
 import { RingOfIceSpell } from './spells/RingOfIceSpell.js';
 import { MagicBulletSpell } from './spells/MagicBulletSpell.js';
+import { DashShockwaveSpell } from './spells/DashShockwaveSpell.js';
 
 /**
  * SpellRegistry - Manages all available spell types
@@ -36,6 +37,7 @@ export class SpellRegistry {
 
     // Magic spells
     this.register('MAGIC_BULLET', MagicBulletSpell);
+    this.register('DASH_SHOCKWAVE', DashShockwaveSpell);
   }
 
   /**

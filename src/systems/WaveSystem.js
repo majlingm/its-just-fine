@@ -182,10 +182,10 @@ export class WaveSystem {
       }
     }
 
-    // Check if wave is complete (all enemies defeated)
+    // Check if wave is complete (10 or fewer enemies remaining)
     if (this.enemiesSpawnedThisWave >= this.currentWaveEnemyCount) {
       const aliveEnemies = this.countAliveEnemies();
-      if (aliveEnemies === 0) {
+      if (aliveEnemies <= 10) {
         // Check if we should spawn a boss (every 7 waves in survival)
         if (isSurvival && (this.currentWave + 1) % 7 === 0) {
           // console.log(`Wave ${this.currentWave + 1}: Spawning boss!`);

@@ -17,7 +17,8 @@ export function upgradeWeapon(weaponInstance) {
     RING_OF_FIRE: ['', 'Hotter flames', 'Larger ring', 'Inferno ring', 'Ring of doom', 'Ring of doom', 'Ring of doom'],
     ICE_LANCE: ['', 'Sharper ice', 'Deep freeze', 'Twin lances', 'Glacial storm', 'Glacial storm', 'Glacial storm'],
     RING_OF_ICE: ['', 'Colder ice', 'Freezing aura', 'Ice fortress', 'Absolute zero', 'Absolute zero', 'Absolute zero'],
-    MAGIC_BULLET: ['', 'Empowered magic', 'Rapid fire', 'Piercing magic', 'Arcane barrage', 'Arcane barrage', 'Arcane barrage']
+    MAGIC_BULLET: ['', 'Empowered magic', 'Rapid fire', 'Piercing magic', 'Arcane barrage', 'Arcane barrage', 'Arcane barrage'],
+    DASH_SHOCKWAVE: ['', 'Increased power', 'Wider shockwave', 'Devastating force', 'Cataclysmic wave', 'Cataclysmic wave', 'Cataclysmic wave']
   };
 
   // Store upgrade description on weaponInstance for UI
@@ -41,7 +42,8 @@ export function createWeaponUpgradeOption(spellKey, currentLevel = 0) {
     RING_OF_FIRE: ['', 'Hotter flames', 'Larger ring', 'Inferno ring', 'Ring of doom', 'Ring of doom', 'Ring of doom'],
     ICE_LANCE: ['', 'Sharper ice', 'Deep freeze', 'Twin lances', 'Glacial storm', 'Glacial storm', 'Glacial storm'],
     RING_OF_ICE: ['', 'Colder ice', 'Freezing aura', 'Ice fortress', 'Absolute zero', 'Absolute zero', 'Absolute zero'],
-    MAGIC_BULLET: ['', 'Empowered magic', 'Rapid fire', 'Piercing magic', 'Arcane barrage', 'Arcane barrage', 'Arcane barrage']
+    MAGIC_BULLET: ['', 'Empowered magic', 'Rapid fire', 'Piercing magic', 'Arcane barrage', 'Arcane barrage', 'Arcane barrage'],
+    DASH_SHOCKWAVE: ['', 'Increased power', 'Wider shockwave', 'Devastating force', 'Cataclysmic wave', 'Cataclysmic wave', 'Cataclysmic wave']
   };
 
   const upgradeDesc = upgradeDescriptions[spellKey]?.[currentLevel + 1] || '';
