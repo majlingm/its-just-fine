@@ -9,6 +9,7 @@ export class BossEnemy extends Enemy {
     this.isBoss = true;
     this.mixer = null;
     this.walkAnimation = null;
+    this.alwaysUpdate = true; // Always update boss AI even when off-screen
   }
 
   setupStats() {

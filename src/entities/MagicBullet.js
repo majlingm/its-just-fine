@@ -180,6 +180,69 @@ export class MagicBullet extends Projectile {
     });
   }
 
+  /**
+   * Clean up trails for pool reuse (without destroying the projectile)
+   */
+  cleanupForPool() {
+    // Clear trail references (instanced pool handles cleanup automatically)
+    this.trails = [];
+  }
+
+  /**
+   * Reset projectile for reuse from pool
+   */
+  reset(engine, x, y, z, dirX, dirZ, weapon, stats, dirY = 0) {
+    // Clean up old trails
+    this.cleanupForPool();
+
+    // Reset base projectile properties
+    this.engine = engine;
+    this.x = x;
+    this.y = y;
+    this.z = z;
+    this.dirX = dirX;
+    this.dirY = dirY;
+    this.dirZ = dirZ;
+    this.weapon = weapon;
+
+    // Calculate damage with crit
+    const critChance = weapon.critChance || 0;
+    const isCrit = Math.random() < critChance;
+    const baseDamage = weapon.damage * stats.damage;
+    if (isCrit) {
+      this.damage = baseDamage * (weapon.critMultiplier || 2.0);
+      this.isCrit = true;
+    } else {
+      this.damage = baseDamage;
+      this.isCrit = false;
+    }
+
+    this.speed = weapon.speed * stats.projectileSpeed;
+    this.pierce = weapon.pierce + stats.pierce;
+    this.lifetime = weapon.lifetime || 3;
+
+    // Reset instance variables
+    this.age = 0;
+    this.pierceCount = 0;
+    this.hitEntities.clear();
+    this.trailSpawnTimer = 0;
+    this.hueShift = Math.random() * 360; // New random starting hue
+    this.active = true;
+    this.shouldRemove = false;
+
+    // Reinitialize trail pool if needed
+    this.initTrailPool();
+
+    // Show and position mesh
+    if (this.mesh) {
+      this.mesh.visible = true;
+      this.mesh.position.set(x, y, z);
+      // Update size scaling if it changed
+      const scale = 0.4 * (weapon?.sizeScale || 1.0);
+      this.mesh.scale.set(scale, scale, 1);
+    }
+  }
+
   destroy() {
     // Clear trail references (pool handles cleanup automatically)
     this.trails = [];

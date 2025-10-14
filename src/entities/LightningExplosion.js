@@ -15,6 +15,7 @@ export class LightningExplosion extends Entity {
     this.age = 0;
     this.particles = [];
     this.hasDamaged = false;
+    this.alwaysUpdate = true; // Always update to expire properly even when off-screen
     this.createExplosion();
   }
 

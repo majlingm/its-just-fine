@@ -29,6 +29,7 @@ export class Enemy extends Entity {
     this.walkAnimation = null;
     this.shaderMaterial = null; // For shadow type
     this.timeOffset = Math.random() * 100; // For shadow animation
+    this.alwaysUpdate = true; // Always update AI even when off-screen
     this.setupStats();
     this.createMesh();
   }

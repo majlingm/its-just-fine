@@ -13,6 +13,7 @@ import { LevelSystem } from '../systems/LevelSystem.js';
 import { WaveSystem } from '../systems/WaveSystem.js';
 import { ProjectilePool } from '../systems/ProjectilePool.js';
 import { EnemyProjectilePool } from '../systems/EnemyProjectilePool.js';
+import { PickupPool } from '../systems/PickupPool.js';
 import { StatsTracker } from '../systems/StatsTracker.js';
 import { LEVELS } from '../levels/index.js';
 
@@ -46,9 +47,10 @@ export class DustAndDynamiteGame {
     this.waveSystem = new WaveSystem(this);
     this.currentLevelName = 'Desert Canyon';
 
-    // Initialize projectile pools for performance
+    // Initialize object pools for performance
     this.projectilePool = new ProjectilePool(engine, 200);
     this.enemyProjectilePool = new EnemyProjectilePool(engine, 100);
+    this.pickupPool = new PickupPool(engine, 200);
 
     // Initialize stats tracker
     this.statsTracker = new StatsTracker();
@@ -270,9 +272,10 @@ export class DustAndDynamiteGame {
     // Update wave system (handles enemy spawning)
     this.waveSystem.update(dt);
 
-    // Update projectile pools to recycle inactive projectiles
+    // Update object pools to recycle inactive objects
     this.projectilePool.update();
     this.enemyProjectilePool.update();
+    this.pickupPool.update();
 
     // Update stats tracker
     this.statsTracker.update(dt, this.engine.time);
@@ -822,8 +825,7 @@ export class DustAndDynamiteGame {
     const xpValue = isElite ? baseXP * 5 : baseXP;
 
     for (let i = 0; i < xpValue; i++) {
-      const pickup = new Pickup(
-        this.engine,
+      const pickup = this.pickupPool.acquire(
         x + (Math.random() - 0.5) * 2,
         z + (Math.random() - 0.5) * 2,
         'xp',
@@ -836,8 +838,7 @@ export class DustAndDynamiteGame {
     const healthDropChance = isElite ? 0.15 : 0.05;
     if (Math.random() < healthDropChance) {
       const healAmount = 10; // Restore 10 HP
-      const healthPickup = new Pickup(
-        this.engine,
+      const healthPickup = this.pickupPool.acquire(
         x + (Math.random() - 0.5) * 2,
         z + (Math.random() - 0.5) * 2,
         'health',
@@ -1134,6 +1135,9 @@ export class DustAndDynamiteGame {
     }
     if (this.enemyProjectilePool) {
       this.enemyProjectilePool.dispose();
+    }
+    if (this.pickupPool) {
+      this.pickupPool.dispose();
     }
   }
 }

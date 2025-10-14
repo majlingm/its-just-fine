@@ -51,6 +51,10 @@ export class GameEngine {
 
     // Camera settings
     this.cameraDistance = 12;
+
+    // Frustum for culling
+    this.frustum = new THREE.Frustum();
+    this.frustumMatrix = new THREE.Matrix4();
   }
 
   /**
@@ -390,10 +394,40 @@ export class GameEngine {
   }
 
   /**
+   * Check if an entity is visible in the camera frustum
+   * @param {object} entity - Entity to check
+   * @returns {boolean} True if entity is visible
+   */
+  isEntityVisible(entity) {
+    // Always update certain entity types regardless of visibility
+    if (entity.alwaysUpdate || entity.isPersistent || !entity.mesh) {
+      return true;
+    }
+
+    // Create a bounding sphere for the entity
+    // Most entities are roughly 1 unit in size, use 2 for safety margin
+    const boundingSphere = new THREE.Sphere(
+      new THREE.Vector3(entity.x || 0, entity.y || 0, entity.z || 0),
+      2
+    );
+
+    return this.frustum.intersectsSphere(boundingSphere);
+  }
+
+  /**
    * Update all systems
    * @param {number} dt - Delta time in seconds
    */
   update(dt) {
+    // Update frustum for culling
+    if (this.camera) {
+      this.frustumMatrix.multiplyMatrices(
+        this.camera.projectionMatrix,
+        this.camera.matrixWorldInverse
+      );
+      this.frustum.setFromProjectionMatrix(this.frustumMatrix);
+    }
+
     // Update particle system
     if (this.particles) {
       this.particles.update(dt);
@@ -404,15 +438,26 @@ export class GameEngine {
       if (pool) pool.update(dt);
     });
 
-    // Update all entities
+    // Update projectile pools
+    if (this.projectilePools) {
+      this.projectilePools.forEach(pool => {
+        if (pool) pool.update();
+      });
+    }
+
+    // Update all entities with frustum culling
     for (let i = this.entities.length - 1; i >= 0; i--) {
       const entity = this.entities[i];
-      if (entity.active && entity.update) {
-        entity.update(dt);
-      }
+
       // Remove inactive entities
       if (!entity.active && entity.shouldRemove) {
         this.removeEntity(entity);
+        continue;
+      }
+
+      // Update entity only if visible or important
+      if (entity.active && entity.update && this.isEntityVisible(entity)) {
+        entity.update(dt);
       }
     }
   }

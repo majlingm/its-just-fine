@@ -184,6 +184,72 @@ export class IceLance extends Projectile {
     });
   }
 
+  /**
+   * Clean up ice shards for pool reuse (without destroying the projectile)
+   */
+  cleanupForPool() {
+    // Clean up ice shard particles
+    this.iceShards.forEach(shard => {
+      this.engine.scene.remove(shard.sprite);
+    });
+    this.iceShards = [];
+  }
+
+  /**
+   * Reset projectile for reuse from pool
+   */
+  reset(engine, x, y, z, dirX, dirZ, weapon, stats, dirY = 0) {
+    // Clean up old ice shards
+    this.cleanupForPool();
+
+    // Reset base projectile properties
+    this.engine = engine;
+    this.x = x;
+    this.y = y;
+    this.z = z;
+    this.dirX = dirX;
+    this.dirY = dirY;
+    this.dirZ = dirZ;
+    this.weapon = weapon;
+
+    // Calculate damage with crit
+    const critChance = weapon.critChance || 0;
+    const isCrit = Math.random() < critChance;
+    const baseDamage = weapon.damage * stats.damage;
+    if (isCrit) {
+      this.damage = baseDamage * (weapon.critMultiplier || 2.0);
+      this.isCrit = true;
+    } else {
+      this.damage = baseDamage;
+      this.isCrit = false;
+    }
+
+    this.speed = weapon.speed * stats.projectileSpeed;
+    this.pierce = weapon.pierce + stats.pierce;
+    this.lifetime = weapon.lifetime || 3;
+
+    // Reset instance variables
+    this.age = 0;
+    this.pierceCount = 0;
+    this.hitEntities.clear();
+    this.shardSpawnTimer = 0;
+    this.active = true;
+    this.shouldRemove = false;
+
+    // Show and position mesh
+    if (this.mesh) {
+      this.mesh.visible = true;
+      this.mesh.position.set(x, y, z);
+      this.mesh.rotation.set(0, 0, 0);
+
+      // Update size scaling if it changed
+      const sizeScale = weapon?.sizeScale || 1.0;
+      if (this.iceMesh) {
+        this.iceMesh.scale.set(sizeScale, sizeScale, sizeScale);
+      }
+    }
+  }
+
   destroy() {
     // Clean up ice shard particles
     this.iceShards.forEach(shard => {

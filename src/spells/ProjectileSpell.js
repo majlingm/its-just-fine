@@ -1,4 +1,5 @@
 import { Spell } from './Spell.js';
+import { TypedProjectilePool } from '../systems/TypedProjectilePool.js';
 
 /**
  * ProjectileSpell - Base class for spells that fire projectiles
@@ -17,6 +18,28 @@ export class ProjectileSpell extends Spell {
 
     // Projectile class to instantiate
     this.projectileClass = config.projectileClass || null;
+  }
+
+  /**
+   * Get or create a pool for this projectile class
+   * @param {object} engine - Game engine
+   * @returns {TypedProjectilePool} Pool for this projectile class
+   */
+  getProjectilePool(engine) {
+    if (!this.projectileClass) return null;
+
+    // Initialize projectile pools storage in engine if needed
+    if (!engine.projectilePools) {
+      engine.projectilePools = new Map();
+    }
+
+    // Get or create pool for this projectile class
+    const className = this.projectileClass.name;
+    if (!engine.projectilePools.has(className)) {
+      engine.projectilePools.set(className, new TypedProjectilePool(this.projectileClass, 50));
+    }
+
+    return engine.projectilePools.get(className);
   }
 
   /**
@@ -71,23 +94,36 @@ export class ProjectileSpell extends Spell {
     }
 
     const target = this.findTarget(engine, player);
+    const pool = this.getProjectilePool(engine);
 
     // Fire projectiles
     for (let i = 0; i < this.projectileCount; i++) {
       const direction = this.calculateDirection(player, target, i, this.projectileCount);
 
-      // Create projectile with spell stats
-      const projectile = new this.projectileClass(
-        engine,
-        player.x,
-        0.5, // Default height
-        player.z,
-        direction.dirX,
-        direction.dirZ,
-        this, // Pass spell as weapon
-        stats,
-        direction.dirY
-      );
+      // Get projectile from pool or create new one
+      const projectile = pool
+        ? pool.acquire(
+            engine,
+            player.x,
+            0.5, // Default height
+            player.z,
+            direction.dirX,
+            direction.dirZ,
+            this, // Pass spell as weapon
+            stats,
+            direction.dirY
+          )
+        : new this.projectileClass(
+            engine,
+            player.x,
+            0.5,
+            player.z,
+            direction.dirX,
+            direction.dirZ,
+            this,
+            stats,
+            direction.dirY
+          );
 
       engine.addEntity(projectile);
     }

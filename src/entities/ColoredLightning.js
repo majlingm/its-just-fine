@@ -20,6 +20,7 @@ export class ColoredLightning extends Entity {
     this.width = width * 0.02; // Scale down width even more
     this.taper = taper; // Whether to taper from thick to thin
     this.gradientColor = gradientColor; // End color for gradient (null = no gradient)
+    this.alwaysUpdate = true; // Always update to expire properly even when off-screen
     this.createBolts();
   }
 

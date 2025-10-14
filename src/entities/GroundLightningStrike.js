@@ -11,6 +11,7 @@ export class GroundLightningStrike extends Entity {
     this.lifetime = 0.5;
     this.age = 0;
     this.bolts = [];
+    this.alwaysUpdate = true; // Always update to expire properly even when off-screen
     this.createLightningStrike();
   }
 
@@ -190,6 +191,12 @@ export class GroundLightningStrike extends Entity {
   destroy() {
     this.bolts.forEach(bolt => {
       this.engine.scene.remove(bolt);
+      if (bolt.geometry) {
+        bolt.geometry.dispose();
+      }
+      if (bolt.material) {
+        bolt.material.dispose();
+      }
     });
     this.active = false;
     this.shouldRemove = true;
