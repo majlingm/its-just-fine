@@ -42,8 +42,10 @@ export class MovementSystem extends ComponentSystem {
         continue;
       }
 
-      // Frustum culling check
-      if (OptimizationConfig.frustumCulling.enabled && this.frustumCuller) {
+      // Frustum culling check (only if applyToMovement is enabled)
+      if (OptimizationConfig.frustumCulling.enabled &&
+          OptimizationConfig.frustumCulling.applyToMovement &&
+          this.frustumCuller) {
         // Check if entity should always update
         const alwaysUpdate = entity.alwaysUpdate ||
           (OptimizationConfig.frustumCulling.alwaysUpdatePlayer && entity.hasTag('player')) ||

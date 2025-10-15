@@ -61,6 +61,9 @@ export const OptimizationConfig = {
     enabled: true,               // Don't update entities outside camera view
     alwaysUpdatePlayer: true,    // Always update player entity
     alwaysUpdatePickups: true,   // Always update pickup entities
+    applyToAI: false,            // Don't cull AI (enemies need to move toward player off-screen)
+    applyToMovement: true,       // Apply to movement system
+    applyToPhysics: false,       // Don't cull physics
     updateRadius: 5,             // Extra radius beyond bounding sphere
     debug: false                 // Log culling statistics
   },

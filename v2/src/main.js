@@ -432,6 +432,19 @@ class Game {
       this.frustumCuller.updateFrustum();
     }
 
+    // Update camera to follow player
+    if (this.player) {
+      const playerTransform = this.player.getComponent('Transform');
+      if (playerTransform) {
+        this.renderer.camera.position.set(
+          playerTransform.x,
+          playerTransform.y + this.renderer.cameraDistance * 1.5,
+          playerTransform.z + this.renderer.cameraDistance * 0.5
+        );
+        this.renderer.camera.lookAt(playerTransform.x, 0, playerTransform.z);
+      }
+    }
+
     // Process systems in order
     // 1. PlayerInputSystem - process player input
     this.playerInputSystem.update(dt, this.engine.entities);

@@ -92,8 +92,10 @@ export class AISystem extends ComponentSystem {
         continue;
       }
 
-      // Frustum culling check
-      if (OptimizationConfig.frustumCulling.enabled && this.frustumCuller) {
+      // Frustum culling check (only if applyToAI is enabled)
+      if (OptimizationConfig.frustumCulling.enabled &&
+          OptimizationConfig.frustumCulling.applyToAI &&
+          this.frustumCuller) {
         const boundingRadius = entity.boundingRadius || 1;
         const extraRadius = OptimizationConfig.frustumCulling.updateRadius || 0;
 
