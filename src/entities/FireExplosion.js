@@ -14,8 +14,13 @@ export class FireExplosion extends Entity {
     this.particleCount = particleCount; // Allow customizable particle count
     this.lifetime = 0.6;
     this.age = 0;
-    this.particles = [];
+    this.particles = []; // Store particle tracking data
     this.hasDamaged = false;
+    this.alwaysUpdate = true; // Must update even off-screen to damage enemies and animate
+
+    // Get particle pool
+    this.particlePool = engine.getInstancedParticlePool('fire_explosion');
+
     this.createExplosion();
   }
 
@@ -24,38 +29,54 @@ export class FireExplosion extends Entity {
     const numParticles = this.particleCount;
 
     for (let i = 0; i < numParticles; i++) {
-      // Use cached materials for fire explosion particles
-      // Vary the color variants for visual diversity
-      const variant = Math.floor(Math.random() * 5); // 5 color variants available
-
-      // Get cached material and clone it for independent properties
-      const baseMaterial = resourceCache.getFireExplosionMaterial(variant);
-      const material = baseMaterial.clone();
-      const sprite = new THREE.Sprite(material);
+      // Choose fire color variant
+      const colorChoice = Math.random();
+      let color;
+      if (colorChoice < 0.2) {
+        color = 0xffff00; // Yellow
+      } else if (colorChoice < 0.5) {
+        color = 0xffaa00; // Orange
+      } else if (colorChoice < 0.8) {
+        color = 0xff6600; // Dark orange
+      } else {
+        color = 0xff0000; // Red
+      }
 
       const angle = (i / numParticles) * Math.PI * 2;
       const distance = Math.random() * 0.3;
       const velocityMagnitude = 3 + Math.random() * 5;
 
-      sprite.position.set(
+      const initialScale = 0.3 + Math.random() * 0.3;
+      const maxScale = initialScale * (2 + Math.random() * 2);
+
+      // Spawn particle using instanced pool
+      const particle = this.particlePool.spawn(
         this.x + Math.cos(angle) * distance,
         0.2 + Math.random() * 0.3,
-        this.z + Math.sin(angle) * distance
+        this.z + Math.sin(angle) * distance,
+        {
+          life: this.lifetime,
+          scale: initialScale,
+          velocity: {
+            x: Math.cos(angle) * velocityMagnitude,
+            y: Math.random() * 2 + 1,
+            z: Math.sin(angle) * velocityMagnitude
+          },
+          color: color,
+          fadeOut: false, // We'll handle fading manually for grow/shrink effect
+          shrink: false, // We'll handle scaling manually
+          gravity: -5 // Apply gravity
+        }
       );
 
-      const initialScale = 0.3 + Math.random() * 0.3;
-      sprite.scale.set(initialScale, initialScale, 1);
-
-      this.engine.scene.add(sprite);
-
-      this.particles.push({
-        sprite: sprite,
-        velocityX: Math.cos(angle) * velocityMagnitude,
-        velocityZ: Math.sin(angle) * velocityMagnitude,
-        velocityY: Math.random() * 2 + 1,
-        initialScale: initialScale,
-        maxScale: initialScale * (2 + Math.random() * 2)
-      });
+      // Store tracking data for custom grow/shrink animation
+      if (particle) {
+        this.particles.push({
+          particle: particle,
+          initialScale: initialScale,
+          maxScale: maxScale
+        });
+      }
     }
 
     // Create expanding shockwave rings
@@ -130,30 +151,37 @@ export class FireExplosion extends Entity {
       });
     }
 
-    // Update particles
+    // Update particles - handle custom grow/shrink and fade
     const progress = this.age / this.lifetime;
 
-    this.particles.forEach(particle => {
-      // Expand outward
-      particle.sprite.position.x += particle.velocityX * dt;
-      particle.sprite.position.z += particle.velocityZ * dt;
-
-      // Rise and slow down
-      particle.velocityY -= dt * 5; // Gravity
-      particle.sprite.position.y += particle.velocityY * dt;
+    this.particles.forEach(data => {
+      const particle = data.particle;
 
       // Grow then shrink
       let scale;
       if (progress < 0.3) {
-        scale = particle.initialScale + (particle.maxScale - particle.initialScale) * (progress / 0.3);
+        scale = data.initialScale + (data.maxScale - data.initialScale) * (progress / 0.3);
       } else {
-        scale = particle.maxScale * (1 - ((progress - 0.3) / 0.7));
+        scale = data.maxScale * (1 - ((progress - 0.3) / 0.7));
       }
-      particle.sprite.scale.set(scale, scale, 1);
 
-      // Fade out
-      particle.sprite.material.opacity = 1 - progress;
+      // Update particle scale manually
+      const instanceIndex = particle.instanceIndex;
+      this.particlePool.tempMatrix.makeTranslation(particle.x, particle.y, particle.z);
+      this.particlePool.tempMatrix.scale(new THREE.Vector3(scale, scale, 1));
+      this.particlePool.instancedMesh.setMatrixAt(instanceIndex, this.particlePool.tempMatrix);
+
+      // Fade out manually
+      const opacity = 1 - progress;
+      this.particlePool.tempColor.copy(particle.initialColor).multiplyScalar(opacity);
+      this.particlePool.instancedMesh.setColorAt(instanceIndex, this.particlePool.tempColor);
     });
+
+    // Mark matrices as needing update
+    if (this.particles.length > 0) {
+      this.particlePool.instancedMesh.instanceMatrix.needsUpdate = true;
+      this.particlePool.instancedMesh.instanceColor.needsUpdate = true;
+    }
 
     // Update shockwave rings
     this.shockwaveRings.forEach(ring => {
@@ -182,9 +210,7 @@ export class FireExplosion extends Entity {
   }
 
   destroy() {
-    this.particles.forEach(particle => {
-      this.engine.scene.remove(particle.sprite);
-    });
+    // Particles are managed by the instanced pool, just clear our tracking
     this.particles = [];
 
     // Clean up shockwave rings

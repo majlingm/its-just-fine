@@ -7,12 +7,15 @@ export class FlameProjectile extends Projectile {
   constructor(engine, x, y, z, dirX, dirZ, weapon, stats, dirY = 0) {
     super(engine, x, y, z, dirX, dirZ, weapon, stats, dirY);
 
-    this.flames = [];
+    this.flames = []; // Array of particle references for cleanup
     this.flameSpawnTimer = 0;
     this.flameSpawnInterval = 0.03;
     this.hitEntities = new Set();
     this.pierceCount = 0;
     this.hasExploded = false;  // Track if we've already created an explosion
+
+    // Get particle pool for flame trails
+    this.flamePool = engine.getInstancedParticlePool('flames');
   }
 
   createMesh() {
@@ -28,41 +31,43 @@ export class FlameProjectile extends Projectile {
   }
 
   createFlameTrail() {
-    // Use cached flame trail materials
+    // Determine color based on random choice
     const colorChoice = Math.random();
-    let colorType;
+    let color;
     if (colorChoice < 0.3) {
-      colorType = 'yellow';
+      color = 0xffff00; // Yellow
     } else if (colorChoice < 0.7) {
-      colorType = 'orange';
+      color = 0xffaa00; // Orange
     } else {
-      colorType = 'red';
+      color = 0xff4400; // Red
     }
-
-    // Get cached material (cloned so we can modify opacity independently)
-    const material = resourceCache.getFlameTrailMaterial(colorType);
-    const sprite = new THREE.Sprite(material);
-    sprite.scale.set(0.8, 0.8, 1);
-    sprite.renderOrder = 998;
 
     // Random offset from projectile path
     const offsetX = (Math.random() - 0.5) * 0.3;
     const offsetZ = (Math.random() - 0.5) * 0.3;
+    const offsetY = (Math.random() - 0.5) * 0.2;
 
-    sprite.position.set(
+    // Spawn particle using instanced pool
+    const particle = this.flamePool.spawn(
       this.x + offsetX,
-      this.y + (Math.random() - 0.5) * 0.2,
-      this.z + offsetZ
+      this.y + offsetY,
+      this.z + offsetZ,
+      {
+        life: 0.3,
+        scale: 1.5, // Bigger particles for more visible trail
+        velocity: { x: 0, y: Math.random() * 0.5 + 0.2, z: 0 },
+        color: color,
+        fadeOut: true,
+        shrink: true,
+        gravity: 0
+      }
     );
 
-    this.engine.scene.add(sprite);
-
-    return {
-      sprite: sprite,
-      life: 0.3,
-      age: 0,
-      velocityY: Math.random() * 0.5 + 0.2
-    };
+    // Store particle reference for cleanup if needed
+    if (particle) {
+      return { particle, age: 0, life: 0.3 };
+    }
+    return null;
   }
 
   update(dt) {
@@ -98,22 +103,21 @@ export class FlameProjectile extends Projectile {
     this.flameSpawnTimer += dt;
     if (this.flameSpawnTimer >= this.flameSpawnInterval) {
       this.flameSpawnTimer = 0;
-      this.flames.push(this.createFlameTrail());
+      const trail = this.createFlameTrail();
+      if (trail) {
+        this.flames.push(trail);
+      }
     }
 
-    // Update flame particles
+    // Update flame particles - they're auto-updated by the pool,
+    // just track for cleanup
     for (let i = this.flames.length - 1; i >= 0; i--) {
       const flame = this.flames[i];
       flame.age += dt;
 
       if (flame.age > flame.life) {
-        this.engine.scene.remove(flame.sprite);
+        // Particle will be auto-removed by pool, just remove from our tracking
         this.flames.splice(i, 1);
-      } else {
-        // Rise up and fade
-        flame.sprite.position.y += flame.velocityY * dt;
-        flame.sprite.material.opacity = 1 - (flame.age / flame.life);
-        flame.sprite.scale.multiplyScalar(1 - dt * 0.5);
       }
     }
 
@@ -177,10 +181,7 @@ export class FlameProjectile extends Projectile {
    * Clean up flame trails for pool reuse (without destroying the projectile)
    */
   cleanupForPool() {
-    // Clean up flame particles
-    this.flames.forEach(flame => {
-      this.engine.scene.remove(flame.sprite);
-    });
+    // Flame particles are managed by the instanced pool, just clear our tracking
     this.flames = [];
   }
 
@@ -200,6 +201,9 @@ export class FlameProjectile extends Projectile {
     this.dirY = dirY;
     this.dirZ = dirZ;
     this.weapon = weapon;
+
+    // Reinitialize particle pool reference
+    this.flamePool = engine.getInstancedParticlePool('flames');
 
     // Calculate damage with crit
     const critChance = weapon.critChance || 0;
@@ -237,10 +241,7 @@ export class FlameProjectile extends Projectile {
   }
 
   destroy() {
-    // Clean up flame particles
-    this.flames.forEach(flame => {
-      this.engine.scene.remove(flame.sprite);
-    });
+    // Flame particles are managed by the instanced pool, just clear our tracking
     this.flames = [];
 
     super.destroy();

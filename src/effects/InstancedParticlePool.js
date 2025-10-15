@@ -44,17 +44,74 @@ export class InstancedParticlePool {
   }
 
   createInstancedMesh() {
-    // Create geometry (simple quad)
+    // Create geometry (plane for sprite-like particles)
     const geometry = new THREE.PlaneGeometry(this.particleSize, this.particleSize);
 
-    // Create material
+    // Create a radial gradient texture for soft circular particles
+    let particleTexture = this.texture;
+    if (!particleTexture) {
+      const canvas = document.createElement('canvas');
+      canvas.width = 64;
+      canvas.height = 64;
+      const ctx = canvas.getContext('2d');
+
+      // Create radial gradient from white center to transparent edge
+      const gradient = ctx.createRadialGradient(32, 32, 0, 32, 32, 32);
+      gradient.addColorStop(0, 'rgba(255, 255, 255, 1)');
+      gradient.addColorStop(0.5, 'rgba(255, 255, 255, 0.5)');
+      gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, 64, 64);
+
+      particleTexture = new THREE.CanvasTexture(canvas);
+    }
+
+    // Use THREE's built-in instance color support via onBeforeCompile
     const material = new THREE.MeshBasicMaterial({
-      map: this.texture,
+      map: particleTexture,
       transparent: this.transparent,
       blending: this.blending,
       depthWrite: false,
-      side: THREE.DoubleSide
+      side: THREE.DoubleSide,
+      color: 0xffffff // Base color that will be modulated by instance colors
     });
+
+    // Modify shader to use instance colors (Three.js already declares instanceColor attribute)
+    material.onBeforeCompile = (shader) => {
+      // Add varying to pass instance color from vertex to fragment shader
+      shader.vertexShader = shader.vertexShader.replace(
+        '#include <common>',
+        `
+        #include <common>
+        varying vec3 vInstanceColor;
+        `
+      );
+
+      // Pass instance color after vertex transformation
+      shader.vertexShader = shader.vertexShader.replace(
+        '#include <begin_vertex>',
+        `
+        #include <begin_vertex>
+        vInstanceColor = instanceColor;
+        `
+      );
+
+      // Add varying in fragment shader
+      shader.fragmentShader = shader.fragmentShader.replace(
+        '#include <common>',
+        `
+        #include <common>
+        varying vec3 vInstanceColor;
+        `
+      );
+
+      // Use instance color to modulate diffuse color
+      shader.fragmentShader = shader.fragmentShader.replace(
+        'vec4 diffuseColor = vec4( diffuse, opacity );',
+        'vec4 diffuseColor = vec4( diffuse * vInstanceColor, opacity );'
+      );
+    };
 
     // Create instanced mesh
     this.instancedMesh = new THREE.InstancedMesh(
@@ -63,16 +120,31 @@ export class InstancedParticlePool {
       this.maxParticles
     );
 
-    this.instancedMesh.renderOrder = 998;
+    // Keep count at max - we hide instances by scaling to 0
+    // this.instancedMesh.count = this.maxParticles; // Default is already maxParticles
 
-    // Initialize all instances as invisible
+    this.instancedMesh.renderOrder = 998;
+    this.instancedMesh.frustumCulled = false; // Always render, don't cull
+
+    // Enable per-instance colors
+    this.instancedMesh.instanceColor = new THREE.InstancedBufferAttribute(
+      new Float32Array(this.maxParticles * 3),
+      3
+    );
+
+    // Initialize all instances as invisible with white color
     const invisibleMatrix = new THREE.Matrix4();
     invisibleMatrix.makeScale(0, 0, 0);
+    const whiteColor = new THREE.Color(0xffffff);
 
     for (let i = 0; i < this.maxParticles; i++) {
       this.instancedMesh.setMatrixAt(i, invisibleMatrix);
+      this.instancedMesh.setColorAt(i, whiteColor);
       this.availableIndices.push(i);
     }
+
+    this.instancedMesh.instanceMatrix.needsUpdate = true;
+    this.instancedMesh.instanceColor.needsUpdate = true;
 
     // Add to scene
     this.scene.add(this.instancedMesh);
@@ -114,6 +186,18 @@ export class InstancedParticlePool {
       }
     }
 
+    // Store initial color for proper fading
+    const initialColor = new THREE.Color();
+    if (config.color !== undefined) {
+      if (typeof config.color === 'number') {
+        initialColor.setHex(config.color);
+      } else if (config.color instanceof THREE.Color) {
+        initialColor.copy(config.color);
+      }
+    } else {
+      initialColor.set(0xffffff);
+    }
+
     // Create particle data
     const particle = {
       instanceIndex: instanceIndex,
@@ -128,6 +212,7 @@ export class InstancedParticlePool {
       fadeOut: config.fadeOut !== false,
       shrink: config.shrink !== false,
       gravity: config.gravity || 0,
+      initialColor: initialColor.clone(), // Store original color
       userData: config.userData || {}
     };
 
@@ -174,13 +259,13 @@ export class InstancedParticlePool {
       this.tempMatrix.scale(new THREE.Vector3(scale, scale, 1));
       this.instancedMesh.setMatrixAt(particle.instanceIndex, this.tempMatrix);
 
-      // Update opacity (fade out) by modifying color alpha
+      // Update opacity (fade out) by modifying color brightness
       // Note: InstancedMesh doesn't support per-instance opacity directly
-      // We can fake it by darkening the color
+      // We fake it by darkening the color based on original color
       if (particle.fadeOut) {
         const opacity = 1 - lifeProgress;
-        this.instancedMesh.getColorAt(particle.instanceIndex, this.tempColor);
-        this.tempColor.multiplyScalar(opacity);
+        // Lerp from initial color to black based on opacity
+        this.tempColor.copy(particle.initialColor).multiplyScalar(opacity);
         this.instancedMesh.setColorAt(particle.instanceIndex, this.tempColor);
       }
     }

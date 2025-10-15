@@ -329,15 +329,18 @@ export class GameEngine {
    */
   getInstancedParticlePool(type) {
     if (!this.instancedParticlePools[type]) {
-      // Create on demand
-      this.instancedParticlePools[type] = new InstancedParticlePool(
-        this.scene,
-        1000, // Max particles
-        {
-          color: type === 'explosions' ? 0xff4400 : 0xffffff,
-          size: type === 'explosions' ? 2 : 1
-        }
-      );
+      // Create on demand with type-specific configuration
+      const configs = {
+        flames: { maxParticles: 2000, size: 0.8, blending: THREE.AdditiveBlending },
+        ice: { maxParticles: 1000, size: 0.3, blending: THREE.AdditiveBlending },
+        shadow: { maxParticles: 1000, size: 0.6, blending: THREE.AdditiveBlending },
+        fire_explosion: { maxParticles: 1500, size: 0.5, blending: THREE.AdditiveBlending },
+        lightning_explosion: { maxParticles: 1000, size: 0.4, blending: THREE.AdditiveBlending },
+        generic: { maxParticles: 2000, size: 1.0, blending: THREE.AdditiveBlending }
+      };
+
+      const config = configs[type] || configs.generic;
+      this.instancedParticlePools[type] = new InstancedParticlePool(this.scene, config);
     }
     return this.instancedParticlePools[type];
   }

@@ -13,9 +13,13 @@ export class LightningExplosion extends Entity {
     this.isCrit = isCrit;
     this.lifetime = 0.6;
     this.age = 0;
-    this.particles = [];
+    this.particles = []; // Store particle tracking data
     this.hasDamaged = false;
     this.alwaysUpdate = true; // Always update to expire properly even when off-screen
+
+    // Get particle pool
+    this.particlePool = engine.getInstancedParticlePool('lightning_explosion');
+
     this.createExplosion();
   }
 
@@ -24,45 +28,52 @@ export class LightningExplosion extends Entity {
     const numParticles = 30;
 
     for (let i = 0; i < numParticles; i++) {
-      // Use cached materials for lightning particles
+      // Choose lightning color variant
       const colorChoice = Math.random();
-      let colorType;
+      let color;
       if (colorChoice < 0.3) {
-        colorType = 'white';
+        color = 0xffffff; // White
       } else if (colorChoice < 0.7) {
-        colorType = 'blue';
+        color = 0x88ddff; // Blue
       } else {
-        colorType = 'purple';
+        color = 0xcc88ff; // Purple
       }
-
-      // Get cached material and clone it for independent properties
-      const baseMaterial = resourceCache.getLightningParticleMaterial(colorType);
-      const material = baseMaterial.clone();
-      const sprite = new THREE.Sprite(material);
 
       const angle = (i / numParticles) * Math.PI * 2;
       const distance = Math.random() * 0.3;
       const velocityMagnitude = 3 + Math.random() * 5;
 
-      sprite.position.set(
+      const initialScale = 0.3 + Math.random() * 0.3;
+      const maxScale = initialScale * (2 + Math.random() * 2);
+
+      // Spawn particle using instanced pool
+      const particle = this.particlePool.spawn(
         this.x + Math.cos(angle) * distance,
         0.2 + Math.random() * 0.3,
-        this.z + Math.sin(angle) * distance
+        this.z + Math.sin(angle) * distance,
+        {
+          life: this.lifetime,
+          scale: initialScale,
+          velocity: {
+            x: Math.cos(angle) * velocityMagnitude,
+            y: Math.random() * 2 + 1,
+            z: Math.sin(angle) * velocityMagnitude
+          },
+          color: color,
+          fadeOut: false, // We'll handle fading manually for grow/shrink effect
+          shrink: false, // We'll handle scaling manually
+          gravity: -5 // Apply gravity
+        }
       );
 
-      const initialScale = 0.3 + Math.random() * 0.3;
-      sprite.scale.set(initialScale, initialScale, 1);
-
-      this.engine.scene.add(sprite);
-
-      this.particles.push({
-        sprite: sprite,
-        velocityX: Math.cos(angle) * velocityMagnitude,
-        velocityZ: Math.sin(angle) * velocityMagnitude,
-        velocityY: Math.random() * 2 + 1,
-        initialScale: initialScale,
-        maxScale: initialScale * (2 + Math.random() * 2)
-      });
+      // Store tracking data for custom grow/shrink animation
+      if (particle) {
+        this.particles.push({
+          particle: particle,
+          initialScale: initialScale,
+          maxScale: maxScale
+        });
+      }
     }
 
     // Create expanding shockwave rings
@@ -137,30 +148,37 @@ export class LightningExplosion extends Entity {
       });
     }
 
-    // Update particles
+    // Update particles - handle custom grow/shrink and fade
     const progress = this.age / this.lifetime;
 
-    this.particles.forEach(particle => {
-      // Expand outward
-      particle.sprite.position.x += particle.velocityX * dt;
-      particle.sprite.position.z += particle.velocityZ * dt;
-
-      // Rise and slow down
-      particle.velocityY -= dt * 5; // Gravity
-      particle.sprite.position.y += particle.velocityY * dt;
+    this.particles.forEach(data => {
+      const particle = data.particle;
 
       // Grow then shrink
       let scale;
       if (progress < 0.3) {
-        scale = particle.initialScale + (particle.maxScale - particle.initialScale) * (progress / 0.3);
+        scale = data.initialScale + (data.maxScale - data.initialScale) * (progress / 0.3);
       } else {
-        scale = particle.maxScale * (1 - ((progress - 0.3) / 0.7));
+        scale = data.maxScale * (1 - ((progress - 0.3) / 0.7));
       }
-      particle.sprite.scale.set(scale, scale, 1);
 
-      // Fade out
-      particle.sprite.material.opacity = 1 - progress;
+      // Update particle scale manually
+      const instanceIndex = particle.instanceIndex;
+      this.particlePool.tempMatrix.makeTranslation(particle.x, particle.y, particle.z);
+      this.particlePool.tempMatrix.scale(new THREE.Vector3(scale, scale, 1));
+      this.particlePool.instancedMesh.setMatrixAt(instanceIndex, this.particlePool.tempMatrix);
+
+      // Fade out manually
+      const opacity = 1 - progress;
+      this.particlePool.tempColor.copy(particle.initialColor).multiplyScalar(opacity);
+      this.particlePool.instancedMesh.setColorAt(instanceIndex, this.particlePool.tempColor);
     });
+
+    // Mark matrices as needing update
+    if (this.particles.length > 0) {
+      this.particlePool.instancedMesh.instanceMatrix.needsUpdate = true;
+      this.particlePool.instancedMesh.instanceColor.needsUpdate = true;
+    }
 
     // Update shockwave rings
     this.shockwaveRings.forEach(ring => {
@@ -189,9 +207,7 @@ export class LightningExplosion extends Entity {
   }
 
   destroy() {
-    this.particles.forEach(particle => {
-      this.engine.scene.remove(particle.sprite);
-    });
+    // Particles are managed by the instanced pool, just clear our tracking
     this.particles = [];
 
     // Clean up shockwave rings
