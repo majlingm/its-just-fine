@@ -17,6 +17,8 @@
  */
 
 import { ComponentSystem } from '../../core/ecs/ComponentSystem.js';
+import { ResourceCache } from '../../core/pooling/ResourceCache.js';
+import { OptimizationConfig } from '../../config/optimization.js';
 import * as THREE from 'three';
 
 export class RenderSystem extends ComponentSystem {
@@ -42,18 +44,11 @@ export class RenderSystem extends ComponentSystem {
 
       // Remove mesh if entity doesn't exist, is inactive, or marked for removal
       if (!entity || !entity.active || entity.shouldRemove) {
-        // Entity doesn't exist or is being removed, clean up mesh directly
+        // Entity doesn't exist or is being removed, clean up mesh
         const mesh = this.meshCache.get(entityId);
         if (mesh) {
           this.renderer.removeFromScene(mesh);
-          if (mesh.geometry) mesh.geometry.dispose();
-          if (mesh.material) {
-            if (Array.isArray(mesh.material)) {
-              mesh.material.forEach(m => m.dispose());
-            } else {
-              mesh.material.dispose();
-            }
-          }
+          // NOTE: DO NOT dispose geometry/material - managed by ResourceCache
           this.meshCache.delete(entityId);
         }
         continue;
@@ -97,52 +92,73 @@ export class RenderSystem extends ComponentSystem {
   createMesh(entity, transform, renderable) {
     let geometry;
 
-    // Create geometry based on modelType
+    // Use ResourceCache if enabled, otherwise create directly
+    const useCache = OptimizationConfig.resourceCaching.enabled;
+
+    // Get cached geometry based on modelType
     // Map enemy-specific model types to actual geometries
     switch (renderable.modelType) {
       // Basic geometric shapes
       case 'cube':
-        geometry = new THREE.BoxGeometry(1, 1, 1);
+        geometry = useCache ?
+          ResourceCache.getGeometry('box', { width: 1, height: 1, depth: 1 }) :
+          new THREE.BoxGeometry(1, 1, 1);
         break;
       case 'sphere':
-        geometry = new THREE.SphereGeometry(0.5, 32, 32);
+        geometry = useCache ?
+          ResourceCache.getGeometry('sphere', { radius: 0.5, widthSegments: 32, heightSegments: 32 }) :
+          new THREE.SphereGeometry(0.5, 32, 32);
         break;
       case 'cylinder':
-        geometry = new THREE.CylinderGeometry(0.5, 0.5, 1, 32);
+        geometry = useCache ?
+          ResourceCache.getGeometry('cylinder', { radiusTop: 0.5, radiusBottom: 0.5, height: 1, radialSegments: 32 }) :
+          new THREE.CylinderGeometry(0.5, 0.5, 1, 32);
         break;
       case 'cone':
-        geometry = new THREE.ConeGeometry(0.5, 1, 32);
+        geometry = useCache ?
+          ResourceCache.getGeometry('cone', { radius: 0.5, height: 1, radialSegments: 32 }) :
+          new THREE.ConeGeometry(0.5, 1, 32);
         break;
 
       // Enemy-specific models (map to appropriate geometries)
       case 'shadow':
       case 'knight':
       case 'hound':
-        // Humanoid/creature enemies - use capsule-like shape
-        geometry = new THREE.CapsuleGeometry(0.3, 0.8, 8, 16);
+        // Humanoid/creature enemies - use box for now (TODO: add capsule to ResourceCache)
+        geometry = useCache ?
+          ResourceCache.getGeometry('box', { width: 0.6, height: 1.6, depth: 0.6 }) :
+          new THREE.BoxGeometry(0.6, 1.6, 0.6);
         break;
 
       case 'crystal':
       case 'golem':
-        // Blocky/crystalline enemies - use octahedron
-        geometry = new THREE.OctahedronGeometry(0.5, 0);
+        // Blocky/crystalline enemies - use box
+        geometry = useCache ?
+          ResourceCache.getGeometry('box', { width: 1, height: 1, depth: 1 }) :
+          new THREE.BoxGeometry(1, 1, 1);
         break;
 
       case 'flame':
       case 'wisp':
       case 'lightning':
-        // Energy/elemental enemies - use icosahedron (more organic)
-        geometry = new THREE.IcosahedronGeometry(0.5, 1);
+        // Energy/elemental enemies - use sphere
+        geometry = useCache ?
+          ResourceCache.getGeometry('sphere', { radius: 0.5, widthSegments: 16, heightSegments: 12 }) :
+          new THREE.SphereGeometry(0.5, 16, 12);
         break;
 
       case 'void':
         // Void enemies - use sphere
-        geometry = new THREE.SphereGeometry(0.5, 16, 16);
+        geometry = useCache ?
+          ResourceCache.getGeometry('sphere', { radius: 0.5, widthSegments: 16, heightSegments: 16 }) :
+          new THREE.SphereGeometry(0.5, 16, 16);
         break;
 
       case 'frost':
-        // Frost enemies - use dodecahedron (icy crystal)
-        geometry = new THREE.DodecahedronGeometry(0.5, 0);
+        // Frost enemies - use box (TODO: add dodecahedron to ResourceCache)
+        geometry = useCache ?
+          ResourceCache.getGeometry('box', { width: 1, height: 1, depth: 1 }) :
+          new THREE.BoxGeometry(1, 1, 1);
         break;
 
       case 'custom':
@@ -151,24 +167,38 @@ export class RenderSystem extends ComponentSystem {
           geometry = renderable.geometryData;
         } else {
           console.warn(`Entity ${entity.id}: custom modelType but no geometryData provided`);
-          geometry = new THREE.BoxGeometry(1, 1, 1); // Fallback
+          geometry = useCache ?
+            ResourceCache.getGeometry('box', { width: 1, height: 1, depth: 1 }) :
+            new THREE.BoxGeometry(1, 1, 1);
         }
         break;
 
       default:
         console.warn(`Entity ${entity.id}: unknown modelType "${renderable.modelType}", using sphere`);
-        geometry = new THREE.SphereGeometry(0.5, 16, 16);
+        geometry = useCache ?
+          ResourceCache.getGeometry('sphere', { radius: 0.5, widthSegments: 16, heightSegments: 16 }) :
+          new THREE.SphereGeometry(0.5, 16, 16);
     }
 
-    // Create material
-    const material = new THREE.MeshStandardMaterial({
-      color: renderable.color,
-      emissive: renderable.emissive,
-      metalness: renderable.metalness,
-      roughness: renderable.roughness,
-      transparent: renderable.transparent,
-      opacity: renderable.opacity
-    });
+    // Get cached material or create new one
+    const materialKey = `${renderable.modelType}_${renderable.color}_${renderable.emissive}`;
+    const material = useCache ?
+      ResourceCache.getMaterial(materialKey, {
+        color: renderable.color,
+        emissive: renderable.emissive,
+        metalness: renderable.metalness,
+        roughness: renderable.roughness,
+        transparent: renderable.transparent,
+        opacity: renderable.opacity
+      }) :
+      new THREE.MeshStandardMaterial({
+        color: renderable.color,
+        emissive: renderable.emissive,
+        metalness: renderable.metalness,
+        roughness: renderable.roughness,
+        transparent: renderable.transparent,
+        opacity: renderable.opacity
+      });
 
     // Create mesh
     const mesh = new THREE.Mesh(geometry, material);
@@ -244,17 +274,8 @@ export class RenderSystem extends ComponentSystem {
       // Remove from scene
       this.renderer.removeFromScene(mesh);
 
-      // Dispose geometry and material
-      if (mesh.geometry) {
-        mesh.geometry.dispose();
-      }
-      if (mesh.material) {
-        if (Array.isArray(mesh.material)) {
-          mesh.material.forEach(m => m.dispose());
-        } else {
-          mesh.material.dispose();
-        }
-      }
+      // NOTE: DO NOT dispose geometry/material here!
+      // They are managed by ResourceCache and shared across entities
 
       // Remove from cache
       this.meshCache.delete(entity.id);
@@ -273,20 +294,13 @@ export class RenderSystem extends ComponentSystem {
   cleanup() {
     for (const [entityId, mesh] of this.meshCache) {
       this.renderer.removeFromScene(mesh);
-
-      if (mesh.geometry) {
-        mesh.geometry.dispose();
-      }
-      if (mesh.material) {
-        if (Array.isArray(mesh.material)) {
-          mesh.material.forEach(m => m.dispose());
-        } else {
-          mesh.material.dispose();
-        }
-      }
+      // NOTE: DO NOT dispose geometry/material - managed by ResourceCache
     }
 
     this.meshCache.clear();
+
+    // Clear the ResourceCache (this disposes all shared resources)
+    ResourceCache.clear();
   }
 
   /**

@@ -17,11 +17,14 @@
  */
 
 import { ComponentSystem } from '../../core/ecs/ComponentSystem.js';
+import { OptimizationConfig } from '../../config/optimization.js';
 
 export class MovementSystem extends ComponentSystem {
-  constructor() {
+  constructor(frustumCuller = null) {
     // Require Transform and Movement components
     super(['Transform', 'Movement']);
+
+    this.frustumCuller = frustumCuller;
   }
 
   /**
@@ -36,6 +39,36 @@ export class MovementSystem extends ComponentSystem {
 
       // Check if entity has required components
       if (!transform || !movement) {
+        continue;
+      }
+
+      // Frustum culling check
+      if (OptimizationConfig.frustumCulling.enabled && this.frustumCuller) {
+        // Check if entity should always update
+        const alwaysUpdate = entity.alwaysUpdate ||
+          (OptimizationConfig.frustumCulling.alwaysUpdatePlayer && entity.hasTag('player')) ||
+          (OptimizationConfig.frustumCulling.alwaysUpdatePickups && entity.hasTag('pickup'));
+
+        if (!alwaysUpdate) {
+          // Check if entity is in view frustum
+          const boundingRadius = entity.boundingRadius || 1;
+          const extraRadius = OptimizationConfig.frustumCulling.updateRadius || 0;
+
+          if (!this.frustumCuller.isInFrustum(transform, boundingRadius, extraRadius)) {
+            // Entity is outside frustum, skip update
+            continue;
+          }
+        }
+      }
+
+      // Check status effects for movement restrictions
+      const statusEffect = entity.getComponent('StatusEffect');
+
+      // Check if entity can move (not stunned/frozen/rooted)
+      if (statusEffect && !statusEffect.canMove()) {
+        // Stop all movement
+        movement.velocityX = 0;
+        movement.velocityZ = 0;
         continue;
       }
 
@@ -59,10 +92,16 @@ export class MovementSystem extends ComponentSystem {
       // Cap speed to maxSpeed
       movement.capSpeed();
 
-      // Apply velocity to position
-      transform.x += movement.velocityX * dt;
-      transform.y += movement.velocityY * dt;
-      transform.z += movement.velocityZ * dt;
+      // Apply status effect speed modifiers (slow, haste)
+      let speedModifier = 1.0;
+      if (statusEffect) {
+        speedModifier = statusEffect.getStatModifier('speed');
+      }
+
+      // Apply velocity to position (with speed modifier)
+      transform.x += movement.velocityX * speedModifier * dt;
+      transform.y += movement.velocityY * dt; // Y axis not affected by speed modifiers
+      transform.z += movement.velocityZ * speedModifier * dt;
 
       // Apply gravity if not grounded (optional - can be enabled per entity)
       if (!movement.isGrounded && movement.gravityScale !== undefined && movement.gravityScale > 0) {

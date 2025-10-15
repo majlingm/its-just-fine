@@ -19,6 +19,8 @@
  */
 
 import { ComponentSystem } from '../../core/ecs/ComponentSystem.js';
+import { SpatialGrid } from '../../core/spatial/SpatialGrid.js';
+import { OptimizationConfig } from '../../config/optimization.js';
 
 export class CollisionSystem extends ComponentSystem {
   constructor() {
@@ -26,11 +28,19 @@ export class CollisionSystem extends ComponentSystem {
     super(['Transform', 'Collider']);
 
     // Spatial grid for broad-phase optimization
-    this.gridCellSize = 10; // Size of each grid cell
-    this.spatialGrid = new Map(); // Map of grid cell -> entities in that cell
+    this.gridCellSize = OptimizationConfig.spatialPartitioning.cellSize || 10;
+    this.spatialGrid = new Map(); // Map of grid cell -> entities in that cell (fallback)
+    this.optimizedGrid = new SpatialGrid(this.gridCellSize); // Optimized spatial grid
 
     // Collision tracking (for enter/exit events)
     this.previousCollisions = new Map(); // entityId -> Set of colliding entity IDs
+
+    // Statistics
+    this.stats = {
+      totalChecks: 0,
+      narrowPhaseChecks: 0,
+      collisions: 0
+    };
   }
 
   /**
@@ -39,24 +49,48 @@ export class CollisionSystem extends ComponentSystem {
    * @param {Array<Entity>} entities - Entities to process
    */
   process(dt, entities) {
-    // Clear spatial grid
-    this.spatialGrid.clear();
+    // Reset statistics
+    this.stats.totalChecks = entities.length;
+    this.stats.narrowPhaseChecks = 0;
+    this.stats.collisions = 0;
 
-    // Build spatial grid (broad-phase)
-    for (const entity of entities) {
-      const transform = entity.getComponent('Transform');
-      const collider = entity.getComponent('Collider');
+    // Use optimized spatial grid if enabled
+    const useOptimized = OptimizationConfig.spatialPartitioning.enabled;
 
-      if (!collider.enabled) continue;
+    if (useOptimized) {
+      // Clear optimized grid
+      this.optimizedGrid.clear();
 
-      const bounds = collider.getBounds(transform);
-      const cells = this.getCellsForBounds(bounds);
+      // Build optimized spatial grid (broad-phase)
+      for (const entity of entities) {
+        const transform = entity.getComponent('Transform');
+        const collider = entity.getComponent('Collider');
 
-      for (const cellKey of cells) {
-        if (!this.spatialGrid.has(cellKey)) {
-          this.spatialGrid.set(cellKey, []);
+        if (!collider.enabled) continue;
+
+        // Insert into optimized grid using center position
+        this.optimizedGrid.insert(entity, transform.x, transform.z);
+      }
+    } else {
+      // Clear fallback spatial grid
+      this.spatialGrid.clear();
+
+      // Build fallback spatial grid (broad-phase)
+      for (const entity of entities) {
+        const transform = entity.getComponent('Transform');
+        const collider = entity.getComponent('Collider');
+
+        if (!collider.enabled) continue;
+
+        const bounds = collider.getBounds(transform);
+        const cells = this.getCellsForBounds(bounds);
+
+        for (const cellKey of cells) {
+          if (!this.spatialGrid.has(cellKey)) {
+            this.spatialGrid.set(cellKey, []);
+          }
+          this.spatialGrid.get(cellKey).push(entity);
         }
-        this.spatialGrid.get(cellKey).push(entity);
       }
     }
 
@@ -77,16 +111,25 @@ export class CollisionSystem extends ComponentSystem {
       if (!collider.enabled) continue;
 
       const transform = entity.getComponent('Transform');
-      const bounds = collider.getBounds(transform);
-      const cells = this.getCellsForBounds(bounds);
 
       // Get potential collision candidates from spatial grid
-      const candidates = new Set();
-      for (const cellKey of cells) {
-        const cellEntities = this.spatialGrid.get(cellKey) || [];
-        for (const other of cellEntities) {
-          if (other.id !== entity.id) {
-            candidates.add(other);
+      let candidates;
+      if (useOptimized) {
+        // Use optimized grid query
+        const queryRadius = collider.radius || 2; // Use collider radius or default
+        const candidateList = this.optimizedGrid.query(transform.x, transform.z, queryRadius * 2);
+        candidates = new Set(candidateList.filter(other => other.id !== entity.id));
+      } else {
+        // Use fallback grid
+        const bounds = collider.getBounds(transform);
+        const cells = this.getCellsForBounds(bounds);
+        candidates = new Set();
+        for (const cellKey of cells) {
+          const cellEntities = this.spatialGrid.get(cellKey) || [];
+          for (const other of cellEntities) {
+            if (other.id !== entity.id) {
+              candidates.add(other);
+            }
           }
         }
       }
@@ -114,12 +157,16 @@ export class CollisionSystem extends ComponentSystem {
         const otherTransform = other.getComponent('Transform');
 
         // Perform collision test
+        // Increment narrow-phase check counter
+        this.stats.narrowPhaseChecks++;
+
         const collision = this.testCollision(
           entity, transform, collider,
           other, otherTransform, otherCollider
         );
 
         if (collision.isColliding) {
+          this.stats.collisions++;
           // Mark as colliding
           collider.isColliding = true;
           collider.collidingWith.push(other.id);
@@ -559,5 +606,29 @@ export class CollisionSystem extends ComponentSystem {
         colliderB.onCollisionExit(entityB, entityA);
       }
     }
+  }
+
+  /**
+   * Get collision system statistics
+   * @returns {Object} Statistics
+   */
+  getStats() {
+    const gridStats = OptimizationConfig.spatialPartitioning.enabled ?
+      this.optimizedGrid.getStats() : null;
+
+    // Calculate efficiency
+    const maxPossibleChecks = (this.stats.totalChecks * (this.stats.totalChecks - 1)) / 2;
+    const efficiency = maxPossibleChecks > 0 ?
+      ((maxPossibleChecks - this.stats.narrowPhaseChecks) / maxPossibleChecks * 100).toFixed(1) : 0;
+
+    return {
+      totalEntities: this.stats.totalChecks,
+      narrowPhaseChecks: this.stats.narrowPhaseChecks,
+      maxPossibleChecks: maxPossibleChecks,
+      collisions: this.stats.collisions,
+      efficiency: `${efficiency}%`,
+      spatialGridEnabled: OptimizationConfig.spatialPartitioning.enabled,
+      gridStats: gridStats
+    };
   }
 }

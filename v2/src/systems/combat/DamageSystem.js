@@ -236,6 +236,23 @@ export class DamageSystem extends ComponentSystem {
     // Add invincibility
     this.invincibilityTimers.set(target.id, this.invincibilityDuration);
 
+    // Apply burn status effect to enemies hit by player projectiles
+    if (source && source.hasTag('projectile')) {
+      const projectileComp = source.getComponent('Projectile');
+      if (projectileComp && projectileComp.ownerTag === 'player' && target.hasTag('enemy')) {
+        // Import and apply burn effect
+        import('./StatusEffectSystem.js').then(module => {
+          module.StatusEffectSystem.applyEffect(target, {
+            type: 'burn',
+            duration: 3,
+            strength: 3, // 3 damage per tick
+            tickRate: 0.5, // Tick every 0.5 seconds
+            color: 0xff4400
+          });
+        });
+      }
+    }
+
     // Emit damage event
     this.emitDamageEvent(target, source, damage);
 

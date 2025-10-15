@@ -37,10 +37,118 @@
     #loading.hidden {
       display: none;
     }
+
+    /* HUD Styles */
+    #hud {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 100;
+      font-family: 'Courier New', monospace;
+      color: #fff;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+    }
+
+    #hud.hidden {
+      display: none;
+    }
+
+    .hud-top-left {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+    }
+
+    .hud-top-right {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      text-align: right;
+    }
+
+    .hud-bottom-center {
+      position: absolute;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      text-align: center;
+    }
+
+    .health-bar {
+      width: 200px;
+      height: 30px;
+      background: rgba(50, 50, 50, 0.8);
+      border: 2px solid #fff;
+      border-radius: 4px;
+      overflow: hidden;
+      margin-top: 5px;
+    }
+
+    .health-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #ff0000, #ff6666);
+      transition: width 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 14px;
+    }
+
+    .stat {
+      font-size: 18px;
+      margin: 5px 0;
+      font-weight: bold;
+    }
+
+    .stat-label {
+      color: #ffdd88;
+    }
+
+    .stat-value {
+      color: #ffffff;
+      font-size: 24px;
+    }
   </style>
 </head>
 <body>
   <div id="loading">Loading Its Just Fine v2...</div>
+
+  <!-- HUD -->
+  <div id="hud" class="hidden">
+    <!-- Top Left - Player Stats -->
+    <div class="hud-top-left">
+      <div class="stat">
+        <span class="stat-label">HEALTH</span>
+      </div>
+      <div class="health-bar">
+        <div class="health-fill" id="health-fill" style="width: 100%;">
+          <span id="health-text">100 / 100</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Top Right - Wave Info -->
+    <div class="hud-top-right">
+      <div class="stat">
+        <span class="stat-label">WAVE</span>
+        <span class="stat-value" id="wave-number">1</span>
+      </div>
+      <div class="stat">
+        <span class="stat-label">ENEMIES</span>
+        <span class="stat-value" id="enemy-count">0</span>
+      </div>
+    </div>
+
+    <!-- Bottom Center - Messages -->
+    <div class="hud-bottom-center">
+      <div class="stat" id="wave-message" style="font-size: 32px; color: #ffff00;"></div>
+    </div>
+  </div>
+
   <script type="module" src="/src/main.js"></script>
 </body>
 </html>

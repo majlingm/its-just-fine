@@ -16,14 +16,29 @@
  */
 
 import { ComponentSystem } from '../../core/ecs/ComponentSystem.js';
+import { OptimizationConfig } from '../../config/optimization.js';
 
 export class AISystem extends ComponentSystem {
-  constructor() {
+  constructor(frustumCuller = null) {
     // Require Transform, Movement, and AI components
     super(['Transform', 'Movement', 'AI']);
 
     // Cache player entity for performance
     this.playerEntity = null;
+
+    // Frustum culler for visibility checks
+    this.frustumCuller = frustumCuller;
+
+    // Distance-based update timers (per entity)
+    this.updateTimers = new Map(); // entityId -> timer
+
+    // Statistics
+    this.stats = {
+      totalEntities: 0,
+      frustumCulled: 0,
+      throttled: 0,
+      updated: 0
+    };
   }
 
   /**
@@ -60,6 +75,12 @@ export class AISystem extends ComponentSystem {
       return;
     }
 
+    // Reset frame stats
+    this.stats.totalEntities = entities.length;
+    this.stats.frustumCulled = 0;
+    this.stats.throttled = 0;
+    this.stats.updated = 0;
+
     // Process each AI entity
     for (const entity of entities) {
       const transform = entity.getComponent('Transform');
@@ -70,6 +91,70 @@ export class AISystem extends ComponentSystem {
       if (!ai.enabled) {
         continue;
       }
+
+      // Frustum culling check
+      if (OptimizationConfig.frustumCulling.enabled && this.frustumCuller) {
+        const boundingRadius = entity.boundingRadius || 1;
+        const extraRadius = OptimizationConfig.frustumCulling.updateRadius || 0;
+
+        if (!this.frustumCuller.isInFrustum(transform, boundingRadius, extraRadius)) {
+          // Entity is outside frustum, skip AI update
+          this.stats.frustumCulled++;
+          continue;
+        }
+      }
+
+      // Distance-based update throttling
+      if (OptimizationConfig.distanceUpdates.enabled && OptimizationConfig.distanceUpdates.applyToAI) {
+        // Calculate distance to player
+        const dx = playerTransform.x - transform.x;
+        const dz = playerTransform.z - transform.z;
+        const distance = Math.sqrt(dx * dx + dz * dz);
+
+        // Determine update interval based on distance
+        let updateInterval = 0; // 0 = every frame
+        if (distance >= OptimizationConfig.distanceUpdates.farDistance) {
+          updateInterval = 1.0 / OptimizationConfig.distanceUpdates.farFPS;
+        } else if (distance >= OptimizationConfig.distanceUpdates.mediumDistance) {
+          updateInterval = 1.0 / OptimizationConfig.distanceUpdates.mediumFPS;
+        } else if (distance >= OptimizationConfig.distanceUpdates.closeDistance) {
+          updateInterval = 1.0 / OptimizationConfig.distanceUpdates.closeFPS;
+        }
+        // else: close enough for full-rate updates (updateInterval = 0)
+
+        // Check if enough time has passed
+        if (updateInterval > 0) {
+          const timer = this.updateTimers.get(entity.id) || 0;
+          const newTimer = timer + dt;
+
+          if (newTimer < updateInterval) {
+            // Not time to update yet
+            this.updateTimers.set(entity.id, newTimer);
+            this.stats.throttled++;
+            continue;
+          }
+
+          // Time to update, reset timer
+          this.updateTimers.set(entity.id, 0);
+        }
+      }
+
+      // Entity passed all checks, update AI
+      this.stats.updated++;
+      this.processAIBehavior(entity, transform, movement, ai, playerTransform, dt);
+    }
+  }
+
+  /**
+   * Process AI behavior for an entity
+   * @param {Entity} entity - AI entity
+   * @param {Transform} transform - Entity transform
+   * @param {Movement} movement - Entity movement
+   * @param {AI} ai - Entity AI component
+   * @param {Transform} playerTransform - Player transform
+   * @param {number} dt - Delta time
+   */
+  processAIBehavior(entity, transform, movement, ai, playerTransform, dt) {
 
       // Process behavior based on AI type
       switch (ai.behavior) {
@@ -108,7 +193,6 @@ export class AISystem extends ComponentSystem {
           console.warn(`Unknown AI behavior: ${ai.behavior} - using chase_player as fallback`);
           this.processChasePlayer(entity, transform, movement, ai, playerTransform);
       }
-    }
   }
 
   /**
@@ -299,5 +383,28 @@ export class AISystem extends ComponentSystem {
    */
   resetPlayerCache() {
     this.playerEntity = null;
+  }
+
+  /**
+   * Get AI system statistics
+   * @returns {Object} Statistics
+   */
+  getStats() {
+    const cullRate = this.stats.totalEntities > 0 ?
+      (this.stats.frustumCulled / this.stats.totalEntities * 100).toFixed(1) : 0;
+    const throttleRate = this.stats.totalEntities > 0 ?
+      (this.stats.throttled / this.stats.totalEntities * 100).toFixed(1) : 0;
+    const updateRate = this.stats.totalEntities > 0 ?
+      (this.stats.updated / this.stats.totalEntities * 100).toFixed(1) : 0;
+
+    return {
+      totalEntities: this.stats.totalEntities,
+      frustumCulled: this.stats.frustumCulled,
+      throttled: this.stats.throttled,
+      updated: this.stats.updated,
+      cullRate: `${cullRate}%`,
+      throttleRate: `${throttleRate}%`,
+      updateRate: `${updateRate}%`
+    };
   }
 }

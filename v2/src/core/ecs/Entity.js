@@ -28,6 +28,16 @@ export class Entity {
 
     // Tags for grouping
     this.tags = new Set();
+
+    // Display name (optional, for debugging)
+    this.displayName = '';
+
+    // Entity type (for typed pools)
+    this.entityType = '';
+
+    // Pooling flags
+    this._pooled = false;       // Is this entity from a pool?
+    this._poolType = null;      // Pool type for returning to correct pool
   }
 
   /**

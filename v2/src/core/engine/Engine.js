@@ -26,6 +26,9 @@ export class Engine {
     // Callbacks
     this.onUpdate = null;  // Called every frame with dt
     this.onRender = null;  // Called every frame for rendering
+
+    // Entity pool reference (set during init)
+    this.entityPool = null;
   }
 
   /**
