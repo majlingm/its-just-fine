@@ -1,0 +1,335 @@
+{
+  "shadow_lord": {
+    "name": "Shadow Lord",
+    "displayName": "The Shadow Lord",
+    "type": "boss",
+    "health": 5000,
+    "speed": 4.0,
+    "maxSpeed": 7.0,
+    "scale": 2.5,
+    "model": "shadow_boss",
+    "color": 4521088,
+    "phases": [
+      {
+        "healthThreshold": 1.0,
+        "name": "Phase 1: Awakening",
+        "behavior": "aggressive",
+        "abilities": ["shadow_strike", "dark_pulse"]
+      },
+      {
+        "healthThreshold": 0.66,
+        "name": "Phase 2: Enraged",
+        "behavior": "berserk",
+        "abilities": ["shadow_strike", "dark_pulse", "summon_minions"]
+      },
+      {
+        "healthThreshold": 0.33,
+        "name": "Phase 3: Desperate",
+        "behavior": "ultimate",
+        "abilities": ["shadow_strike", "dark_pulse", "summon_minions", "void_realm"]
+      }
+    ],
+    "abilities": [
+      {
+        "id": "shadow_strike",
+        "name": "Shadow Strike",
+        "cooldown": 3.0,
+        "damage": 50,
+        "range": 5
+      },
+      {
+        "id": "dark_pulse",
+        "name": "Dark Pulse",
+        "cooldown": 8.0,
+        "damage": 30,
+        "range": 15,
+        "aoe": true
+      },
+      {
+        "id": "summon_minions",
+        "name": "Summon Shadows",
+        "cooldown": 15.0,
+        "summonCount": 3,
+        "summonType": "shadow_lurker"
+      },
+      {
+        "id": "void_realm",
+        "name": "Void Realm",
+        "cooldown": 30.0,
+        "damage": 100,
+        "range": 20,
+        "duration": 5.0
+      }
+    ]
+  },
+  "crystal_titan": {
+    "name": "crystal_titan",
+    "displayName": "Crystal Titan",
+    "type": "boss",
+    "health": 8000,
+    "speed": 2.5,
+    "maxSpeed": 4.0,
+    "scale": 3.0,
+    "model": "crystal_boss",
+    "color": 65535,
+    "phases": [
+      {
+        "healthThreshold": 1.0,
+        "name": "Phase 1: Dormant",
+        "behavior": "defensive",
+        "abilities": ["crystal_spikes", "reflect_shield"]
+      },
+      {
+        "healthThreshold": 0.5,
+        "name": "Phase 2: Awakened",
+        "behavior": "aggressive",
+        "abilities": ["crystal_spikes", "reflect_shield", "crystal_storm"]
+      },
+      {
+        "healthThreshold": 0.25,
+        "name": "Phase 3: Shattered",
+        "behavior": "berserk",
+        "abilities": ["crystal_spikes", "crystal_storm", "prismatic_beam"]
+      }
+    ],
+    "abilities": [
+      {
+        "id": "crystal_spikes",
+        "name": "Crystal Spikes",
+        "cooldown": 4.0,
+        "damage": 40,
+        "range": 10
+      },
+      {
+        "id": "reflect_shield",
+        "name": "Reflect Shield",
+        "cooldown": 12.0,
+        "duration": 5.0,
+        "reflectPercent": 0.5
+      },
+      {
+        "id": "crystal_storm",
+        "name": "Crystal Storm",
+        "cooldown": 20.0,
+        "damage": 25,
+        "range": 25,
+        "duration": 6.0
+      },
+      {
+        "id": "prismatic_beam",
+        "name": "Prismatic Beam",
+        "cooldown": 25.0,
+        "damage": 150,
+        "range": 30
+      }
+    ]
+  },
+  "inferno_dragon": {
+    "name": "inferno_dragon",
+    "displayName": "Inferno Dragon",
+    "type": "boss",
+    "health": 10000,
+    "speed": 5.0,
+    "maxSpeed": 8.0,
+    "scale": 3.5,
+    "model": "dragon_boss",
+    "color": 16733440,
+    "phases": [
+      {
+        "healthThreshold": 1.0,
+        "name": "Phase 1: Ground Assault",
+        "behavior": "melee",
+        "abilities": ["flame_breath", "tail_swipe"]
+      },
+      {
+        "healthThreshold": 0.6,
+        "name": "Phase 2: Aerial Dominance",
+        "behavior": "aerial",
+        "abilities": ["flame_breath", "fire_dive", "meteor_rain"]
+      },
+      {
+        "healthThreshold": 0.3,
+        "name": "Phase 3: Infernal Rage",
+        "behavior": "ultimate",
+        "abilities": ["flame_breath", "fire_dive", "meteor_rain", "supernova"]
+      }
+    ],
+    "abilities": [
+      {
+        "id": "flame_breath",
+        "name": "Flame Breath",
+        "cooldown": 5.0,
+        "damage": 45,
+        "range": 15,
+        "cone": true
+      },
+      {
+        "id": "tail_swipe",
+        "name": "Tail Swipe",
+        "cooldown": 6.0,
+        "damage": 60,
+        "range": 8,
+        "knockback": true
+      },
+      {
+        "id": "fire_dive",
+        "name": "Fire Dive",
+        "cooldown": 18.0,
+        "damage": 80,
+        "range": 10,
+        "aoe": true
+      },
+      {
+        "id": "meteor_rain",
+        "name": "Meteor Rain",
+        "cooldown": 22.0,
+        "damage": 35,
+        "range": 30,
+        "duration": 8.0,
+        "meteorCount": 12
+      },
+      {
+        "id": "supernova",
+        "name": "Supernova",
+        "cooldown": 40.0,
+        "damage": 200,
+        "range": 40,
+        "aoe": true
+      }
+    ]
+  },
+  "void_empress": {
+    "name": "void_empress",
+    "displayName": "Void Empress",
+    "type": "boss",
+    "health": 7500,
+    "speed": 3.5,
+    "maxSpeed": 6.0,
+    "scale": 2.2,
+    "model": "void_boss",
+    "color": 2105376,
+    "phases": [
+      {
+        "healthThreshold": 1.0,
+        "name": "Phase 1: Manifestation",
+        "behavior": "teleport",
+        "abilities": ["void_bolt", "reality_tear"]
+      },
+      {
+        "healthThreshold": 0.7,
+        "name": "Phase 2: Corruption",
+        "behavior": "summon",
+        "abilities": ["void_bolt", "reality_tear", "summon_void"]
+      },
+      {
+        "healthThreshold": 0.4,
+        "name": "Phase 3: Oblivion",
+        "behavior": "chaos",
+        "abilities": ["void_bolt", "reality_tear", "summon_void", "dimensional_collapse"]
+      }
+    ],
+    "abilities": [
+      {
+        "id": "void_bolt",
+        "name": "Void Bolt",
+        "cooldown": 2.5,
+        "damage": 55,
+        "range": 25
+      },
+      {
+        "id": "reality_tear",
+        "name": "Reality Tear",
+        "cooldown": 10.0,
+        "damage": 40,
+        "range": 20,
+        "duration": 4.0,
+        "slow": 0.5
+      },
+      {
+        "id": "summon_void",
+        "name": "Summon Void Walkers",
+        "cooldown": 18.0,
+        "summonCount": 2,
+        "summonType": "void_walker"
+      },
+      {
+        "id": "dimensional_collapse",
+        "name": "Dimensional Collapse",
+        "cooldown": 35.0,
+        "damage": 120,
+        "range": 35,
+        "teleportCount": 5
+      }
+    ]
+  },
+  "elder_lich": {
+    "name": "elder_lich",
+    "displayName": "Elder Lich",
+    "type": "boss",
+    "health": 6000,
+    "speed": 2.0,
+    "maxSpeed": 3.5,
+    "scale": 2.0,
+    "model": "lich_boss",
+    "color": 5570560,
+    "phases": [
+      {
+        "healthThreshold": 1.0,
+        "name": "Phase 1: Necromancy",
+        "behavior": "summon",
+        "abilities": ["death_bolt", "raise_dead"]
+      },
+      {
+        "healthThreshold": 0.6,
+        "name": "Phase 2: Phylactery Power",
+        "behavior": "defensive",
+        "abilities": ["death_bolt", "raise_dead", "soul_drain", "bone_armor"]
+      },
+      {
+        "healthThreshold": 0.3,
+        "name": "Phase 3: Eternal Death",
+        "behavior": "ultimate",
+        "abilities": ["death_bolt", "raise_dead", "soul_drain", "death_wave"]
+      }
+    ],
+    "abilities": [
+      {
+        "id": "death_bolt",
+        "name": "Death Bolt",
+        "cooldown": 3.5,
+        "damage": 48,
+        "range": 20
+      },
+      {
+        "id": "raise_dead",
+        "name": "Raise Dead",
+        "cooldown": 12.0,
+        "summonCount": 4,
+        "summonType": "shadow_lurker"
+      },
+      {
+        "id": "soul_drain",
+        "name": "Soul Drain",
+        "cooldown": 15.0,
+        "damage": 30,
+        "range": 15,
+        "heal": 0.5
+      },
+      {
+        "id": "bone_armor",
+        "name": "Bone Armor",
+        "cooldown": 20.0,
+        "duration": 8.0,
+        "damageReduction": 0.6
+      },
+      {
+        "id": "death_wave",
+        "name": "Death Wave",
+        "cooldown": 30.0,
+        "damage": 100,
+        "range": 40,
+        "aoe": true
+      }
+    ]
+  }
+}

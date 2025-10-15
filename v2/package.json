@@ -1,0 +1,36 @@
+{
+  "name": "its-just-fine-v2",
+  "version": "2.0.0",
+  "description": "Its Just Fine - Refactored Version (ECS Architecture)",
+  "type": "module",
+  "main": "src/main.js",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "vitest",
+    "test:ui": "vitest --ui",
+    "test:run": "vitest run",
+    "test:coverage": "vitest run --coverage"
+  },
+  "dependencies": {
+    "three": "^0.160.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.2.1",
+    "@vitest/coverage-v8": "^3.2.4",
+    "@vitest/ui": "^3.2.4",
+    "happy-dom": "^20.0.1",
+    "vite": "^5.0.11",
+    "vitest": "^3.2.4"
+  },
+  "keywords": [
+    "game",
+    "bullet-heaven",
+    "threejs",
+    "ecs",
+    "entity-component-system"
+  ],
+  "author": "",
+  "license": "ISC"
+}

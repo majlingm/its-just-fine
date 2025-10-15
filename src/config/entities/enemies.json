@@ -1,0 +1,203 @@
+{
+  "shadow_lurker": {
+    "displayName": "Shadow Lurker",
+    "type": "enemy",
+    "health": 100,
+    "speed": 5.5,
+    "maxSpeed": 8.0,
+    "damage": 10,
+    "scale": 0.8,
+    "model": "shadow",
+    "color": 4521088,
+    "castShadow": true,
+    "receiveShadow": true,
+    "ai": {
+      "behavior": "chase_player",
+      "aggroRange": 30,
+      "attackRange": 2,
+      "attackCooldown": 1.0
+    }
+  },
+  "crystal_guardian": {
+    "displayName": "Crystal Guardian",
+    "type": "enemy",
+    "health": 150,
+    "speed": 3.0,
+    "maxSpeed": 4.5,
+    "damage": 15,
+    "scale": 1.0,
+    "model": "crystal",
+    "color": 65535,
+    "castShadow": true,
+    "receiveShadow": true,
+    "ai": {
+      "behavior": "patrol",
+      "aggroRange": 25,
+      "attackRange": 3,
+      "attackCooldown": 1.5,
+      "patrolRadius": 15
+    }
+  },
+  "flame_imp": {
+    "displayName": "Flame Imp",
+    "type": "enemy",
+    "health": 80,
+    "speed": 7.0,
+    "maxSpeed": 10.0,
+    "damage": 12,
+    "scale": 0.6,
+    "model": "flame",
+    "color": 16733440,
+    "castShadow": true,
+    "receiveShadow": false,
+    "ai": {
+      "behavior": "swarm",
+      "aggroRange": 35,
+      "attackRange": 1.5,
+      "attackCooldown": 0.8
+    }
+  },
+  "void_walker": {
+    "displayName": "Void Walker",
+    "type": "enemy",
+    "health": 200,
+    "speed": 4.0,
+    "maxSpeed": 6.0,
+    "damage": 20,
+    "scale": 1.2,
+    "model": "void",
+    "color": 2105376,
+    "castShadow": true,
+    "receiveShadow": true,
+    "ai": {
+      "behavior": "teleport",
+      "aggroRange": 40,
+      "attackRange": 2.5,
+      "attackCooldown": 2.0,
+      "teleportCooldown": 5.0,
+      "teleportRange": 10
+    }
+  },
+  "frost_sentinel": {
+    "displayName": "Frost Sentinel",
+    "type": "enemy",
+    "health": 180,
+    "speed": 2.5,
+    "maxSpeed": 4.0,
+    "damage": 18,
+    "scale": 1.1,
+    "model": "frost",
+    "color": 9498256,
+    "castShadow": true,
+    "receiveShadow": true,
+    "ai": {
+      "behavior": "ranged",
+      "aggroRange": 45,
+      "attackRange": 15,
+      "attackCooldown": 2.5,
+      "projectileSpeed": 10
+    }
+  },
+  "corrupted_knight": {
+    "displayName": "Corrupted Knight",
+    "type": "enemy",
+    "health": 250,
+    "speed": 3.5,
+    "maxSpeed": 5.0,
+    "damage": 25,
+    "scale": 1.3,
+    "model": "knight",
+    "color": 8388736,
+    "castShadow": true,
+    "receiveShadow": true,
+    "ai": {
+      "behavior": "charge",
+      "aggroRange": 30,
+      "attackRange": 2,
+      "attackCooldown": 1.2,
+      "chargeSpeed": 12,
+      "chargeCooldown": 6.0
+    }
+  },
+  "arcane_wisp": {
+    "displayName": "Arcane Wisp",
+    "type": "enemy",
+    "health": 50,
+    "speed": 8.0,
+    "maxSpeed": 12.0,
+    "damage": 8,
+    "scale": 0.4,
+    "model": "wisp",
+    "color": 16711935,
+    "castShadow": false,
+    "receiveShadow": false,
+    "ai": {
+      "behavior": "evade",
+      "aggroRange": 40,
+      "attackRange": 5,
+      "attackCooldown": 0.5,
+      "evadeChance": 0.7
+    }
+  },
+  "stone_golem": {
+    "displayName": "Stone Golem",
+    "type": "enemy",
+    "health": 400,
+    "speed": 2.0,
+    "maxSpeed": 3.0,
+    "damage": 30,
+    "scale": 1.8,
+    "model": "golem",
+    "color": 8421504,
+    "castShadow": true,
+    "receiveShadow": true,
+    "ai": {
+      "behavior": "tank",
+      "aggroRange": 20,
+      "attackRange": 3,
+      "attackCooldown": 3.0,
+      "armor": 0.5
+    }
+  },
+  "blood_hound": {
+    "displayName": "Blood Hound",
+    "type": "enemy",
+    "health": 120,
+    "speed": 9.0,
+    "maxSpeed": 13.0,
+    "damage": 14,
+    "scale": 0.9,
+    "model": "hound",
+    "color": 9109504,
+    "castShadow": true,
+    "receiveShadow": true,
+    "ai": {
+      "behavior": "pack_hunter",
+      "aggroRange": 50,
+      "attackRange": 1.5,
+      "attackCooldown": 0.6,
+      "packBonusDamage": 5
+    }
+  },
+  "lightning_elemental": {
+    "displayName": "Lightning Elemental",
+    "type": "enemy",
+    "health": 130,
+    "speed": 6.0,
+    "maxSpeed": 9.0,
+    "damage": 22,
+    "scale": 0.7,
+    "model": "lightning",
+    "color": 16776960,
+    "castShadow": false,
+    "receiveShadow": false,
+    "ai": {
+      "behavior": "chain_attack",
+      "aggroRange": 35,
+      "attackRange": 8,
+      "attackCooldown": 1.8,
+      "chainRange": 5,
+      "maxChains": 3
+    }
+  }
+}

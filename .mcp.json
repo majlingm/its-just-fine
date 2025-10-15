@@ -1,0 +1,23 @@
+{
+  "mcpServers": {
+    "chrome-devtools": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "-y",
+        "chrome-devtools-mcp",
+        "http://localhost:9222"
+      ],
+      "env": {}
+    },
+    "mermaid": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "-y",
+        "@peng-shawn/mermaid-mcp-server"
+      ],
+      "env": {}
+    }
+  }
+}
