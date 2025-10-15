@@ -72,7 +72,13 @@ export class ShadowBoltGroup extends Entity {
   }
 
   destroy() {
-    // Don't destroy the projectiles, just stop managing them
+    // Destroy all managed projectiles
+    for (const proj of this.projectiles) {
+      if (proj && proj.active) {
+        proj.destroy();
+      }
+    }
+    this.projectiles = [];
     this.active = false;
     this.shouldRemove = true;
   }

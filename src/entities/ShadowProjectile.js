@@ -223,6 +223,7 @@ export class ShadowProjectile extends Projectile {
     this.trailSpawnTimer = 0;
     this.active = true;
     this.shouldRemove = false;
+    this.managedByGroup = false; // Reset group management flag
 
     // Show and position mesh
     if (this.mesh) {
