@@ -114,7 +114,9 @@ export class MagicBullet extends Projectile {
     if (!this.active) return;
 
     this.age += dt;
-    if (this.age > this.lifetime) {
+
+    // Check expiration timestamp (works even when not updated due to frustum culling)
+    if (this.engine.time >= this.expiresAt) {
       this.destroy();
       return;
     }
@@ -123,6 +125,7 @@ export class MagicBullet extends Projectile {
     this.x += this.dirX * this.speed * dt;
     this.y += this.dirY * this.speed * dt; // 3D movement
     this.z += this.dirZ * this.speed * dt;
+
     this.mesh.position.x = this.x;
     this.mesh.position.y = this.y;
     this.mesh.position.z = this.z;
@@ -230,6 +233,9 @@ export class MagicBullet extends Projectile {
     this.active = true;
     this.shouldRemove = false;
 
+    // Reset expiration timestamp
+    this.expiresAt = engine.time + this.lifetime;
+
     // Reinitialize trail pool if needed
     this.initTrailPool();
 
@@ -247,6 +253,13 @@ export class MagicBullet extends Projectile {
     // Clear trail references (pool handles cleanup automatically)
     this.trails = [];
 
-    super.destroy();
+    // Make sure mesh is hidden
+    if (this.mesh) {
+      this.mesh.visible = false;
+    }
+
+    // Mark for removal
+    this.active = false;
+    this.shouldRemove = true;
   }
 }

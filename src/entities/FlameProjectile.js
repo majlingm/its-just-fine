@@ -74,7 +74,9 @@ export class FlameProjectile extends Projectile {
     if (!this.active) return;
 
     this.age += dt;
-    if (this.age > this.lifetime) {
+
+    // Check expiration timestamp (works even when not updated due to frustum culling)
+    if (this.engine.time >= this.expiresAt) {
       // Only create explosion on expiration if we haven't exploded yet
       if (!this.hasExploded) {
         const explosion = new FireExplosion(
@@ -229,6 +231,9 @@ export class FlameProjectile extends Projectile {
     this.flameSpawnTimer = 0;
     this.active = true;
     this.shouldRemove = false;
+
+    // Reset expiration timestamp
+    this.expiresAt = engine.time + this.lifetime;
 
     // Show and position mesh
     if (this.mesh) {

@@ -31,8 +31,10 @@ export class ShadowBoltSpell extends ProjectileSpell {
 
     // Override stats for triangle formation (after scaling)
     this.projectileCount = 3;
-    this.speed = 10; // Slower than default
-    this.cooldown = 0.6; // Less frequent
+    this.speed = 2.5; // Slow but steady
+    this.cooldown = 5.0; // Very rare
+    this.pierce = (this.pierce || 2) + 10; // +10 additional pierce
+    this.lifetime = 20.0; // Persist for a long time
     this.rotationAngle = 0; // Track rotation for spinning effect
   }
 
@@ -96,7 +98,7 @@ export class ShadowBoltSpell extends ProjectileSpell {
       direction.dirX,
       direction.dirZ,
       projectiles,
-      5 // rotation speed in radians/sec
+      2 // rotation speed in radians/sec (slower)
     );
     // Use the spell's speed
     group.speed = this.speed;

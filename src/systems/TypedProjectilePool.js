@@ -62,6 +62,11 @@ export class TypedProjectilePool {
       this.active.splice(index, 1);
     }
 
+    // Remove from engine entities array (CRITICAL for preventing memory leak!)
+    if (projectile.engine && projectile.engine.removeEntity) {
+      projectile.engine.removeEntity(projectile);
+    }
+
     // Don't let pool grow unbounded
     if (this.pool.length < this.initialSize * 2) {
       // Clean up any visual effects before pooling

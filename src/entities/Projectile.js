@@ -25,6 +25,10 @@ export class Projectile extends Entity {
     this.pierceCount = 0;
     this.lifetime = weapon.lifetime || 3;
     this.age = 0;
+
+    // Set expiration timestamp (more reliable than age with frustum culling)
+    this.expiresAt = engine.time + this.lifetime;
+
     this.createMesh();
 
     // Set initial mesh position
@@ -46,7 +50,9 @@ export class Projectile extends Entity {
     if (!this.active) return;
 
     this.age += dt;
-    if (this.age > this.lifetime) {
+
+    // Check expiration timestamp (works even when not updated due to frustum culling)
+    if (this.engine.time >= this.expiresAt) {
       this.destroy();
       return;
     }

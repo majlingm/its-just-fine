@@ -607,100 +607,10 @@ export class DustAndDynamiteGame {
           return;
         }
 
-        // Handle spells with no targeting (like Magic Bullet - shoots in random directions)
-        if (weapon.targeting === 'none') {
-          // Use the spell's cast method which properly handles direction calculation
+        // Handle projectile spells (targeting: 'none', 'nearest', 'farthest')
+        // Use the spell's cast() method which properly handles pooling
+        if (weapon.targeting === 'none' || weapon.targeting === 'nearest' || weapon.targeting === 'farthest') {
           weapon.cast(this.engine, this.player, this.player.stats);
-          this.player.showMuzzleFlash();
-          this.engine.sound.playShoot();
-          weaponInstance.lastShot = this.engine.time;
-          return;
-        }
-
-        if (weapon.targeting === 'nearest') {
-          const maxRange = weapon.maxRange || 50; // Default max range for projectile weapons
-          const maxRangeSq = maxRange * maxRange;
-          let minDist = Infinity;
-          this.enemies.forEach(e => {
-            const dx = e.x - this.player.x;
-            const dz = e.z - this.player.z;
-            const dist = dx * dx + dz * dz;
-            if (dist < minDist && dist <= maxRangeSq) {
-              minDist = dist;
-              target = e;
-            }
-          });
-        } else if (weapon.targeting === 'farthest') {
-          const maxRange = weapon.maxRange || 50; // Default max range for projectile weapons
-          const maxRangeSq = maxRange * maxRange;
-          let maxDist = 0;
-          this.enemies.forEach(e => {
-            const dx = e.x - this.player.x;
-            const dz = e.z - this.player.z;
-            const dist = dx * dx + dz * dz;
-            if (dist > maxDist && dist <= maxRangeSq) {
-              maxDist = dist;
-              target = e;
-            }
-          });
-        }
-
-        if (target) {
-          const dx = target.x - this.player.x;
-          const dz = target.z - this.player.z;
-
-          // Calculate target height based on mesh scale
-          const targetScale = target.mesh?.scale.y || 1.0;
-          const baseHeight = 3.0; // Base model height in units
-          const targetHeight = baseHeight * targetScale;
-          const targetCenterY = targetHeight / 2; // Center is half the total height
-
-          // Calculate player center height
-          const playerScale = this.player.mesh?.scale.y || 1.0;
-          const playerHeight = baseHeight * playerScale;
-          const playerCenterY = playerHeight / 2;
-
-          // Never aim lower than player center
-          const targetY = Math.max(playerCenterY, targetCenterY);
-          const dy = targetY - playerCenterY;
-
-          const mag = Math.sqrt(dx * dx + dy * dy + dz * dz);
-          const dirX = dx / mag;
-          const dirY = dy / mag;
-          const dirZ = dz / mag;
-
-          const totalProjectiles = weapon.projectileCount || 1;
-          const spreadAngleRadians = weapon.spread || 0;
-
-          for (let i = 0; i < totalProjectiles; i++) {
-            // Calculate the angular offset for this projectile
-            // Center projectile at 0, others spread evenly
-            const angleOffset = (i - (totalProjectiles - 1) / 2) * spreadAngleRadians;
-
-            // Calculate the angle to target in XZ plane using the non-normalized dx/dz
-            const targetAngle = Math.atan2(dx, dz);
-
-            // Add the offset to create spread
-            const finalAngle = targetAngle + angleOffset;
-
-            // Convert back to direction vector (all projectiles still aim generally at target)
-            const newDirX = Math.sin(finalAngle);
-            const newDirZ = Math.cos(finalAngle);
-
-            const proj = weapon.createProjectile(
-              this.engine,
-              this.player.x,
-              playerCenterY, // Spawn at player center height
-              this.player.z,
-              newDirX,
-              newDirZ,
-              weapon,
-              this.player.stats,
-              dirY // Pass Y direction
-            );
-            this.engine.addEntity(proj);
-          }
-
           this.player.showMuzzleFlash();
           this.engine.sound.playShoot();
           weaponInstance.lastShot = this.engine.time;
@@ -709,6 +619,7 @@ export class DustAndDynamiteGame {
           if (weapon.hasRandomCooldown && weapon.baseCooldownMin && weapon.baseCooldownMax) {
             weapon.cooldown = weapon.baseCooldownMin + Math.random() * (weapon.baseCooldownMax - weapon.baseCooldownMin);
           }
+          return;
         }
       }
     });

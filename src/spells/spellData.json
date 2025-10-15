@@ -239,30 +239,30 @@
   },
   "SHADOW_BOLT": {
     "name": "Shadow Bolt",
-    "description": "Dark projectile with white edges, slower but more powerful than fireball",
+    "description": "Slow-moving spinning triangle of dark projectiles that persist and pierce many enemies",
     "category": "shadow",
     "targeting": "none",
     "base": {
-      "damage": 20,
-      "speed": 15,
-      "pierce": 2,
-      "projectileCount": 1,
+      "damage": 25,
+      "speed": 2.5,
+      "pierce": 12,
+      "projectileCount": 3,
       "spread": 0,
-      "cooldown": 0.35,
+      "cooldown": 5.0,
       "sizeScale": 1.0,
-      "lifetime": 1.0,
-      "maxRange": 20
+      "lifetime": 20.0,
+      "maxRange": 50
     },
     "scaling": {
-      "damage": [20, 26, 34, 45, 60, 80, 110],
-      "speed": [15, 16, 18, 20, 22, 25, 28],
-      "pierce": [2, 3, 4, 5, 6, 8, 10],
-      "projectileCount": [1, 1, 2, 2, 3, 3, 4],
-      "spreadAngle": [0, 0, 3, 3, 4, 4, 5],
-      "cooldown": [0.35, 0.32, 0.28, 0.24, 0.20, 0.16, 0.12],
+      "damage": [25, 35, 50, 70, 100, 140, 200],
+      "speed": [2.5, 2.5, 2.5, 2.5, 2.5, 2.5, 2.5],
+      "pierce": [12, 14, 16, 19, 23, 28, 35],
+      "projectileCount": [3, 3, 3, 3, 3, 3, 3],
+      "spreadAngle": [0, 0, 0, 0, 0, 0, 0],
+      "cooldown": [5.0, 4.8, 4.5, 4.2, 3.8, 3.4, 3.0],
       "sizeScale": [1.0, 1.1, 1.2, 1.35, 1.5, 1.7, 2.0],
-      "lifetime": [1.0, 1.1, 1.2, 1.4, 1.6, 1.9, 2.2],
-      "maxRange": [20, 22, 24, 26, 28, 30, 35]
+      "lifetime": [20.0, 22.0, 24.0, 27.0, 30.0, 35.0, 40.0],
+      "maxRange": [50, 55, 60, 65, 70, 80, 100]
     }
   },
   "SKULL_SHIELD": {

@@ -112,7 +112,9 @@ export class IceLance extends Projectile {
     if (!this.active) return;
 
     this.age += dt;
-    if (this.age > this.lifetime) {
+
+    // Check expiration timestamp (works even when not updated due to frustum culling)
+    if (this.engine.time >= this.expiresAt) {
       this.destroy();
       return;
     }
@@ -238,6 +240,9 @@ export class IceLance extends Projectile {
     this.shardSpawnTimer = 0;
     this.active = true;
     this.shouldRemove = false;
+
+    // Reset expiration timestamp
+    this.expiresAt = engine.time + this.lifetime;
 
     // Show and position mesh
     if (this.mesh) {
