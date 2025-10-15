@@ -5,33 +5,37 @@ export class ShadowProjectile extends Projectile {
   constructor(engine, x, y, z, dirX, dirZ, weapon, stats, dirY = 0) {
     super(engine, x, y, z, dirX, dirZ, weapon, stats, dirY);
 
-    this.trails = [];
+    this.trails = []; // Track particle data for cleanup
     this.trailSpawnTimer = 0;
-    this.trailSpawnInterval = 0.04;
+    this.trailSpawnInterval = 0.02; // Spawn more frequently for denser trail
     this.hitEntities = new Set();
     this.pierceCount = 0;
+
+    // Get particle pool for shadow trails
+    this.shadowTrailPool = engine.getInstancedParticlePool('shadow');
   }
 
   createMesh() {
-    // Create shadow bolt sprite with black center and white edges
+    // Create shadow bolt sprite with fuzzy appearance
     const canvas = document.createElement('canvas');
     canvas.width = 64;
     canvas.height = 64;
     const ctx = canvas.getContext('2d');
 
-    // Outer white glow
-    const outerGradient = ctx.createRadialGradient(32, 32, 20, 32, 32, 32);
+    // Outer fuzzy white glow (softer, wider)
+    const outerGradient = ctx.createRadialGradient(32, 32, 10, 32, 32, 32);
     outerGradient.addColorStop(0, 'rgba(255, 255, 255, 0)');
-    outerGradient.addColorStop(0.6, 'rgba(255, 255, 255, 0.8)');
-    outerGradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+    outerGradient.addColorStop(0.4, 'rgba(200, 200, 200, 0.5)');
+    outerGradient.addColorStop(0.7, 'rgba(150, 150, 150, 0.3)');
+    outerGradient.addColorStop(1, 'rgba(100, 100, 100, 0)');
     ctx.fillStyle = outerGradient;
     ctx.fillRect(0, 0, 64, 64);
 
-    // Dark purple-black core
-    const innerGradient = ctx.createRadialGradient(32, 32, 5, 32, 32, 18);
-    innerGradient.addColorStop(0, 'rgba(40, 0, 60, 1)');
-    innerGradient.addColorStop(0.5, 'rgba(20, 0, 30, 0.9)');
-    innerGradient.addColorStop(1, 'rgba(0, 0, 0, 0.3)');
+    // Dark purple-black core (softer edges for fuzzy look)
+    const innerGradient = ctx.createRadialGradient(32, 32, 3, 32, 32, 15);
+    innerGradient.addColorStop(0, 'rgba(40, 0, 60, 0.9)');
+    innerGradient.addColorStop(0.5, 'rgba(20, 0, 30, 0.6)');
+    innerGradient.addColorStop(1, 'rgba(0, 0, 0, 0.1)');
     ctx.fillStyle = innerGradient;
     ctx.fillRect(0, 0, 64, 64);
 
@@ -43,8 +47,8 @@ export class ShadowProjectile extends Projectile {
     });
     const sprite = new THREE.Sprite(material);
 
-    // Use spell level size scaling
-    const scale = 1.0 * (this.weapon?.sizeScale || 1.0);
+    // Smaller size for the main bolt
+    const scale = 0.7 * (this.weapon?.sizeScale || 1.0);
     sprite.scale.set(scale, scale, 1);
     sprite.renderOrder = 999;
 
@@ -52,55 +56,42 @@ export class ShadowProjectile extends Projectile {
   }
 
   createShadowTrail() {
-    // Create trailing shadow particles
-    const canvas = document.createElement('canvas');
-    canvas.width = 32;
-    canvas.height = 32;
-    const ctx = canvas.getContext('2d');
-
-    // White wispy edge
-    const outerGradient = ctx.createRadialGradient(16, 16, 8, 16, 16, 16);
-    outerGradient.addColorStop(0, 'rgba(200, 200, 200, 0)');
-    outerGradient.addColorStop(0.5, 'rgba(150, 150, 150, 0.5)');
-    outerGradient.addColorStop(1, 'rgba(100, 100, 100, 0)');
-    ctx.fillStyle = outerGradient;
-    ctx.fillRect(0, 0, 32, 32);
-
-    // Dark center
-    const innerGradient = ctx.createRadialGradient(16, 16, 2, 16, 16, 8);
-    innerGradient.addColorStop(0, 'rgba(30, 0, 45, 0.8)');
-    innerGradient.addColorStop(1, 'rgba(0, 0, 0, 0.2)');
-    ctx.fillStyle = innerGradient;
-    ctx.fillRect(0, 0, 32, 32);
-
-    const texture = new THREE.CanvasTexture(canvas);
-    const material = new THREE.SpriteMaterial({
-      map: texture,
-      transparent: true,
-      blending: THREE.AdditiveBlending
-    });
-    const sprite = new THREE.Sprite(material);
-    sprite.scale.set(0.6, 0.6, 1);
-    sprite.renderOrder = 998;
+    // Choose shadow color variant (dark purple/gray tones)
+    const colorChoice = Math.random();
+    let color;
+    if (colorChoice < 0.3) {
+      color = 0x1e002d; // Dark purple
+    } else if (colorChoice < 0.7) {
+      color = 0x444444; // Gray
+    } else {
+      color = 0x888888; // Light gray
+    }
 
     // Random offset from projectile path
     const offsetX = (Math.random() - 0.5) * 0.4;
     const offsetZ = (Math.random() - 0.5) * 0.4;
 
-    sprite.position.set(
+    // Spawn particle using instanced pool
+    const particle = this.shadowTrailPool.spawn(
       this.x + offsetX,
       this.y + (Math.random() - 0.5) * 0.3,
-      this.z + offsetZ
+      this.z + offsetZ,
+      {
+        life: 0.4,
+        scale: 2.0, // Even bigger particles for more visible trail
+        velocity: { x: 0, y: Math.random() * 0.3 + 0.1, z: 0 },
+        color: color,
+        fadeOut: true,
+        shrink: true,
+        gravity: 0
+      }
     );
 
-    this.engine.scene.add(sprite);
-
-    return {
-      sprite: sprite,
-      life: 0.4,
-      age: 0,
-      velocityY: Math.random() * 0.3 + 0.1
-    };
+    // Store particle reference for cleanup if needed
+    if (particle) {
+      return { particle, age: 0, life: 0.4 };
+    }
+    return null;
   }
 
   update(dt) {
@@ -112,40 +103,49 @@ export class ShadowProjectile extends Projectile {
       return;
     }
 
-    this.x += this.dirX * this.speed * dt;
-    this.y += this.dirY * this.speed * dt;
-    this.z += this.dirZ * this.speed * dt;
+    // Only update position if not managed by group
+    if (!this.managedByGroup) {
+      this.x += this.dirX * this.speed * dt;
+      this.y += this.dirY * this.speed * dt;
+      this.z += this.dirZ * this.speed * dt;
 
-    this.mesh.position.x = this.x;
-    this.mesh.position.y = this.y;
-    this.mesh.position.z = this.z;
+      this.mesh.position.x = this.x;
+      this.mesh.position.y = this.y;
+      this.mesh.position.z = this.z;
+    }
 
     // Spawn shadow trail
     this.trailSpawnTimer += dt;
     if (this.trailSpawnTimer >= this.trailSpawnInterval) {
       this.trailSpawnTimer = 0;
-      this.trails.push(this.createShadowTrail());
+      const trail = this.createShadowTrail();
+      if (trail) {
+        this.trails.push(trail);
+      }
     }
 
-    // Update trail particles
+    // Update trail particles - they're auto-updated by the pool,
+    // just track for cleanup
     for (let i = this.trails.length - 1; i >= 0; i--) {
       const trail = this.trails[i];
       trail.age += dt;
 
       if (trail.age > trail.life) {
-        this.engine.scene.remove(trail.sprite);
-        trail.sprite.material.map.dispose();
-        trail.sprite.material.dispose();
+        // Particle will be auto-removed by pool, just remove from our tracking
         this.trails.splice(i, 1);
-      } else {
-        // Drift and fade
-        trail.sprite.position.y += trail.velocityY * dt;
-        trail.sprite.material.opacity = 1 - (trail.age / trail.life);
-        trail.sprite.scale.multiplyScalar(1 - dt * 0.3);
       }
     }
 
-    // Collision detection
+    // Collision detection (unless managed by group)
+    if (!this.managedByGroup) {
+      this.checkCollisions();
+    }
+  }
+
+  /**
+   * Check collisions - can be called by ShadowBoltGroup or from update
+   */
+  checkCollisions() {
     this.engine.entities.forEach(entity => {
       if (!entity.active || entity.health === undefined || this.hitEntities.has(entity)) return;
       if (entity === this.engine.game?.player) return;
@@ -176,14 +176,7 @@ export class ShadowProjectile extends Projectile {
    * Clean up shadow trails for pool reuse (without destroying the projectile)
    */
   cleanupForPool() {
-    // Clean up trail particles
-    this.trails.forEach(trail => {
-      this.engine.scene.remove(trail.sprite);
-      if (trail.sprite.material.map) {
-        trail.sprite.material.map.dispose();
-      }
-      trail.sprite.material.dispose();
-    });
+    // Shadow trail particles are managed by the instanced pool, just clear our tracking
     this.trails = [];
   }
 
@@ -203,6 +196,9 @@ export class ShadowProjectile extends Projectile {
     this.dirY = dirY;
     this.dirZ = dirZ;
     this.weapon = weapon;
+
+    // Reinitialize particle pool reference
+    this.shadowTrailPool = engine.getInstancedParticlePool('shadow');
 
     // Calculate damage with crit
     const critChance = weapon.critChance || 0;
@@ -232,21 +228,14 @@ export class ShadowProjectile extends Projectile {
     if (this.mesh) {
       this.mesh.visible = true;
       this.mesh.position.set(x, y, z);
-      // Update size scaling if it changed
-      const scale = 1.0 * (weapon?.sizeScale || 1.0);
+      // Update size scaling if it changed (smaller size for fuzzy look)
+      const scale = 0.7 * (weapon?.sizeScale || 1.0);
       this.mesh.scale.set(scale, scale, 1);
     }
   }
 
   destroy() {
-    // Clean up trail particles
-    this.trails.forEach(trail => {
-      this.engine.scene.remove(trail.sprite);
-      if (trail.sprite.material.map) {
-        trail.sprite.material.map.dispose();
-      }
-      trail.sprite.material.dispose();
-    });
+    // Shadow trail particles are managed by the instanced pool, just clear our tracking
     this.trails = [];
 
     super.destroy();

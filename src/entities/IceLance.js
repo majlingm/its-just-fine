@@ -5,11 +5,14 @@ import { resourceCache } from '../systems/ResourceCache.js';
 export class IceLance extends Projectile {
   constructor(engine, x, y, z, dirX, dirZ, weapon, stats, dirY = 0) {
     super(engine, x, y, z, dirX, dirZ, weapon, stats, dirY);
-    this.iceShards = [];
+    this.iceShards = []; // Track particle data for cleanup
     this.shardSpawnTimer = 0;
     this.shardSpawnInterval = 0.04;
     this.hitEntities = new Set();
     this.pierceCount = 0;
+
+    // Get particle pool for ice shards
+    this.iceShardPool = engine.getInstancedParticlePool('ice');
   }
 
   createMesh() {
@@ -67,41 +70,42 @@ export class IceLance extends Projectile {
   }
 
   createIceShard() {
-    // Use cached ice shard materials
+    // Choose ice shard color variant
     const colorChoice = Math.random();
-    let colorType;
+    let color;
     if (colorChoice < 0.3) {
-      colorType = 'white';
+      color = 0xffffff; // White
     } else if (colorChoice < 0.7) {
-      colorType = 'lightblue';
+      color = 0xaaddff; // Light blue
     } else {
-      colorType = 'cyan';
+      color = 0x88ddff; // Cyan
     }
-
-    // Get cached material (cloned so we can modify opacity independently)
-    const material = resourceCache.getIceShardMaterial(colorType);
-    const sprite = new THREE.Sprite(material);
-    sprite.scale.set(0.3, 0.3, 1);
-    sprite.renderOrder = 998;
 
     // Random offset from projectile path
     const offsetX = (Math.random() - 0.5) * 0.2;
     const offsetZ = (Math.random() - 0.5) * 0.2;
 
-    sprite.position.set(
+    // Spawn particle using instanced pool
+    const particle = this.iceShardPool.spawn(
       this.x + offsetX,
       this.y + (Math.random() - 0.5) * 0.1,
-      this.z + offsetZ
+      this.z + offsetZ,
+      {
+        life: 0.25,
+        scale: 0.3,
+        velocity: { x: 0, y: (Math.random() - 0.5) * 0.3, z: 0 },
+        color: color,
+        fadeOut: true,
+        shrink: true,
+        gravity: 0
+      }
     );
 
-    this.engine.scene.add(sprite);
-
-    return {
-      sprite: sprite,
-      life: 0.25,
-      age: 0,
-      velocityY: (Math.random() - 0.5) * 0.3
-    };
+    // Store particle reference for cleanup if needed
+    if (particle) {
+      return { particle, age: 0, life: 0.25 };
+    }
+    return null;
   }
 
   update(dt) {
@@ -132,22 +136,21 @@ export class IceLance extends Projectile {
     this.shardSpawnTimer += dt;
     if (this.shardSpawnTimer >= this.shardSpawnInterval) {
       this.shardSpawnTimer = 0;
-      this.iceShards.push(this.createIceShard());
+      const shard = this.createIceShard();
+      if (shard) {
+        this.iceShards.push(shard);
+      }
     }
 
-    // Update ice shard particles
+    // Update ice shard particles - they're auto-updated by the pool,
+    // just track for cleanup
     for (let i = this.iceShards.length - 1; i >= 0; i--) {
       const shard = this.iceShards[i];
       shard.age += dt;
 
       if (shard.age > shard.life) {
-        this.engine.scene.remove(shard.sprite);
+        // Particle will be auto-removed by pool, just remove from our tracking
         this.iceShards.splice(i, 1);
-      } else {
-        // Drift and fade
-        shard.sprite.position.y += shard.velocityY * dt;
-        shard.sprite.material.opacity = 1 - (shard.age / shard.life);
-        shard.sprite.scale.multiplyScalar(1 - dt * 0.3);
       }
     }
 
@@ -188,10 +191,7 @@ export class IceLance extends Projectile {
    * Clean up ice shards for pool reuse (without destroying the projectile)
    */
   cleanupForPool() {
-    // Clean up ice shard particles
-    this.iceShards.forEach(shard => {
-      this.engine.scene.remove(shard.sprite);
-    });
+    // Ice shard particles are managed by the instanced pool, just clear our tracking
     this.iceShards = [];
   }
 
@@ -211,6 +211,9 @@ export class IceLance extends Projectile {
     this.dirY = dirY;
     this.dirZ = dirZ;
     this.weapon = weapon;
+
+    // Reinitialize particle pool reference
+    this.iceShardPool = engine.getInstancedParticlePool('ice');
 
     // Calculate damage with crit
     const critChance = weapon.critChance || 0;
@@ -251,10 +254,7 @@ export class IceLance extends Projectile {
   }
 
   destroy() {
-    // Clean up ice shard particles
-    this.iceShards.forEach(shard => {
-      this.engine.scene.remove(shard.sprite);
-    });
+    // Ice shard particles are managed by the instanced pool, just clear our tracking
     this.iceShards = [];
 
     super.destroy();

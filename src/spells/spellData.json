@@ -241,7 +241,7 @@
     "name": "Shadow Bolt",
     "description": "Dark projectile with white edges, slower but more powerful than fireball",
     "category": "shadow",
-    "targeting": "nearest",
+    "targeting": "none",
     "base": {
       "damage": 20,
       "speed": 15,
