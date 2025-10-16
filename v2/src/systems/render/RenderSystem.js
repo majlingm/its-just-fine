@@ -292,6 +292,16 @@ export class RenderSystem extends ComponentSystem {
   }
 
   /**
+   * Create a GLTF model mesh synchronously (for pre-loading before entity is added)
+   * @param {Entity} entity - Entity to create mesh for
+   * @param {Transform} transform - Transform component
+   * @param {Renderable} renderable - Renderable component
+   */
+  async createGLTFMeshSync(entity, transform, renderable) {
+    return this.createGLTFMesh(entity, transform, renderable);
+  }
+
+  /**
    * Create a GLTF model mesh
    * @param {Entity} entity - Entity to create mesh for
    * @param {Transform} transform - Transform component
@@ -309,8 +319,17 @@ export class RenderSystem extends ComponentSystem {
     this.loadingModels.add(entity.id);
 
     try {
-      // Load and clone the model
-      const modelScene = await modelLoader.clone(modelPath);
+      // For player, use the original scene directly (no cloning needed since there's only one)
+      // For enemies/other entities, clone using SkeletonUtils for proper deep cloning
+      let modelScene, animations;
+      if (renderable.modelType === 'player') {
+        const gltf = await modelLoader.load(modelPath);
+        modelScene = gltf.scene;
+        animations = gltf.animations;
+      } else {
+        modelScene = await modelLoader.clone(modelPath);
+        // TODO: Clone animations for enemies if needed
+      }
 
       // Check if entity still exists (might have been removed while loading)
       if (!entity.active) {
@@ -318,57 +337,39 @@ export class RenderSystem extends ComponentSystem {
         return;
       }
 
-      // IMPORTANT: Player model has internal 0.01 scale, compensate by scaling up 100x
-      const modelScale = renderable.modelType === 'player' ? 100 : 1;
+      // Player model scale
+      const modelScale = renderable.modelType === 'player' ? 1 : 1;
+
+      // Store model scale in renderable component so it persists during sync
+      renderable.modelScale = modelScale;
 
       // Set initial transform
       modelScene.position.set(transform.x, transform.y, transform.z);
-      modelScene.rotation.set(transform.rotationX, transform.rotationY, transform.rotationZ);
       modelScene.scale.set(transform.scaleX * modelScale, transform.scaleY * modelScale, transform.scaleZ * modelScale);
 
-      // Apply material settings to all meshes in the model
+      // Set initial rotation from transform
+      modelScene.rotation.set(transform.rotationX, transform.rotationY, transform.rotationZ);
+
+      // Apply shadow settings to all meshes in the model
       modelScene.traverse((child) => {
         if (child.isMesh) {
           child.castShadow = renderable.castShadow;
           child.receiveShadow = renderable.receiveShadow;
-
-          // Convert MeshBasicMaterial to MeshStandardMaterial for proper lighting
-          if (child.material) {
-            const materials = Array.isArray(child.material) ? child.material : [child.material];
-
-            materials.forEach((mat, index) => {
-              // Only convert if it's MeshBasicMaterial
-              if (mat.type === 'MeshBasicMaterial') {
-                const newMat = new THREE.MeshStandardMaterial({
-                  map: mat.map,
-                  color: renderable.color !== 0xffffff ? renderable.color : mat.color,
-                  emissive: renderable.emissive || 0x000000,
-                  metalness: renderable.metalness || 0.1,
-                  roughness: renderable.roughness || 0.8,
-                  transparent: mat.transparent,
-                  opacity: mat.opacity,
-                  side: mat.side,
-                  alphaTest: mat.alphaTest
-                });
-
-                if (Array.isArray(child.material)) {
-                  child.material[index] = newMat;
-                } else {
-                  child.material = newMat;
-                }
-              } else {
-                // Just apply color tint if specified
-                if (renderable.color !== 0xffffff) {
-                  mat.color.setHex(renderable.color);
-                }
-              }
-            });
-          }
         }
       });
 
       // Store mesh reference in component
       renderable.mesh = modelScene;
+
+      // Set up animations if they exist
+      if (animations && animations.length > 0) {
+        const animationComponent = entity.getComponent('Animation');
+        if (animationComponent) {
+          const mixer = new THREE.AnimationMixer(modelScene);
+          animationComponent.setAnimations(mixer, animations);
+          console.log(`✅ Loaded ${animations.length} animations for ${renderable.modelType}`);
+        }
+      }
 
       // Cache mesh
       this.meshCache.set(entity.id, modelScene);
@@ -395,11 +396,12 @@ export class RenderSystem extends ComponentSystem {
     // Update position
     mesh.position.set(transform.x, transform.y, transform.z);
 
-    // Update rotation
+    // Update rotation directly from transform
     mesh.rotation.set(transform.rotationX, transform.rotationY, transform.rotationZ);
 
-    // Update scale
-    mesh.scale.set(transform.scaleX, transform.scaleY, transform.scaleZ);
+    // Update scale (apply model scale multiplier to preserve GLTF model scaling)
+    const modelScale = renderable.modelScale || 1;
+    mesh.scale.set(transform.scaleX * modelScale, transform.scaleY * modelScale, transform.scaleZ * modelScale);
 
     // Update material properties if changed (only for standard materials, not shader materials)
     if (mesh.material && renderable.modelType !== 'shader') {

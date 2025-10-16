@@ -96,12 +96,12 @@ export const CameraConfig = {
     near: 0.1,
     far: 1000,
 
-    distance: 3,  // Close camera for clear player visibility
+    distance: 6,  // Zoomed out for better view
     horizontalAngle: 0,
     verticalAngle: Math.PI / 6, // ~30° angle
 
-    heightMultiplier: 1.0,   // Camera height = distance * 1.0 = 3
-    radiusMultiplier: 1.0,   // Horizontal offset = distance * 1.0 = 3
+    heightMultiplier: 1.0,   // Camera height = distance * 1.0 = 6
+    radiusMultiplier: 1.0,   // Horizontal offset = distance * 1.0 = 6
 
     follow: {
       enabled: true,
@@ -112,7 +112,7 @@ export const CameraConfig = {
 
     deviceOverrides: {
       desktop: {
-        distance: 3,
+        distance: 6,
         heightMultiplier: 1.0,
         radiusMultiplier: 1.0
       },

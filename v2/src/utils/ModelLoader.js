@@ -1,4 +1,5 @@
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import * as SkeletonUtils from 'three/examples/jsm/utils/SkeletonUtils.js';
 
 /**
  * ModelLoader - Centralized model loading with caching
@@ -52,13 +53,15 @@ export class ModelLoader {
   }
 
   /**
-   * Clone a loaded model's scene
+   * Clone a loaded model's scene with proper deep cloning
+   * Uses SkeletonUtils to properly clone skeletal animations and hierarchies
    * @param {string} path - Path to the model
-   * @returns {Promise<Object3D>} Cloned scene
+   * @returns {Promise<Object3D>} Deep cloned scene
    */
   async clone(path) {
     const gltf = await this.load(path);
-    return gltf.scene.clone();
+    // Use SkeletonUtils for proper deep cloning that preserves skeletal animations
+    return SkeletonUtils.clone(gltf.scene);
   }
 
   /**

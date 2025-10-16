@@ -12,6 +12,8 @@ import { Engine } from '../core/engine/Engine.js';
 import { Renderer } from '../core/renderer/Renderer.js';
 import { InputManager } from '../core/input/InputManager.js';
 import { FrustumCuller } from '../core/renderer/FrustumCuller.js';
+import { CameraSystem } from '../core/camera/CameraSystem.js';
+import { CameraController } from './CameraController.js';
 
 // Systems
 import { RenderSystem } from '../systems/render/RenderSystem.js';
@@ -31,6 +33,7 @@ import { AudioSystem } from '../systems/audio/AudioSystem.js';
 import { LevelingSystem } from '../systems/progression/LevelingSystem.js';
 import { PickupSystem } from '../systems/items/PickupSystem.js';
 import { UISystem } from '../systems/ui/UISystem.js';
+import { AnimationSystem } from '../systems/animation/AnimationSystem.js';
 
 // Components
 import { Entity } from '../core/ecs/Entity.js';
@@ -42,6 +45,7 @@ import { Collider } from '../components/Collider.js';
 import { Weapon } from '../components/Weapon.js';
 import { Experience } from '../components/Experience.js';
 import { Pickup } from '../components/Pickup.js';
+import { Animation } from '../components/Animation.js';
 
 // Entity Factory
 import { entityFactory } from '../systems/entity/EntityFactory.js';
@@ -59,6 +63,8 @@ export class ItsJustFine {
     this.renderer = new Renderer();
     this.input = new InputManager();
     this.frustumCuller = null;
+    this.cameraSystem = null;
+    this.cameraController = null;
 
     // Game systems
     this.renderSystem = null;
@@ -78,6 +84,7 @@ export class ItsJustFine {
     this.levelingSystem = null;
     this.pickupSystem = null;
     this.uiSystem = null;
+    this.animationSystem = null;
 
     // Game state
     this.initialized = false;
@@ -115,6 +122,28 @@ export class ItsJustFine {
     // Initialize frustum culler
     this.frustumCuller = new FrustumCuller(this.renderer.camera);
     console.log('✅ Frustum culler initialized');
+
+    // Initialize camera system (engine-level)
+    this.cameraSystem = new CameraSystem(this.renderer.camera, {
+      horizontalAngle: 0,
+      verticalAngle: 0.5,
+      distance: 6,
+      heightMultiplier: 2.0,
+      radiusMultiplier: 0.5,
+      smoothing: 0.1,
+      verticalMin: 0.1,
+      verticalMax: 0.9,
+      distanceMin: 3,
+      distanceMax: 20
+    });
+
+    // Initialize camera controller (game-level)
+    this.cameraController = new CameraController(this.cameraSystem, this.input, {
+      horizontalSpeed: 2.0,
+      verticalSpeed: 0.5,
+      zoomSpeed: 0.5
+    });
+    console.log('✅ Camera system initialized');
 
     // Setup engine callbacks
     this.engine.onUpdate = (dt) => this.update(dt);
@@ -172,6 +201,9 @@ export class ItsJustFine {
     // UI
     this.uiSystem = new UISystem();
     this.uiSystem.init();
+
+    // Animation
+    this.animationSystem = new AnimationSystem();
 
     // Setup event listeners
     this.setupEventListeners();
@@ -259,7 +291,7 @@ export class ItsJustFine {
 
     // Transform
     const transform = new Transform();
-    transform.init({ x: 0, y: 0, z: 0, scaleX: 1.0, scaleY: 1.0, scaleZ: 1.0, rotationY: Math.PI });
+    transform.init({ x: 0, y: 0, z: 0, scaleX: 1.0, scaleY: 1.0, scaleZ: 1.0, rotationY: 0 });
     player.addComponent(transform);
 
     // Health
@@ -272,7 +304,7 @@ export class ItsJustFine {
     movement.init({ speed: 8, maxSpeed: 12, drag: 0 });
     player.addComponent(movement);
 
-    // Renderable - Load 3D model
+    // Renderable - Let RenderSystem handle model loading
     const renderable = new Renderable();
     renderable.init({
       modelType: 'player',
@@ -325,10 +357,14 @@ export class ItsJustFine {
     });
     player.addComponent(experience);
 
+    // Animation - will be set up by RenderSystem when model loads
+    const animation = new Animation();
+    player.addComponent(animation);
+
     // Tag as player
     player.addTag('player');
 
-    // Add to engine
+    // Add to engine AFTER model is loaded
     this.engine.addEntity(player);
     this.player = player;
 
@@ -438,13 +474,20 @@ export class ItsJustFine {
     if (this.player) {
       const playerTransform = this.player.getComponent('Transform');
       if (playerTransform) {
-        this.renderer.followTarget({
+        // Set camera target to player position
+        this.cameraSystem.setTarget({
           x: playerTransform.x,
           y: playerTransform.y,
           z: playerTransform.z
         });
       }
     }
+
+    // Update camera controller (handles input)
+    this.cameraController.update(dt);
+
+    // Update camera system (calculates and applies position)
+    this.cameraSystem.updateCameraPosition(dt);
 
     // Update current game mode
     if (this.currentMode && this.gameState === 'playing') {
@@ -465,6 +508,7 @@ export class ItsJustFine {
     this.movementSystem.update(dt, this.engine.entities);
     this.collisionSystem.update(dt, this.engine.entities);
     this.damageSystem.update(dt, this.engine.entities);
+    this.animationSystem.update(dt, this.engine.entities);
     this.renderSystem.update(dt, this.engine.entities);
     this.audioSystem.update(dt, { player: this.player });
     this.levelingSystem.update(dt, this.engine.entities);
