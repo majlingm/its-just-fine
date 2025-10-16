@@ -19,6 +19,9 @@
 import { ComponentSystem } from '../../core/ecs/ComponentSystem.js';
 import { ResourceCache } from '../../core/pooling/ResourceCache.js';
 import { OptimizationConfig } from '../../config/optimization.js';
+import { createShadowSilhouetteMaterial } from '../../shaders/ShadowSilhouetteShader.js';
+import { modelLoader } from '../../utils/ModelLoader.js';
+import { getModelPath, usesGLTFModel } from '../../config/modelMappings.js';
 import * as THREE from 'three';
 
 export class RenderSystem extends ComponentSystem {
@@ -30,6 +33,7 @@ export class RenderSystem extends ComponentSystem {
 
     // Track which entities have meshes created
     this.meshCache = new Map(); // entityId -> mesh
+    this.loadingModels = new Set(); // entityIds currently loading models
   }
 
   /**
@@ -71,8 +75,8 @@ export class RenderSystem extends ComponentSystem {
       // Skip if renderable is disabled
       if (!renderable.enabled) continue;
 
-      // Create mesh if it doesn't exist
-      if (!renderable.mesh && !this.meshCache.has(entity.id)) {
+      // Create mesh if it doesn't exist (and not currently loading)
+      if (!renderable.mesh && !this.meshCache.has(entity.id) && !this.loadingModels.has(entity.id)) {
         this.createMesh(entity, transform, renderable);
       }
 
@@ -89,7 +93,13 @@ export class RenderSystem extends ComponentSystem {
    * @param {Transform} transform - Transform component
    * @param {Renderable} renderable - Renderable component
    */
-  createMesh(entity, transform, renderable) {
+  async createMesh(entity, transform, renderable) {
+    // Check if this model type uses a GLTF model
+    if (usesGLTFModel(renderable.modelType)) {
+      await this.createGLTFMesh(entity, transform, renderable);
+      return;
+    }
+
     let geometry;
 
     // Use ResourceCache if enabled, otherwise create directly
@@ -173,6 +183,24 @@ export class RenderSystem extends ComponentSystem {
         }
         break;
 
+      case 'shader':
+        // Shader-based enemies (shadow/light types) - will be handled specially below
+        // Use plane geometry for shader enemies
+        if (renderable.shaderConfig) {
+          const config = renderable.shaderConfig;
+          const segments = 64; // Match v1's segment count
+          geometry = new THREE.PlaneGeometry(
+            config.width || 2.5,
+            config.height || 4.0,
+            segments,
+            segments
+          );
+        } else {
+          console.warn(`Entity ${entity.id}: shader modelType but no shaderConfig provided`);
+          geometry = new THREE.PlaneGeometry(2.5, 4.0, 64, 64);
+        }
+        break;
+
       default:
         console.warn(`Entity ${entity.id}: unknown modelType "${renderable.modelType}", using sphere`);
         geometry = useCache ?
@@ -180,25 +208,50 @@ export class RenderSystem extends ComponentSystem {
           new THREE.SphereGeometry(0.5, 16, 16);
     }
 
-    // Get cached material or create new one
-    const materialKey = `${renderable.modelType}_${renderable.color}_${renderable.emissive}`;
-    const material = useCache ?
-      ResourceCache.getMaterial(materialKey, {
-        color: renderable.color,
-        emissive: renderable.emissive,
-        metalness: renderable.metalness,
-        roughness: renderable.roughness,
-        transparent: renderable.transparent,
-        opacity: renderable.opacity
-      }) :
-      new THREE.MeshStandardMaterial({
-        color: renderable.color,
-        emissive: renderable.emissive,
-        metalness: renderable.metalness,
-        roughness: renderable.roughness,
-        transparent: renderable.transparent,
-        opacity: renderable.opacity
-      });
+    // Create material based on model type
+    let material;
+
+    if (renderable.modelType === 'shader' && renderable.shaderConfig) {
+      // Create shader material for shadow/light enemies
+      const config = renderable.shaderConfig;
+      const fuzzyAmount = 0.6; // Default fuzzy amount
+
+      material = createShadowSilhouetteMaterial(
+        config.eyeColor,
+        fuzzyAmount,
+        config.eyeSize,
+        config.flowSpeed,
+        config.flowAmp,
+        config.waveCount,
+        config.waveType,
+        config.shapeType,
+        config.baseColor,
+        config.gradientColor,
+        config.isCrawler || false,
+        config.outlineColor,
+        config.outlineWidth
+      );
+    } else {
+      // Get cached material or create new one
+      const materialKey = `${renderable.modelType}_${renderable.color}_${renderable.emissive}`;
+      material = useCache ?
+        ResourceCache.getMaterial(materialKey, {
+          color: renderable.color,
+          emissive: renderable.emissive,
+          metalness: renderable.metalness,
+          roughness: renderable.roughness,
+          transparent: renderable.transparent,
+          opacity: renderable.opacity
+        }) :
+        new THREE.MeshStandardMaterial({
+          color: renderable.color,
+          emissive: renderable.emissive,
+          metalness: renderable.metalness,
+          roughness: renderable.roughness,
+          transparent: renderable.transparent,
+          opacity: renderable.opacity
+        });
+    }
 
     // Create mesh
     const mesh = new THREE.Mesh(geometry, material);
@@ -215,6 +268,19 @@ export class RenderSystem extends ComponentSystem {
     mesh.rotation.set(transform.rotationX, transform.rotationY, transform.rotationZ);
     mesh.scale.set(transform.scaleX, transform.scaleY, transform.scaleZ);
 
+    // Special handling for shader-based enemies
+    if (renderable.modelType === 'shader' && renderable.shaderConfig) {
+      const config = renderable.shaderConfig;
+      // Position at correct height (half of height for standing, close to ground for crawlers)
+      if (config.isCrawler) {
+        mesh.position.y = config.height / 2;
+        mesh.rotation.x = -Math.PI / 2; // Lay flat on ground
+      } else {
+        mesh.position.y = config.height / 2;
+        // Standing enemies will be billboarded in syncMesh
+      }
+    }
+
     // Store mesh reference in component
     renderable.mesh = mesh;
 
@@ -223,6 +289,98 @@ export class RenderSystem extends ComponentSystem {
 
     // Add to scene
     this.renderer.addToScene(mesh);
+  }
+
+  /**
+   * Create a GLTF model mesh
+   * @param {Entity} entity - Entity to create mesh for
+   * @param {Transform} transform - Transform component
+   * @param {Renderable} renderable - Renderable component
+   */
+  async createGLTFMesh(entity, transform, renderable) {
+    const modelPath = getModelPath(renderable.modelType);
+
+    if (!modelPath) {
+      console.warn(`No model path found for modelType: ${renderable.modelType}`);
+      return;
+    }
+
+    // Mark entity as loading
+    this.loadingModels.add(entity.id);
+
+    try {
+      // Load and clone the model
+      const modelScene = await modelLoader.clone(modelPath);
+
+      // Check if entity still exists (might have been removed while loading)
+      if (!entity.active) {
+        this.loadingModels.delete(entity.id);
+        return;
+      }
+
+      // IMPORTANT: Player model has internal 0.01 scale, compensate by scaling up 100x
+      const modelScale = renderable.modelType === 'player' ? 100 : 1;
+
+      // Set initial transform
+      modelScene.position.set(transform.x, transform.y, transform.z);
+      modelScene.rotation.set(transform.rotationX, transform.rotationY, transform.rotationZ);
+      modelScene.scale.set(transform.scaleX * modelScale, transform.scaleY * modelScale, transform.scaleZ * modelScale);
+
+      // Apply material settings to all meshes in the model
+      modelScene.traverse((child) => {
+        if (child.isMesh) {
+          child.castShadow = renderable.castShadow;
+          child.receiveShadow = renderable.receiveShadow;
+
+          // Convert MeshBasicMaterial to MeshStandardMaterial for proper lighting
+          if (child.material) {
+            const materials = Array.isArray(child.material) ? child.material : [child.material];
+
+            materials.forEach((mat, index) => {
+              // Only convert if it's MeshBasicMaterial
+              if (mat.type === 'MeshBasicMaterial') {
+                const newMat = new THREE.MeshStandardMaterial({
+                  map: mat.map,
+                  color: renderable.color !== 0xffffff ? renderable.color : mat.color,
+                  emissive: renderable.emissive || 0x000000,
+                  metalness: renderable.metalness || 0.1,
+                  roughness: renderable.roughness || 0.8,
+                  transparent: mat.transparent,
+                  opacity: mat.opacity,
+                  side: mat.side,
+                  alphaTest: mat.alphaTest
+                });
+
+                if (Array.isArray(child.material)) {
+                  child.material[index] = newMat;
+                } else {
+                  child.material = newMat;
+                }
+              } else {
+                // Just apply color tint if specified
+                if (renderable.color !== 0xffffff) {
+                  mat.color.setHex(renderable.color);
+                }
+              }
+            });
+          }
+        }
+      });
+
+      // Store mesh reference in component
+      renderable.mesh = modelScene;
+
+      // Cache mesh
+      this.meshCache.set(entity.id, modelScene);
+
+      // Add to scene
+      this.renderer.addToScene(modelScene);
+
+    } catch (error) {
+      console.error(`Failed to load model for entity ${entity.id}:`, error);
+    } finally {
+      this.loadingModels.delete(entity.id);
+    }
   }
 
   /**
@@ -243,8 +401,8 @@ export class RenderSystem extends ComponentSystem {
     // Update scale
     mesh.scale.set(transform.scaleX, transform.scaleY, transform.scaleZ);
 
-    // Update material properties if changed
-    if (mesh.material) {
+    // Update material properties if changed (only for standard materials, not shader materials)
+    if (mesh.material && renderable.modelType !== 'shader') {
       mesh.material.color.setHex(renderable.color);
       mesh.material.emissive.setHex(renderable.emissive);
       mesh.material.metalness = renderable.metalness;
@@ -262,6 +420,21 @@ export class RenderSystem extends ComponentSystem {
 
     // Update render order
     mesh.renderOrder = renderable.renderOrder;
+
+    // Special handling for shader-based enemies
+    if (renderable.modelType === 'shader' && renderable.shaderConfig) {
+      const config = renderable.shaderConfig;
+
+      // Update shader time uniform for animation
+      if (mesh.material.uniforms && mesh.material.uniforms.time) {
+        mesh.material.uniforms.time.value = performance.now() * 0.001;
+      }
+
+      // Billboard behavior for non-crawler enemies (make them face the camera)
+      if (!config.isCrawler && this.renderer.camera) {
+        mesh.lookAt(this.renderer.camera.position);
+      }
+    }
   }
 
   /**

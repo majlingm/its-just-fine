@@ -1,0 +1,417 @@
+{
+  "$schema": "./levels.schema.json",
+  "levels": {
+    "survival": {
+      "id": "survival",
+      "name": "Survive!",
+      "description": "Endless waves of increasingly difficult enemies",
+      "mode": "survival",
+      "groundType": "void",
+      "music": "/assets/music/risinginferno.mp3",
+      "lighting": {
+        "background": "0x87ceeb",
+        "ambient": {
+          "color": "0xffffff",
+          "intensity": 0.8
+        },
+        "sun": {
+          "color": "0xffffff",
+          "intensity": 1.2,
+          "position": { "x": 20, "y": 40, "z": 15 }
+        },
+        "fill": {
+          "color": "0xccccff",
+          "intensity": 0.5
+        },
+        "hemisphere": {
+          "sky": "0xaaccff",
+          "ground": "0x888888",
+          "intensity": 0.7
+        }
+      },
+      "spawnBoundaries": {
+        "minX": -100,
+        "maxX": 100,
+        "minZ": -100,
+        "maxZ": 100
+      },
+      "waves": [
+        {
+          "enemyCount": 40,
+          "spawnInterval": 1.0,
+          "spawnBatchSize": 5,
+          "groupSpawnChance": 0.7,
+          "enemyTypes": [
+            { "type": "shadow", "weight": 3 },
+            { "type": "shadow_lurker", "weight": 5 },
+            { "type": "shadow_titan", "weight": 1 },
+            { "type": "shadow_wraith", "weight": 4 },
+            { "type": "shadow_colossus", "weight": 2 },
+            { "type": "shadow_flicker", "weight": 6 },
+            { "type": "shadow_void", "weight": 2 },
+            { "type": "light", "weight": 3 },
+            { "type": "light_lurker", "weight": 5 },
+            { "type": "light_titan", "weight": 1 },
+            { "type": "light_wraith", "weight": 4 },
+            { "type": "light_colossus", "weight": 2 },
+            { "type": "light_flicker", "weight": 6 },
+            { "type": "light_void", "weight": 2 }
+          ]
+        }
+      ],
+      "boss": {
+        "type": "zombieLord",
+        "spawnInterval": 7,
+        "health": 3000,
+        "damage": 35,
+        "speed": 2.5
+      },
+      "enemySettings": {
+        "rangedEnemies": ["fast"],
+        "elitesCanShoot": true,
+        "eliteShootChance": 0.6,
+        "shootRange": 12,
+        "shootCooldown": { "min": 3.5, "max": 5.5 },
+        "projectileSpeed": 7,
+        "projectileDamage": 15
+      },
+      "objects": []
+    },
+    "desert_canyon": {
+      "id": "desert_canyon",
+      "name": "Desert Canyon",
+      "description": "A desolate canyon in the heart of the desert",
+      "mode": "waves",
+      "groundType": "desert",
+      "music": "/assets/music/risinginferno.mp3",
+      "lighting": {
+        "background": "0xd4a574",
+        "ambient": {
+          "color": "0xffddaa",
+          "intensity": 0.6
+        },
+        "sun": {
+          "color": "0xfff4e0",
+          "intensity": 1.2,
+          "position": { "x": 20, "y": 40, "z": 15 }
+        },
+        "fill": {
+          "color": "0xff9944",
+          "intensity": 0.3
+        },
+        "hemisphere": {
+          "sky": "0xffffbb",
+          "ground": "0x4a3520",
+          "intensity": 0.5
+        }
+      },
+      "spawnBoundaries": {
+        "minX": -70,
+        "maxX": 70,
+        "minZ": -70,
+        "maxZ": 70
+      },
+      "waves": [
+        {
+          "enemyCount": 40,
+          "spawnInterval": 1.5,
+          "spawnBatchSize": 3,
+          "groupSpawnChance": 0.6,
+          "enemyTypes": [
+            { "type": "bandit", "weight": 10 }
+          ]
+        },
+        {
+          "enemyCount": 60,
+          "spawnInterval": 1.2,
+          "spawnBatchSize": 4,
+          "groupSpawnChance": 0.7,
+          "enemyTypes": [
+            { "type": "bandit", "weight": 8 },
+            { "type": "coyote", "weight": 2 }
+          ]
+        },
+        {
+          "enemyCount": 80,
+          "spawnInterval": 1.0,
+          "spawnBatchSize": 5,
+          "groupSpawnChance": 0.5,
+          "enemyTypes": [
+            { "type": "bandit", "weight": 6 },
+            { "type": "coyote", "weight": 3 },
+            { "type": "gunman", "weight": 1 }
+          ]
+        },
+        {
+          "enemyCount": 100,
+          "spawnInterval": 0.8,
+          "spawnBatchSize": 6,
+          "groupSpawnChance": 0.8,
+          "enemyTypes": [
+            { "type": "bandit", "weight": 5 },
+            { "type": "coyote", "weight": 4 },
+            { "type": "gunman", "weight": 1 }
+          ]
+        }
+      ],
+      "boss": {
+        "type": "zombieLord",
+        "health": 4000,
+        "damage": 40,
+        "speed": 2.5
+      },
+      "enemySettings": {
+        "rangedEnemies": [],
+        "elitesCanShoot": true,
+        "eliteShootChance": 0.5,
+        "shootRange": 12,
+        "shootCooldown": { "min": 4.0, "max": 6.0 },
+        "projectileSpeed": 6,
+        "projectileDamage": 12
+      },
+      "objects": [
+        {
+          "model": "/models/nature-kit/cliff_block_stone.glb",
+          "positions": [
+            { "x": -60, "y": 0, "z": -75, "scale": 2, "rotation": { "y": 0 } },
+            { "x": -30, "y": 0, "z": -75, "scale": 2, "rotation": { "y": 0 } },
+            { "x": 0, "y": 0, "z": -75, "scale": 2, "rotation": { "y": 0 } },
+            { "x": 30, "y": 0, "z": -75, "scale": 2, "rotation": { "y": 0 } },
+            { "x": 60, "y": 0, "z": -75, "scale": 2, "rotation": { "y": 0 } }
+          ],
+          "collidable": true
+        },
+        {
+          "model": "/models/nature-kit/cliff_large_rock.glb",
+          "positions": [
+            { "x": -25, "y": 0, "z": -20, "scale": 2.5, "rotation": { "y": 0.5 } },
+            { "x": 25, "y": 0, "z": 20, "scale": 2.5, "rotation": { "y": -0.8 } }
+          ],
+          "collidable": true
+        }
+      ]
+    },
+    "urban_outpost": {
+      "id": "urban_outpost",
+      "name": "Urban Outpost",
+      "description": "Abandoned urban settlement with ruins and debris",
+      "mode": "waves",
+      "groundType": "urban",
+      "music": "/assets/music/risinginferno.mp3",
+      "lighting": {
+        "background": "0x8899aa",
+        "ambient": {
+          "color": "0xccccdd",
+          "intensity": 0.7
+        },
+        "sun": {
+          "color": "0xffffee",
+          "intensity": 1.0,
+          "position": { "x": 20, "y": 40, "z": 15 }
+        },
+        "fill": {
+          "color": "0xaaaacc",
+          "intensity": 0.4
+        },
+        "hemisphere": {
+          "sky": "0xbbccdd",
+          "ground": "0x555555",
+          "intensity": 0.6
+        }
+      },
+      "spawnBoundaries": {
+        "minX": -80,
+        "maxX": 80,
+        "minZ": -80,
+        "maxZ": 80
+      },
+      "waves": [
+        {
+          "enemyCount": 50,
+          "spawnInterval": 1.3,
+          "spawnBatchSize": 4,
+          "groupSpawnChance": 0.7,
+          "enemyTypes": [
+            { "type": "bandit", "weight": 10 }
+          ]
+        }
+      ],
+      "enemySettings": {
+        "rangedEnemies": ["gunman"],
+        "elitesCanShoot": true,
+        "eliteShootChance": 0.7,
+        "shootRange": 15,
+        "shootCooldown": { "min": 3.0, "max": 5.0 },
+        "projectileSpeed": 8,
+        "projectileDamage": 18
+      },
+      "objects": []
+    },
+    "abandoned_town": {
+      "id": "abandoned_town",
+      "name": "Abandoned Town",
+      "description": "Desolate town overrun by darkness",
+      "mode": "waves",
+      "groundType": "urban",
+      "music": "/assets/music/risinginferno.mp3",
+      "lighting": {
+        "background": "0x554455",
+        "ambient": {
+          "color": "0x886688",
+          "intensity": 0.5
+        },
+        "sun": {
+          "color": "0xddbbdd",
+          "intensity": 0.8,
+          "position": { "x": 20, "y": 40, "z": 15 }
+        },
+        "fill": {
+          "color": "0x664466",
+          "intensity": 0.3
+        },
+        "hemisphere": {
+          "sky": "0x775577",
+          "ground": "0x332233",
+          "intensity": 0.4
+        }
+      },
+      "spawnBoundaries": {
+        "minX": -90,
+        "maxX": 90,
+        "minZ": -90,
+        "maxZ": 90
+      },
+      "waves": [
+        {
+          "enemyCount": 60,
+          "spawnInterval": 1.0,
+          "spawnBatchSize": 5,
+          "groupSpawnChance": 0.8,
+          "enemyTypes": [
+            { "type": "skeleton_warrior", "weight": 6 },
+            { "type": "skeleton_mage", "weight": 4 }
+          ]
+        }
+      ],
+      "enemySettings": {
+        "rangedEnemies": ["skeleton_mage"],
+        "elitesCanShoot": true,
+        "eliteShootChance": 0.8,
+        "shootRange": 14,
+        "shootCooldown": { "min": 2.5, "max": 4.5 },
+        "projectileSpeed": 9,
+        "projectileDamage": 20
+      },
+      "objects": []
+    },
+    "boss_rush": {
+      "id": "boss_rush",
+      "name": "Boss Rush",
+      "description": "Face endless waves of powerful bosses",
+      "mode": "boss_rush",
+      "groundType": "void",
+      "music": "/assets/music/risinginferno.mp3",
+      "lighting": {
+        "background": "0x330033",
+        "ambient": {
+          "color": "0x660066",
+          "intensity": 0.6
+        },
+        "sun": {
+          "color": "0xff00ff",
+          "intensity": 1.0,
+          "position": { "x": 20, "y": 40, "z": 15 }
+        },
+        "fill": {
+          "color": "0x880088",
+          "intensity": 0.4
+        },
+        "hemisphere": {
+          "sky": "0x660066",
+          "ground": "0x220022",
+          "intensity": 0.5
+        }
+      },
+      "spawnBoundaries": {
+        "minX": -50,
+        "maxX": 50,
+        "minZ": -50,
+        "maxZ": 50
+      },
+      "waves": [],
+      "boss": {
+        "type": "zombieLord",
+        "spawnInterval": 1,
+        "health": 5000,
+        "damage": 50,
+        "speed": 3.0
+      },
+      "enemySettings": {
+        "rangedEnemies": [],
+        "elitesCanShoot": false,
+        "eliteShootChance": 0,
+        "shootRange": 0,
+        "shootCooldown": { "min": 0, "max": 0 },
+        "projectileSpeed": 0,
+        "projectileDamage": 0
+      },
+      "objects": []
+    },
+    "chapter1": {
+      "id": "chapter1",
+      "name": "Chapter 1: The Beginning",
+      "description": "Story mode chapter 1",
+      "mode": "story",
+      "groundType": "desert",
+      "music": "/assets/music/risinginferno.mp3",
+      "lighting": {
+        "background": "0xd4a574",
+        "ambient": {
+          "color": "0xffddaa",
+          "intensity": 0.6
+        },
+        "sun": {
+          "color": "0xfff4e0",
+          "intensity": 1.2,
+          "position": { "x": 20, "y": 40, "z": 15 }
+        },
+        "fill": {
+          "color": "0xff9944",
+          "intensity": 0.3
+        },
+        "hemisphere": {
+          "sky": "0xffffbb",
+          "ground": "0x4a3520",
+          "intensity": 0.5
+        }
+      },
+      "spawnBoundaries": {
+        "minX": -70,
+        "maxX": 70,
+        "minZ": -70,
+        "maxZ": 70
+      },
+      "waves": [
+        {
+          "enemyCount": 30,
+          "spawnInterval": 2.0,
+          "spawnBatchSize": 3,
+          "groupSpawnChance": 0.5,
+          "enemyTypes": [
+            { "type": "bandit", "weight": 10 }
+          ]
+        }
+      ],
+      "enemySettings": {
+        "rangedEnemies": [],
+        "elitesCanShoot": false,
+        "eliteShootChance": 0,
+        "shootRange": 0,
+        "shootCooldown": { "min": 0, "max": 0 },
+        "projectileSpeed": 0,
+        "projectileDamage": 0
+      },
+      "objects": []
+    }
+  }
+}

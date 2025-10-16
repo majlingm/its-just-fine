@@ -1,0 +1,93 @@
+{
+  "$schema": "../spawns.schema.json",
+  "name": "Desert Canyon",
+  "description": "4 waves of bandits, coyotes, and gunmen in the desert canyon",
+  "globalSettings": {
+    "startDelay": 3.0,
+    "wavePauseDelay": 5.0,
+    "spawnSafeDistance": 40,
+    "spawnMaxDistance": 55
+  },
+  "waves": [
+    {
+      "waveNumber": 1,
+      "name": "First Wave",
+      "spawnRules": {
+        "totalEnemies": 40,
+        "spawnInterval": 1.5,
+        "spawnBatchSize": 3,
+        "simultaneousMax": 20,
+        "waveCompleteThreshold": 0
+      },
+      "enemyComposition": [
+        { "enemyType": "bandit", "weight": 10 }
+      ],
+      "spawnPattern": {
+        "type": "random_scatter",
+        "config": {}
+      }
+    },
+    {
+      "waveNumber": 2,
+      "name": "Second Wave",
+      "spawnRules": {
+        "totalEnemies": 60,
+        "spawnInterval": 1.2,
+        "spawnBatchSize": 4,
+        "simultaneousMax": 25,
+        "waveCompleteThreshold": 0
+      },
+      "enemyComposition": [
+        { "enemyType": "bandit", "weight": 8 },
+        { "enemyType": "coyote", "weight": 2 }
+      ],
+      "spawnPattern": {
+        "type": "random_scatter",
+        "config": {}
+      }
+    },
+    {
+      "waveNumber": 3,
+      "name": "Third Wave",
+      "spawnRules": {
+        "totalEnemies": 80,
+        "spawnInterval": 1.0,
+        "spawnBatchSize": 5,
+        "simultaneousMax": 30,
+        "waveCompleteThreshold": 0
+      },
+      "enemyComposition": [
+        { "enemyType": "bandit", "weight": 6 },
+        { "enemyType": "coyote", "weight": 3 },
+        { "enemyType": "gunman", "weight": 1 }
+      ],
+      "spawnPattern": {
+        "type": "random_scatter",
+        "config": {}
+      }
+    },
+    {
+      "waveNumber": 4,
+      "name": "Fourth Wave",
+      "spawnRules": {
+        "totalEnemies": 100,
+        "spawnInterval": 0.8,
+        "spawnBatchSize": 6,
+        "simultaneousMax": 35,
+        "waveCompleteThreshold": 0
+      },
+      "enemyComposition": [
+        { "enemyType": "bandit", "weight": 5 },
+        { "enemyType": "coyote", "weight": 4 },
+        { "enemyType": "gunman", "weight": 1 }
+      ],
+      "spawnPattern": {
+        "type": "random_scatter",
+        "config": {}
+      }
+    }
+  ],
+  "infiniteMode": {
+    "enabled": false
+  }
+}

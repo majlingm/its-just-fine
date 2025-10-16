@@ -12,8 +12,9 @@ export class Renderable extends Component {
     this.mesh = null;
 
     // Model/geometry info
-    this.modelType = 'cube'; // 'cube', 'sphere', 'custom', etc.
+    this.modelType = 'cube'; // 'cube', 'sphere', 'custom', 'shader', etc.
     this.geometryData = null; // Custom geometry data
+    this.shaderConfig = null; // For shader-based enemies (shadow/light types)
 
     // Material properties
     this.color = 0xffffff;

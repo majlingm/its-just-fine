@@ -5,6 +5,7 @@ import { Movement } from '../../components/Movement.js';
 import { Renderable } from '../../components/Renderable.js';
 import { AI } from '../../components/AI.js';
 import { Collider } from '../../components/Collider.js';
+import { Boss } from '../../components/Boss.js';
 import { configLoader } from '../../utils/ConfigLoader.js';
 
 /**
@@ -23,6 +24,7 @@ export class EntityFactory {
       ['Renderable', Renderable],
       ['AI', AI],
       ['Collider', Collider],
+      ['Boss', Boss],
     ]);
   }
 
@@ -114,6 +116,7 @@ export class EntityFactory {
         color: finalConfig.color || 0xffffff,
         castShadow: finalConfig.castShadow !== false,
         receiveShadow: finalConfig.receiveShadow !== false,
+        shaderConfig: finalConfig.shaderConfig || null,
       },
     ];
 
@@ -157,7 +160,7 @@ export class EntityFactory {
    * @returns {Promise<Entity>} Created boss entity
    */
   async createBoss(bossId, overrides = {}) {
-    const config = await configLoader.getBoss(bossId);
+    const config = await configLoader.getEnemy(bossId);
 
     // Merge config with overrides
     const finalConfig = { ...config, ...overrides };
@@ -187,28 +190,59 @@ export class EntityFactory {
         type: 'Renderable',
         modelType: finalConfig.model,
         color: finalConfig.color || 0xff0000,
-        castShadow: true,
-        receiveShadow: true,
+        castShadow: finalConfig.castShadow !== false,
+        receiveShadow: finalConfig.receiveShadow !== false,
+        shaderConfig: finalConfig.shaderConfig || null,
       },
     ];
 
-    // Boss-specific AI with phases
-    if (finalConfig.phases) {
+    // Add AI component
+    if (finalConfig.ai) {
       components.push({
         type: 'AI',
-        behavior: 'boss',
-        phases: finalConfig.phases,
-        abilities: finalConfig.abilities || [],
-        currentPhase: 0,
+        behavior: finalConfig.ai.behavior || 'boss',
+        aggroRange: finalConfig.ai.aggroRange || 50,
+        attackRange: finalConfig.ai.attackRange || 3,
+        attackCooldown: finalConfig.ai.attackCooldown || 1.5,
       });
     }
+
+    // Add Boss component with phase and ability data
+    if (finalConfig.boss) {
+      const bossConfig = finalConfig.boss;
+      components.push({
+        type: 'Boss',
+        bossName: bossConfig.bossName || finalConfig.displayName || bossId,
+        bossType: bossConfig.bossType || 'melee',
+        phases: bossConfig.phases || [],
+        abilities: bossConfig.abilities || [],
+        attackPattern: bossConfig.attackPattern || 'basic',
+        attackCooldown: bossConfig.attackCooldown || 2.0,
+        canSummonMinions: bossConfig.canSummonMinions || false,
+        minionType: bossConfig.minionType || '',
+        maxMinions: bossConfig.maxMinions || 3,
+        minionSpawnCooldown: bossConfig.minionSpawnCooldown || 10.0,
+      });
+    }
+
+    // Add Collider component (bosses are larger)
+    components.push({
+      type: 'Collider',
+      shape: 'sphere',
+      radius: (finalConfig.scale || 1) * 1.5,
+      layer: 'enemy',
+      collidesWith: ['player', 'enemy'],
+      isSolid: true,
+      bounciness: 0.2,
+      collisionResolutionMode: 'horizontal'
+    });
 
     // Create entity with boss tags
     const entity = this.create(components, ['boss', 'enemy', bossId]);
 
     // Store config reference
     entity.configId = bossId;
-    entity.displayName = finalConfig.name || bossId;
+    entity.displayName = finalConfig.displayName || bossId;
     entity.isBoss = true;
 
     return entity;

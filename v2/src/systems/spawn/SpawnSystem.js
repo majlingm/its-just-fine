@@ -171,6 +171,18 @@ export class SpawnSystem extends ComponentSystem {
         this.infiniteLoopCount = 0;
       }
 
+      // Check if this should be a boss wave
+      if (this.spawnConfig.infiniteMode.bossWaves?.enabled) {
+        const bossFrequency = this.spawnConfig.infiniteMode.bossWaves.frequency;
+        const wavesSinceStart = waveIndex - this.spawnConfig.waves.length + 1;
+
+        if (wavesSinceStart % bossFrequency === 0) {
+          console.log(`SpawnSystem: Boss wave triggered! (wave ${waveIndex + 1})`);
+          this.startBossWave();
+          return;
+        }
+      }
+
       // Loop waves
       const loopWaves = this.spawnConfig.infiniteMode.loopWaves ||
                         Array.from({length: this.spawnConfig.waves.length}, (_, i) => i + 1);
@@ -431,6 +443,85 @@ export class SpawnSystem extends ComponentSystem {
       isInfiniteMode: this.isInfiniteMode,
       infiniteLoopCount: this.infiniteLoopCount
     };
+  }
+
+  /**
+   * Start a boss wave
+   */
+  async startBossWave() {
+    const bossWaveConfig = this.spawnConfig.infiniteMode.bossWaves;
+    if (!bossWaveConfig) return;
+
+    // Select a boss from the pool
+    const totalWeight = bossWaveConfig.bossPool.reduce((sum, boss) => sum + boss.weight, 0);
+    let random = Math.random() * totalWeight;
+
+    let selectedBoss = null;
+    for (const boss of bossWaveConfig.bossPool) {
+      random -= boss.weight;
+      if (random <= 0) {
+        selectedBoss = boss;
+        break;
+      }
+    }
+
+    if (!selectedBoss) {
+      console.error('SpawnSystem: Failed to select boss from pool');
+      return;
+    }
+
+    console.log(`SpawnSystem: Spawning boss: ${selectedBoss.bossType}`);
+
+    // Display message if configured
+    if (selectedBoss.message) {
+      setTimeout(() => {
+        console.log(`⚠️ ${selectedBoss.message}`);
+        // TODO: Show UI message
+      }, (selectedBoss.messageDelay || 0) * 1000);
+    }
+
+    // Spawn the boss
+    try {
+      const position = this.calculateSpawnPosition({ spawnLocations: {} });
+      const boss = await entityFactory.createBoss(selectedBoss.bossType, position);
+      this.emitSpawnEvent(boss);
+
+      console.log(`SpawnSystem: Boss ${selectedBoss.bossType} spawned at (${position.x.toFixed(1)}, ${position.y.toFixed(1)}, ${position.z.toFixed(1)})`);
+    } catch (error) {
+      console.error(`SpawnSystem: Failed to spawn boss ${selectedBoss.bossType}:`, error);
+    }
+
+    // Spawn additional enemies if configured
+    if (bossWaveConfig.additionalEnemies?.enabled) {
+      const addConfig = bossWaveConfig.additionalEnemies;
+
+      setTimeout(async () => {
+        console.log(`SpawnSystem: Spawning ${addConfig.count} additional enemies`);
+
+        for (let i = 0; i < addConfig.count; i++) {
+          const enemyType = addConfig.enemyTypes[Math.floor(Math.random() * addConfig.enemyTypes.length)];
+          const position = this.calculateSpawnPosition({ spawnLocations: {} });
+
+          try {
+            const enemy = await entityFactory.createEnemy(enemyType, position);
+            this.emitSpawnEvent(enemy);
+          } catch (error) {
+            console.error(`SpawnSystem: Failed to spawn additional enemy ${enemyType}:`, error);
+          }
+        }
+      }, addConfig.spawnDelay * 1000);
+    }
+
+    // Mark wave as complete and queue next wave
+    this.waveActive = false;
+    const pauseDelay = this.spawnConfig.globalSettings?.wavePauseDelay || 5.0;
+    this.wavePauseTimer = pauseDelay;
+    this.inWavePause = true;
+
+    const nextWaveIndex = this.currentWave + 1;
+    setTimeout(() => {
+      this.startWave(nextWaveIndex);
+    }, pauseDelay * 1000);
   }
 
   /**
