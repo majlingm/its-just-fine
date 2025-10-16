@@ -26,7 +26,7 @@
  */
 
 import * as THREE from 'three';
-import { OptimizationConfig } from '../../config/optimization.js';
+import { OptimizationConfig } from '../../core/config/optimization.js';
 
 export class InstancedParticlePool {
   constructor(renderer, config = {}) {

@@ -1,0 +1,66 @@
+{
+  "id": "void",
+  "name": "Void Arena",
+  "description": "Empty grass field - classic survival arena",
+
+  "ground": {
+    "type": "plane",
+    "size": 200,
+    "texture": null,
+    "color": 4881467,
+    "receiveShadow": true,
+    "properties": {
+      "friction": 0.8,
+      "restitution": 0.0
+    }
+  },
+
+  "lighting": {
+    "background": 8900331,
+    "ambient": {
+      "color": 16777215,
+      "intensity": 0.8
+    },
+    "sun": {
+      "color": 16777215,
+      "intensity": 1.2,
+      "position": { "x": 20, "y": 40, "z": 15 },
+      "castShadow": true,
+      "shadowMapSize": 2048
+    },
+    "fill": {
+      "color": 13421823,
+      "intensity": 0.5,
+      "position": { "x": -10, "y": 20, "z": -10 }
+    },
+    "hemisphere": {
+      "sky": 11190527,
+      "ground": 8947848,
+      "intensity": 0.7
+    }
+  },
+
+  "boundaries": {
+    "type": "box",
+    "minX": -100,
+    "maxX": 100,
+    "minZ": -100,
+    "maxZ": 100,
+    "height": 50,
+    "killPlane": -10
+  },
+
+  "objects": [],
+
+  "fog": {
+    "enabled": false,
+    "color": 8900331,
+    "near": 50,
+    "far": 200
+  },
+
+  "audio": {
+    "ambience": null,
+    "music": "/assets/music/risinginferno.mp3"
+  }
+}

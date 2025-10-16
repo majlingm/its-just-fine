@@ -1,0 +1,54 @@
+{
+  "id": "survival_void",
+  "name": "Survival - Void Arena",
+  "description": "Endless waves of enemies in an empty grass field",
+  "type": "survival",
+
+  "environment": "void",
+  "spawnConfig": "survival_basic",
+
+  "winningCriteria": {
+    "type": "endless",
+    "description": "Survive as long as possible"
+  },
+
+  "playerStart": {
+    "position": { "x": 0, "y": 0, "z": 0 },
+    "rotation": { "x": 0, "y": 0, "z": 0 }
+  },
+
+  "difficulty": {
+    "base": 1.0,
+    "scaling": {
+      "enabled": true,
+      "perWave": 0.15
+    }
+  },
+
+  "lives": {
+    "enabled": false,
+    "count": 3
+  },
+
+  "timeLimit": {
+    "enabled": false,
+    "seconds": 0
+  },
+
+  "music": {
+    "track": "/assets/music/risinginferno.mp3",
+    "volume": 0.7,
+    "loop": true
+  },
+
+  "powerups": {
+    "enabled": true,
+    "spawnChance": 0.1
+  },
+
+  "metadata": {
+    "author": "Its Just Fine",
+    "version": "2.0",
+    "tags": ["survival", "endless", "classic"]
+  }
+}

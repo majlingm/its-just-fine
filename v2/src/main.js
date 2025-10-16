@@ -12,7 +12,7 @@
 import { ItsJustFine } from './game/ItsJustFine.js';
 import { SurvivalMode } from './game/modes/SurvivalMode.js';
 import { ResourceCache } from './core/pooling/ResourceCache.js';
-import { OptimizationConfig } from './config/optimization.js';
+import { OptimizationConfig } from './core/config/optimization.js';
 
 // Create game instance
 const game = new ItsJustFine();

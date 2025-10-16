@@ -15,7 +15,7 @@
  */
 
 import { Entity } from '../ecs/Entity.js';
-import { OptimizationConfig } from '../../config/optimization.js';
+import { OptimizationConfig } from '../../core/config/optimization.js';
 
 export class EntityPool {
   constructor() {

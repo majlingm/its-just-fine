@@ -9,8 +9,8 @@ export class ConfigLoader {
     // Cache loaded configs
     this.cache = new Map();
 
-    // Base path for configs
-    this.basePath = '/src/config';
+    // Base path for configs (game-specific configs)
+    this.basePath = '/src/game/config';
   }
 
   /**
@@ -87,6 +87,30 @@ export class ConfigLoader {
    */
   async loadSpells() {
     return this.load('spells/spells.json');
+  }
+
+  /**
+   * Load particle effect configurations
+   * @returns {Promise<Object>} Particle effect configs
+   */
+  async loadParticleEffects() {
+    return this.load('effects/particle_effects.json');
+  }
+
+  /**
+   * Get a specific particle effect config by ID
+   * @param {string} effectId - Effect ID
+   * @returns {Promise<Object>} Particle effect config
+   */
+  async getParticleEffect(effectId) {
+    const effects = await this.loadParticleEffects();
+    const config = effects[effectId];
+
+    if (!config) {
+      throw new Error(`Particle effect config not found: ${effectId}`);
+    }
+
+    return config;
   }
 
   /**

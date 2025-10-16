@@ -1,0 +1,1404 @@
+{
+  "bandit": {
+    "displayName": "Bandit",
+    "type": "enemy",
+    "health": 100,
+    "speed": 3,
+    "maxSpeed": 4.5,
+    "damage": 12,
+    "scale": 1.05,
+    "model": "bandit",
+    "color": 2960685,
+    "castShadow": true,
+    "receiveShadow": true,
+    "ai": {
+      "behavior": "chase_player",
+      "aggroRange": 30,
+      "attackRange": 2,
+      "attackCooldown": 1.0
+    }
+  },
+  "coyote": {
+    "displayName": "Coyote",
+    "type": "enemy",
+    "health": 60,
+    "speed": 5,
+    "maxSpeed": 7.5,
+    "damage": 8,
+    "scale": 0.75,
+    "model": "coyote",
+    "color": 13799966,
+    "castShadow": true,
+    "receiveShadow": true,
+    "ai": {
+      "behavior": "chase_player",
+      "aggroRange": 35,
+      "attackRange": 1.5,
+      "attackCooldown": 0.8
+    }
+  },
+  "brute": {
+    "displayName": "Brute",
+    "type": "enemy",
+    "health": 240,
+    "speed": 1.5,
+    "maxSpeed": 2.25,
+    "damage": 25,
+    "scale": 1.8,
+    "model": "brute",
+    "color": 4857370,
+    "castShadow": true,
+    "receiveShadow": true,
+    "ai": {
+      "behavior": "chase_player",
+      "aggroRange": 25,
+      "attackRange": 2.5,
+      "attackCooldown": 2.0
+    }
+  },
+  "gunman": {
+    "displayName": "Gunman",
+    "type": "enemy",
+    "health": 80,
+    "speed": 2.5,
+    "maxSpeed": 3.75,
+    "damage": 15,
+    "scale": 1.05,
+    "model": "gunman",
+    "color": 3815994,
+    "castShadow": true,
+    "receiveShadow": true,
+    "ai": {
+      "behavior": "chase_player",
+      "aggroRange": 30,
+      "attackRange": 2,
+      "attackCooldown": 1.0
+    }
+  },
+  "charger": {
+    "displayName": "Charger",
+    "type": "enemy",
+    "health": 120,
+    "speed": 2,
+    "maxSpeed": 3,
+    "damage": 18,
+    "scale": 1.05,
+    "model": "charger",
+    "color": 5911322,
+    "castShadow": true,
+    "receiveShadow": true,
+    "ai": {
+      "behavior": "chase_player",
+      "aggroRange": 30,
+      "attackRange": 2,
+      "attackCooldown": 1.0
+    }
+  },
+  "tiny": {
+    "displayName": "Tiny",
+    "type": "enemy",
+    "health": 40,
+    "speed": 6,
+    "maxSpeed": 9,
+    "damage": 6,
+    "scale": 0.45,
+    "model": "tiny",
+    "color": 3810842,
+    "castShadow": true,
+    "receiveShadow": true,
+    "ai": {
+      "behavior": "chase_player",
+      "aggroRange": 35,
+      "attackRange": 1.5,
+      "attackCooldown": 0.6
+    }
+  },
+  "giant": {
+    "displayName": "Giant",
+    "type": "enemy",
+    "health": 400,
+    "speed": 1.2,
+    "maxSpeed": 1.8,
+    "damage": 35,
+    "scale": 2.7,
+    "model": "giant",
+    "color": 5905946,
+    "castShadow": true,
+    "receiveShadow": true,
+    "ai": {
+      "behavior": "chase_player",
+      "aggroRange": 25,
+      "attackRange": 3,
+      "attackCooldown": 2.5
+    }
+  },
+  "skeleton_warrior": {
+    "displayName": "Skeleton Warrior",
+    "type": "enemy",
+    "health": 140,
+    "speed": 2.8,
+    "maxSpeed": 4.2,
+    "damage": 20,
+    "scale": 1.2,
+    "model": "skeleton_warrior",
+    "color": 13421772,
+    "castShadow": true,
+    "receiveShadow": true,
+    "ai": {
+      "behavior": "chase_player",
+      "aggroRange": 30,
+      "attackRange": 2,
+      "attackCooldown": 1.2
+    }
+  },
+  "skeleton_mage": {
+    "displayName": "Skeleton Mage",
+    "type": "enemy",
+    "health": 90,
+    "speed": 2.3,
+    "maxSpeed": 3.45,
+    "damage": 18,
+    "scale": 1.2,
+    "model": "skeleton_mage",
+    "color": 8947900,
+    "castShadow": true,
+    "receiveShadow": true,
+    "ai": {
+      "behavior": "chase_player",
+      "aggroRange": 30,
+      "attackRange": 2,
+      "attackCooldown": 1.0
+    }
+  },
+  "shadow": {
+    "displayName": "Shadow",
+    "type": "enemy",
+    "health": 120,
+    "speed": 2.0,
+    "maxSpeed": 3.0,
+    "damage": 18,
+    "scale": 1.0,
+    "model": "shader",
+    "color": 0,
+    "castShadow": false,
+    "receiveShadow": false,
+    "shaderConfig": {
+      "width": 2.5,
+      "height": 4.0,
+      "eyeColor": 16711680,
+      "eyeSize": 0.04,
+      "flowSpeed": 1.0,
+      "flowAmp": 1.0,
+      "waveCount": 2,
+      "waveType": 0,
+      "shapeType": 0,
+      "baseColor": 0,
+      "gradientColor": 0,
+      "outlineColor": 851981,
+      "outlineWidth": 0.05,
+      "isCrawler": false
+    },
+    "ai": {
+      "behavior": "chase_player",
+      "aggroRange": 30,
+      "attackRange": 2,
+      "attackCooldown": 1.0
+    },
+    "deathAnimation": "shadow_death"
+  },
+  "shadow_lurker": {
+    "displayName": "Shadow Lurker",
+    "type": "enemy",
+    "health": 60,
+    "speed": 3.5,
+    "maxSpeed": 5.25,
+    "damage": 12,
+    "scale": 1.0,
+    "model": "shader",
+    "color": 1706250,
+    "castShadow": false,
+    "receiveShadow": false,
+    "shaderConfig": {
+      "width": 1.5,
+      "height": 2.5,
+      "eyeColor": 16724787,
+      "eyeSize": 0.03,
+      "flowSpeed": 1.5,
+      "flowAmp": 1.2,
+      "waveCount": 3,
+      "waveType": 1,
+      "shapeType": 2,
+      "baseColor": 0,
+      "gradientColor": 3342336,
+      "outlineColor": 851981,
+      "outlineWidth": 0.05,
+      "isCrawler": false
+    },
+    "ai": {
+      "behavior": "chase_player",
+      "aggroRange": 35,
+      "attackRange": 1.5,
+      "attackCooldown": 0.8
+    },
+    "deathAnimation": "shadow_death"
+  },
+  "shadow_titan": {
+    "displayName": "Shadow Titan",
+    "type": "enemy",
+    "health": 300,
+    "speed": 1.2,
+    "maxSpeed": 1.8,
+    "damage": 30,
+    "scale": 1.0,
+    "model": "shader",
+    "color": 0,
+    "castShadow": false,
+    "receiveShadow": false,
+    "shaderConfig": {
+      "width": 4.0,
+      "height": 6.0,
+      "eyeColor": 16711680,
+      "eyeSize": 0.06,
+      "flowSpeed": 0.5,
+      "flowAmp": 0.8,
+      "waveCount": 1,
+      "waveType": 2,
+      "shapeType": 0,
+      "baseColor": 0,
+      "gradientColor": 0,
+      "outlineColor": 851981,
+      "outlineWidth": 0.05,
+      "isCrawler": false
+    },
+    "ai": {
+      "behavior": "chase_player",
+      "aggroRange": 25,
+      "attackRange": 3,
+      "attackCooldown": 2.0
+    },
+    "deathAnimation": "shadow_death"
+  },
+  "shadow_wraith": {
+    "displayName": "Shadow Wraith",
+    "type": "enemy",
+    "health": 80,
+    "speed": 4.0,
+    "maxSpeed": 6.0,
+    "damage": 15,
+    "scale": 1.0,
+    "model": "shader",
+    "color": 655360,
+    "castShadow": false,
+    "receiveShadow": false,
+    "shaderConfig": {
+      "width": 2.0,
+      "height": 4.5,
+      "eyeColor": 16711680,
+      "eyeSize": 0.025,
+      "flowSpeed": 2.0,
+      "flowAmp": 1.5,
+      "waveCount": 3,
+      "waveType": 0,
+      "shapeType": 3,
+      "baseColor": 0,
+      "gradientColor": 16711680,
+      "outlineColor": 851981,
+      "outlineWidth": 0.05,
+      "isCrawler": false
+    },
+    "ai": {
+      "behavior": "chase_player",
+      "aggroRange": 35,
+      "attackRange": 1.5,
+      "attackCooldown": 0.8
+    },
+    "deathAnimation": "shadow_death"
+  },
+  "shadow_colossus": {
+    "displayName": "Shadow Colossus",
+    "type": "enemy",
+    "health": 200,
+    "speed": 1.5,
+    "maxSpeed": 2.25,
+    "damage": 25,
+    "scale": 1.0,
+    "model": "shader",
+    "color": 327680,
+    "castShadow": false,
+    "receiveShadow": false,
+    "shaderConfig": {
+      "width": 3.5,
+      "height": 5.0,
+      "eyeColor": 14483456,
+      "eyeSize": 0.05,
+      "flowSpeed": 0.7,
+      "flowAmp": 0.9,
+      "waveCount": 2,
+      "waveType": 0,
+      "shapeType": 0,
+      "baseColor": 0,
+      "gradientColor": 1703936,
+      "outlineColor": 851981,
+      "outlineWidth": 0.05,
+      "isCrawler": false
+    },
+    "ai": {
+      "behavior": "chase_player",
+      "aggroRange": 25,
+      "attackRange": 2.5,
+      "attackCooldown": 1.5
+    },
+    "deathAnimation": "shadow_death"
+  },
+  "shadow_flicker": {
+    "displayName": "Shadow Flicker",
+    "type": "enemy",
+    "health": 40,
+    "speed": 5.0,
+    "maxSpeed": 7.5,
+    "damage": 8,
+    "scale": 1.0,
+    "model": "shader",
+    "color": 1703936,
+    "castShadow": false,
+    "receiveShadow": false,
+    "shaderConfig": {
+      "width": 1.0,
+      "height": 1.8,
+      "eyeColor": 16733525,
+      "eyeSize": 0.02,
+      "flowSpeed": 2.5,
+      "flowAmp": 1.8,
+      "waveCount": 3,
+      "waveType": 1,
+      "shapeType": 2,
+      "baseColor": 1703936,
+      "gradientColor": 3342336,
+      "outlineColor": 851981,
+      "outlineWidth": 0.05,
+      "isCrawler": false
+    },
+    "ai": {
+      "behavior": "chase_player",
+      "aggroRange": 35,
+      "attackRange": 1.5,
+      "attackCooldown": 0.6
+    },
+    "deathAnimation": "shadow_death"
+  },
+  "shadow_void": {
+    "displayName": "Shadow Void",
+    "type": "enemy",
+    "health": 150,
+    "speed": 1.8,
+    "maxSpeed": 2.7,
+    "damage": 22,
+    "scale": 1.0,
+    "model": "shader",
+    "color": 0,
+    "castShadow": false,
+    "receiveShadow": false,
+    "shaderConfig": {
+      "width": 3.0,
+      "height": 4.5,
+      "eyeColor": 16777215,
+      "eyeSize": 0.045,
+      "flowSpeed": 0.6,
+      "flowAmp": 0.7,
+      "waveCount": 1,
+      "waveType": 0,
+      "shapeType": 1,
+      "baseColor": 0,
+      "gradientColor": 11141120,
+      "outlineColor": 851981,
+      "outlineWidth": 0.05,
+      "isCrawler": false
+    },
+    "ai": {
+      "behavior": "chase_player",
+      "aggroRange": 30,
+      "attackRange": 2,
+      "attackCooldown": 1.2
+    },
+    "deathAnimation": "shadow_death"
+  },
+  "shadow_crawler": {
+    "displayName": "Shadow Crawler",
+    "type": "enemy",
+    "health": 70,
+    "speed": 4.5,
+    "maxSpeed": 6.75,
+    "damage": 10,
+    "scale": 1.0,
+    "model": "shader",
+    "color": 655360,
+    "castShadow": false,
+    "receiveShadow": false,
+    "shaderConfig": {
+      "width": 3.5,
+      "height": 1.5,
+      "eyeColor": 16724787,
+      "eyeSize": 0.06,
+      "flowSpeed": 0.5,
+      "flowAmp": 1.3,
+      "waveCount": 1,
+      "waveType": 0,
+      "shapeType": 4,
+      "baseColor": 0,
+      "gradientColor": 2228224,
+      "outlineColor": 851981,
+      "outlineWidth": 0.05,
+      "isCrawler": true
+    },
+    "ai": {
+      "behavior": "chase_player",
+      "aggroRange": 35,
+      "attackRange": 1.5,
+      "attackCooldown": 0.8
+    },
+    "deathAnimation": "shadow_death"
+  },
+  "shadow_serpent": {
+    "displayName": "Shadow Serpent",
+    "type": "enemy",
+    "health": 90,
+    "speed": 3.0,
+    "maxSpeed": 4.5,
+    "damage": 14,
+    "scale": 1.0,
+    "model": "shader",
+    "color": 1703936,
+    "castShadow": false,
+    "receiveShadow": false,
+    "shaderConfig": {
+      "width": 4.0,
+      "height": 1.2,
+      "eyeColor": 16712721,
+      "eyeSize": 0.025,
+      "flowSpeed": 1.5,
+      "flowAmp": 1.1,
+      "waveCount": 2,
+      "waveType": 0,
+      "shapeType": 5,
+      "baseColor": 1703936,
+      "gradientColor": 3342336,
+      "outlineColor": 851981,
+      "outlineWidth": 0.05,
+      "isCrawler": true
+    },
+    "ai": {
+      "behavior": "chase_player",
+      "aggroRange": 30,
+      "attackRange": 2,
+      "attackCooldown": 1.0
+    },
+    "deathAnimation": "shadow_death"
+  },
+  "light": {
+    "displayName": "Light",
+    "type": "enemy",
+    "health": 120,
+    "speed": 2.0,
+    "maxSpeed": 3.0,
+    "damage": 18,
+    "scale": 1.0,
+    "model": "shader",
+    "color": 16777215,
+    "castShadow": false,
+    "receiveShadow": false,
+    "shaderConfig": {
+      "width": 2.5,
+      "height": 4.0,
+      "eyeColor": 16711680,
+      "eyeSize": 0.04,
+      "flowSpeed": 1.0,
+      "flowAmp": 1.0,
+      "waveCount": 2,
+      "waveType": 0,
+      "shapeType": 0,
+      "baseColor": 16777215,
+      "gradientColor": 14540253,
+      "outlineColor": 0,
+      "outlineWidth": 0.08,
+      "isCrawler": false
+    },
+    "ai": {
+      "behavior": "chase_player",
+      "aggroRange": 30,
+      "attackRange": 2,
+      "attackCooldown": 1.0
+    },
+    "deathAnimation": "light_death"
+  },
+  "light_lurker": {
+    "displayName": "Light Lurker",
+    "type": "enemy",
+    "health": 60,
+    "speed": 3.5,
+    "maxSpeed": 5.25,
+    "damage": 12,
+    "scale": 1.0,
+    "model": "shader",
+    "color": 16119285,
+    "castShadow": false,
+    "receiveShadow": false,
+    "shaderConfig": {
+      "width": 1.5,
+      "height": 2.5,
+      "eyeColor": 16724787,
+      "eyeSize": 0.03,
+      "flowSpeed": 1.5,
+      "flowAmp": 1.2,
+      "waveCount": 3,
+      "waveType": 1,
+      "shapeType": 2,
+      "baseColor": 16777215,
+      "gradientColor": 13421772,
+      "outlineColor": 0,
+      "outlineWidth": 0.08,
+      "isCrawler": false
+    },
+    "ai": {
+      "behavior": "chase_player",
+      "aggroRange": 35,
+      "attackRange": 1.5,
+      "attackCooldown": 0.8
+    },
+    "deathAnimation": "light_death"
+  },
+  "light_titan": {
+    "displayName": "Light Titan",
+    "type": "enemy",
+    "health": 300,
+    "speed": 1.2,
+    "maxSpeed": 1.8,
+    "damage": 30,
+    "scale": 1.0,
+    "model": "shader",
+    "color": 16777215,
+    "castShadow": false,
+    "receiveShadow": false,
+    "shaderConfig": {
+      "width": 4.0,
+      "height": 6.0,
+      "eyeColor": 16711680,
+      "eyeSize": 0.06,
+      "flowSpeed": 0.5,
+      "flowAmp": 0.8,
+      "waveCount": 1,
+      "waveType": 2,
+      "shapeType": 0,
+      "baseColor": 16777215,
+      "gradientColor": 15658734,
+      "outlineColor": 0,
+      "outlineWidth": 0.08,
+      "isCrawler": false
+    },
+    "ai": {
+      "behavior": "chase_player",
+      "aggroRange": 25,
+      "attackRange": 3,
+      "attackCooldown": 2.0
+    },
+    "deathAnimation": "light_death"
+  },
+  "light_wraith": {
+    "displayName": "Light Wraith",
+    "type": "enemy",
+    "health": 80,
+    "speed": 4.0,
+    "maxSpeed": 6.0,
+    "damage": 15,
+    "scale": 1.0,
+    "model": "shader",
+    "color": 16775925,
+    "castShadow": false,
+    "receiveShadow": false,
+    "shaderConfig": {
+      "width": 2.0,
+      "height": 4.5,
+      "eyeColor": 16711680,
+      "eyeSize": 0.025,
+      "flowSpeed": 2.0,
+      "flowAmp": 1.5,
+      "waveCount": 3,
+      "waveType": 0,
+      "shapeType": 3,
+      "baseColor": 16777215,
+      "gradientColor": 11184810,
+      "outlineColor": 0,
+      "outlineWidth": 0.08,
+      "isCrawler": false
+    },
+    "ai": {
+      "behavior": "chase_player",
+      "aggroRange": 35,
+      "attackRange": 1.5,
+      "attackCooldown": 0.8
+    },
+    "deathAnimation": "light_death"
+  },
+  "light_colossus": {
+    "displayName": "Light Colossus",
+    "type": "enemy",
+    "health": 200,
+    "speed": 1.5,
+    "maxSpeed": 2.25,
+    "damage": 25,
+    "scale": 1.0,
+    "model": "shader",
+    "color": 16775920,
+    "castShadow": false,
+    "receiveShadow": false,
+    "shaderConfig": {
+      "width": 3.5,
+      "height": 5.0,
+      "eyeColor": 14483456,
+      "eyeSize": 0.05,
+      "flowSpeed": 0.7,
+      "flowAmp": 0.9,
+      "waveCount": 2,
+      "waveType": 0,
+      "shapeType": 0,
+      "baseColor": 16777215,
+      "gradientColor": 12303291,
+      "outlineColor": 0,
+      "outlineWidth": 0.08,
+      "isCrawler": false
+    },
+    "ai": {
+      "behavior": "chase_player",
+      "aggroRange": 25,
+      "attackRange": 2.5,
+      "attackCooldown": 1.5
+    },
+    "deathAnimation": "light_death"
+  },
+  "light_flicker": {
+    "displayName": "Light Flicker",
+    "type": "enemy",
+    "health": 40,
+    "speed": 5.0,
+    "maxSpeed": 7.5,
+    "damage": 8,
+    "scale": 1.0,
+    "model": "shader",
+    "color": 16774880,
+    "castShadow": false,
+    "receiveShadow": false,
+    "shaderConfig": {
+      "width": 1.0,
+      "height": 1.8,
+      "eyeColor": 16733525,
+      "eyeSize": 0.02,
+      "flowSpeed": 2.5,
+      "flowAmp": 1.8,
+      "waveCount": 3,
+      "waveType": 1,
+      "shapeType": 2,
+      "baseColor": 16777215,
+      "gradientColor": 13421772,
+      "outlineColor": 0,
+      "outlineWidth": 0.08,
+      "isCrawler": false
+    },
+    "ai": {
+      "behavior": "chase_player",
+      "aggroRange": 35,
+      "attackRange": 1.5,
+      "attackCooldown": 0.6
+    },
+    "deathAnimation": "light_death"
+  },
+  "light_void": {
+    "displayName": "Light Void",
+    "type": "enemy",
+    "health": 150,
+    "speed": 1.8,
+    "maxSpeed": 2.7,
+    "damage": 22,
+    "scale": 1.0,
+    "model": "shader",
+    "color": 16777215,
+    "castShadow": false,
+    "receiveShadow": false,
+    "shaderConfig": {
+      "width": 3.0,
+      "height": 4.5,
+      "eyeColor": 0,
+      "eyeSize": 0.045,
+      "flowSpeed": 0.6,
+      "flowAmp": 0.7,
+      "waveCount": 1,
+      "waveType": 0,
+      "shapeType": 1,
+      "baseColor": 16777215,
+      "gradientColor": 12303291,
+      "outlineColor": 0,
+      "outlineWidth": 0.08,
+      "isCrawler": false
+    },
+    "ai": {
+      "behavior": "chase_player",
+      "aggroRange": 30,
+      "attackRange": 2,
+      "attackCooldown": 1.2
+    },
+    "deathAnimation": "light_death"
+  },
+  "light_crawler": {
+    "displayName": "Light Crawler",
+    "type": "enemy",
+    "health": 70,
+    "speed": 4.5,
+    "maxSpeed": 6.75,
+    "damage": 10,
+    "scale": 1.0,
+    "model": "shader",
+    "color": 16775925,
+    "castShadow": false,
+    "receiveShadow": false,
+    "shaderConfig": {
+      "width": 3.5,
+      "height": 1.5,
+      "eyeColor": 16724787,
+      "eyeSize": 0.06,
+      "flowSpeed": 0.5,
+      "flowAmp": 1.3,
+      "waveCount": 1,
+      "waveType": 0,
+      "shapeType": 4,
+      "baseColor": 16777215,
+      "gradientColor": 13421772,
+      "outlineColor": 0,
+      "outlineWidth": 0.08,
+      "isCrawler": true
+    },
+    "ai": {
+      "behavior": "chase_player",
+      "aggroRange": 35,
+      "attackRange": 1.5,
+      "attackCooldown": 0.8
+    },
+    "deathAnimation": "light_death"
+  },
+  "light_serpent": {
+    "displayName": "Light Serpent",
+    "type": "enemy",
+    "health": 90,
+    "speed": 3.0,
+    "maxSpeed": 4.5,
+    "damage": 14,
+    "scale": 1.0,
+    "model": "shader",
+    "color": 16774880,
+    "castShadow": false,
+    "receiveShadow": false,
+    "shaderConfig": {
+      "width": 4.0,
+      "height": 1.2,
+      "eyeColor": 16712721,
+      "eyeSize": 0.025,
+      "flowSpeed": 1.5,
+      "flowAmp": 1.1,
+      "waveCount": 2,
+      "waveType": 0,
+      "shapeType": 5,
+      "baseColor": 16777215,
+      "gradientColor": 14540253,
+      "outlineColor": 0,
+      "outlineWidth": 0.08,
+      "isCrawler": true
+    },
+    "ai": {
+      "behavior": "chase_player",
+      "aggroRange": 30,
+      "attackRange": 2,
+      "attackCooldown": 1.0
+    },
+    "deathAnimation": "light_death"
+  },
+  "corrupted_knight": {
+    "displayName": "Corrupted Knight",
+    "type": "boss",
+    "health": 2000,
+    "speed": 2.5,
+    "maxSpeed": 4.0,
+    "damage": 40,
+    "scale": 1.8,
+    "model": "shader",
+    "color": 6291456,
+    "castShadow": true,
+    "receiveShadow": true,
+    "shaderConfig": {
+      "width": 3.5,
+      "height": 6.0,
+      "eyeColor": 16711680,
+      "eyeSize": 0.05,
+      "flowSpeed": 0.8,
+      "flowAmp": 1.0,
+      "waveCount": 2,
+      "waveType": 1,
+      "shapeType": 0,
+      "baseColor": 1703936,
+      "gradientColor": 6291456,
+      "outlineColor": 16711680,
+      "outlineWidth": 0.1,
+      "isCrawler": false
+    },
+    "ai": {
+      "behavior": "boss",
+      "aggroRange": 50,
+      "attackRange": 3,
+      "attackCooldown": 1.5
+    },
+    "boss": {
+      "bossName": "Corrupted Knight",
+      "bossType": "melee",
+      "phases": [
+        {
+          "name": "Aggressive Assault",
+          "healthThreshold": 0.7,
+          "damageMultiplier": 1.2,
+          "speedMultiplier": 1.3,
+          "enrage": false
+        },
+        {
+          "name": "Berserker Rage",
+          "healthThreshold": 0.4,
+          "damageMultiplier": 1.5,
+          "speedMultiplier": 1.5,
+          "enrage": true
+        },
+        {
+          "name": "Desperate Fury",
+          "healthThreshold": 0.15,
+          "damageMultiplier": 2.0,
+          "speedMultiplier": 1.8,
+          "enrage": true
+        }
+      ],
+      "abilities": [
+        {
+          "name": "charge",
+          "cooldown": 8.0,
+          "damage": 60,
+          "range": 20
+        },
+        {
+          "name": "ground_slam",
+          "cooldown": 12.0,
+          "damage": 50,
+          "radius": 8
+        }
+      ],
+      "attackPattern": "charge",
+      "canSummonMinions": false
+    }
+  },
+  "stone_golem": {
+    "displayName": "Stone Golem",
+    "type": "boss",
+    "health": 3000,
+    "speed": 1.5,
+    "maxSpeed": 2.5,
+    "damage": 50,
+    "scale": 2.5,
+    "model": "shader",
+    "color": 8421504,
+    "castShadow": true,
+    "receiveShadow": true,
+    "shaderConfig": {
+      "width": 5.0,
+      "height": 7.0,
+      "eyeColor": 16776960,
+      "eyeSize": 0.06,
+      "flowSpeed": 0.3,
+      "flowAmp": 0.5,
+      "waveCount": 1,
+      "waveType": 2,
+      "shapeType": 0,
+      "baseColor": 4473924,
+      "gradientColor": 8421504,
+      "outlineColor": 2236962,
+      "outlineWidth": 0.12,
+      "isCrawler": false
+    },
+    "ai": {
+      "behavior": "boss",
+      "aggroRange": 45,
+      "attackRange": 4,
+      "attackCooldown": 2.0
+    },
+    "boss": {
+      "bossName": "Stone Golem",
+      "bossType": "tank",
+      "phases": [
+        {
+          "name": "Stone Shell",
+          "healthThreshold": 0.6,
+          "damageMultiplier": 1.1,
+          "speedMultiplier": 1.2,
+          "enrage": false
+        },
+        {
+          "name": "Cracked Armor",
+          "healthThreshold": 0.3,
+          "damageMultiplier": 1.3,
+          "speedMultiplier": 1.4,
+          "enrage": false
+        },
+        {
+          "name": "Earthen Wrath",
+          "healthThreshold": 0.1,
+          "damageMultiplier": 1.6,
+          "speedMultiplier": 1.6,
+          "enrage": true
+        }
+      ],
+      "abilities": [
+        {
+          "name": "ground_slam",
+          "cooldown": 10.0,
+          "damage": 70,
+          "radius": 12
+        },
+        {
+          "name": "summon_minions",
+          "cooldown": 20.0,
+          "minionType": "shadow_lurker",
+          "minionCount": 3
+        }
+      ],
+      "attackPattern": "slam",
+      "canSummonMinions": true,
+      "minionType": "shadow_lurker",
+      "maxMinions": 4,
+      "minionSpawnCooldown": 15.0
+    }
+  },
+  "arcane_wisp": {
+    "displayName": "Arcane Wisp",
+    "type": "boss",
+    "health": 1500,
+    "speed": 4.0,
+    "maxSpeed": 6.0,
+    "damage": 35,
+    "scale": 1.5,
+    "model": "shader",
+    "color": 11141290,
+    "castShadow": false,
+    "receiveShadow": false,
+    "shaderConfig": {
+      "width": 2.5,
+      "height": 4.0,
+      "eyeColor": 16777215,
+      "eyeSize": 0.08,
+      "flowSpeed": 2.0,
+      "flowAmp": 2.0,
+      "waveCount": 4,
+      "waveType": 0,
+      "shapeType": 1,
+      "baseColor": 11141290,
+      "gradientColor": 16777215,
+      "outlineColor": 8388736,
+      "outlineWidth": 0.1,
+      "isCrawler": false
+    },
+    "ai": {
+      "behavior": "boss",
+      "aggroRange": 60,
+      "attackRange": 2.5,
+      "attackCooldown": 1.0
+    },
+    "boss": {
+      "bossName": "Arcane Wisp",
+      "bossType": "ranged",
+      "phases": [
+        {
+          "name": "Arcane Flurry",
+          "healthThreshold": 0.65,
+          "damageMultiplier": 1.3,
+          "speedMultiplier": 1.4,
+          "enrage": false
+        },
+        {
+          "name": "Chaotic Burst",
+          "healthThreshold": 0.35,
+          "damageMultiplier": 1.6,
+          "speedMultiplier": 1.7,
+          "enrage": true
+        },
+        {
+          "name": "Arcane Overload",
+          "healthThreshold": 0.1,
+          "damageMultiplier": 2.0,
+          "speedMultiplier": 2.0,
+          "enrage": true
+        }
+      ],
+      "abilities": [
+        {
+          "name": "projectile_barrage",
+          "cooldown": 6.0,
+          "damage": 25,
+          "projectileCount": 5,
+          "range": 30
+        },
+        {
+          "name": "summon_minions",
+          "cooldown": 15.0,
+          "minionType": "light_flicker",
+          "minionCount": 4
+        }
+      ],
+      "attackPattern": "projectile",
+      "canSummonMinions": true,
+      "minionType": "light_flicker",
+      "maxMinions": 6,
+      "minionSpawnCooldown": 12.0
+    }
+  },
+  "zombie_lord": {
+    "displayName": "Zombie Lord",
+    "type": "boss",
+    "health": 2500,
+    "speed": 2.0,
+    "maxSpeed": 3.5,
+    "damage": 45,
+    "scale": 2.0,
+    "model": "shader",
+    "color": 3342336,
+    "castShadow": true,
+    "receiveShadow": true,
+    "shaderConfig": {
+      "width": 4.0,
+      "height": 6.5,
+      "eyeColor": 65280,
+      "eyeSize": 0.07,
+      "flowSpeed": 0.5,
+      "flowAmp": 1.2,
+      "waveCount": 2,
+      "waveType": 1,
+      "shapeType": 0,
+      "baseColor": 1052688,
+      "gradientColor": 3342336,
+      "outlineColor": 65280,
+      "outlineWidth": 0.15,
+      "isCrawler": false
+    },
+    "ai": {
+      "behavior": "boss",
+      "aggroRange": 50,
+      "attackRange": 3.5,
+      "attackCooldown": 1.8
+    },
+    "boss": {
+      "bossName": "Zombie Lord",
+      "bossType": "summoner",
+      "phases": [
+        {
+          "name": "Undead Commander",
+          "healthThreshold": 0.7,
+          "damageMultiplier": 1.2,
+          "speedMultiplier": 1.2,
+          "enrage": false
+        },
+        {
+          "name": "Plague Spreader",
+          "healthThreshold": 0.4,
+          "damageMultiplier": 1.4,
+          "speedMultiplier": 1.4,
+          "enrage": false
+        },
+        {
+          "name": "Necromantic Fury",
+          "healthThreshold": 0.15,
+          "damageMultiplier": 1.8,
+          "speedMultiplier": 1.6,
+          "enrage": true
+        }
+      ],
+      "abilities": [
+        {
+          "name": "summon_minions",
+          "cooldown": 10.0,
+          "minionType": "shadow_lurker",
+          "minionCount": 5
+        },
+        {
+          "name": "charge",
+          "cooldown": 12.0,
+          "damage": 70,
+          "range": 15
+        },
+        {
+          "name": "ground_slam",
+          "cooldown": 15.0,
+          "damage": 60,
+          "radius": 10
+        }
+      ],
+      "attackPattern": "summon",
+      "canSummonMinions": true,
+      "minionType": "shadow_lurker",
+      "maxMinions": 8,
+      "minionSpawnCooldown": 8.0
+    }
+  },
+  "crystal_guardian": {
+    "displayName": "Crystal Guardian",
+    "type": "enemy",
+    "health": 150,
+    "speed": 3.0,
+    "maxSpeed": 4.5,
+    "damage": 15,
+    "scale": 1.0,
+    "model": "crystal_guardian",
+    "color": 65535,
+    "castShadow": true,
+    "receiveShadow": true,
+    "animations": {
+      "idle": "idle",
+      "walk": "walk",
+      "attack": "attack",
+      "death": "death",
+      "spawn": "spawn"
+    },
+    "ai": {
+      "behavior": "patrol",
+      "aggroRange": 25,
+      "attackRange": 3,
+      "attackCooldown": 1.5,
+      "patrolRadius": 15
+    }
+  },
+  "flame_imp": {
+    "displayName": "Flame Imp",
+    "type": "enemy",
+    "health": 80,
+    "speed": 7.0,
+    "maxSpeed": 10.0,
+    "damage": 12,
+    "scale": 0.6,
+    "model": "flame_imp",
+    "color": 16733440,
+    "castShadow": true,
+    "receiveShadow": false,
+    "animations": {
+      "idle": "idle",
+      "walk": "run",
+      "attack": "attack",
+      "death": "death"
+    },
+    "ai": {
+      "behavior": "swarm",
+      "aggroRange": 35,
+      "attackRange": 1.5,
+      "attackCooldown": 0.8
+    }
+  },
+  "void_walker": {
+    "displayName": "Void Walker",
+    "type": "enemy",
+    "health": 200,
+    "speed": 4.0,
+    "maxSpeed": 6.0,
+    "damage": 20,
+    "scale": 1.2,
+    "model": "void_walker",
+    "color": 2105376,
+    "castShadow": true,
+    "receiveShadow": true,
+    "animations": {
+      "idle": "idle",
+      "walk": "walk",
+      "attack": "attack",
+      "death": "death",
+      "teleport": "teleport"
+    },
+    "ai": {
+      "behavior": "teleport",
+      "aggroRange": 40,
+      "attackRange": 2.5,
+      "attackCooldown": 2.0,
+      "teleportCooldown": 5.0,
+      "teleportRange": 10
+    }
+  },
+  "frost_sentinel": {
+    "displayName": "Frost Sentinel",
+    "type": "enemy",
+    "health": 180,
+    "speed": 2.5,
+    "maxSpeed": 4.0,
+    "damage": 18,
+    "scale": 1.1,
+    "model": "frost_sentinel",
+    "color": 9498256,
+    "castShadow": true,
+    "receiveShadow": true,
+    "animations": {
+      "idle": "idle",
+      "walk": "walk",
+      "attack": "cast",
+      "death": "death"
+    },
+    "weapon": {
+      "type": "projectile",
+      "projectileDamage": 18,
+      "projectileSpeed": 10,
+      "projectileLifetime": 3.0,
+      "projectileColor": 9498256,
+      "projectileSize": 0.3
+    },
+    "ai": {
+      "behavior": "ranged",
+      "aggroRange": 45,
+      "attackRange": 15,
+      "attackCooldown": 2.5,
+      "projectileSpeed": 10
+    }
+  },
+  "corrupted_knight_minion": {
+    "displayName": "Corrupted Knight",
+    "type": "enemy",
+    "health": 250,
+    "speed": 3.5,
+    "maxSpeed": 5.0,
+    "damage": 25,
+    "scale": 1.3,
+    "model": "corrupted_knight",
+    "color": 8388736,
+    "castShadow": true,
+    "receiveShadow": true,
+    "animations": {
+      "idle": "idle",
+      "walk": "walk",
+      "attack": "attack",
+      "death": "death",
+      "charge": "run"
+    },
+    "ai": {
+      "behavior": "charge",
+      "aggroRange": 30,
+      "attackRange": 2,
+      "attackCooldown": 1.2,
+      "chargeSpeed": 12,
+      "chargeCooldown": 6.0
+    }
+  },
+  "arcane_wisp_minion": {
+    "displayName": "Arcane Wisp",
+    "type": "enemy",
+    "health": 50,
+    "speed": 8.0,
+    "maxSpeed": 12.0,
+    "damage": 8,
+    "scale": 0.4,
+    "model": "arcane_wisp",
+    "color": 16711935,
+    "castShadow": false,
+    "receiveShadow": false,
+    "animations": {
+      "idle": "float",
+      "walk": "float",
+      "attack": "pulse",
+      "death": "explode"
+    },
+    "ai": {
+      "behavior": "evade",
+      "aggroRange": 40,
+      "attackRange": 5,
+      "attackCooldown": 0.5,
+      "evadeChance": 0.7
+    }
+  },
+  "stone_golem_minion": {
+    "displayName": "Stone Golem",
+    "type": "enemy",
+    "health": 400,
+    "speed": 2.0,
+    "maxSpeed": 3.0,
+    "damage": 30,
+    "scale": 1.8,
+    "model": "stone_golem",
+    "color": 8421504,
+    "castShadow": true,
+    "receiveShadow": true,
+    "animations": {
+      "idle": "idle",
+      "walk": "walk",
+      "attack": "slam",
+      "death": "crumble"
+    },
+    "ai": {
+      "behavior": "tank",
+      "aggroRange": 20,
+      "attackRange": 3,
+      "attackCooldown": 3.0,
+      "armor": 0.5
+    }
+  },
+  "blood_hound": {
+    "displayName": "Blood Hound",
+    "type": "enemy",
+    "health": 120,
+    "speed": 9.0,
+    "maxSpeed": 13.0,
+    "damage": 14,
+    "scale": 0.9,
+    "model": "blood_hound",
+    "color": 9109504,
+    "castShadow": true,
+    "receiveShadow": true,
+    "animations": {
+      "idle": "idle",
+      "walk": "run",
+      "attack": "bite",
+      "death": "death"
+    },
+    "ai": {
+      "behavior": "pack_hunter",
+      "aggroRange": 50,
+      "attackRange": 1.5,
+      "attackCooldown": 0.6,
+      "packBonusDamage": 5
+    }
+  },
+  "lightning_elemental": {
+    "displayName": "Lightning Elemental",
+    "type": "enemy",
+    "health": 130,
+    "speed": 6.0,
+    "maxSpeed": 9.0,
+    "damage": 22,
+    "scale": 0.7,
+    "model": "lightning_elemental",
+    "color": 16776960,
+    "castShadow": false,
+    "receiveShadow": false,
+    "animations": {
+      "idle": "crackle",
+      "walk": "surge",
+      "attack": "discharge",
+      "death": "disperse"
+    },
+    "weapon": {
+      "type": "chain_lightning",
+      "projectileDamage": 22,
+      "chainRange": 5,
+      "maxChains": 3,
+      "projectileColor": 16776960
+    },
+    "ai": {
+      "behavior": "chain_attack",
+      "aggroRange": 35,
+      "attackRange": 8,
+      "attackCooldown": 1.8,
+      "chainRange": 5,
+      "maxChains": 3
+    },
+    "deathAnimation": "light_death"
+  }
+}

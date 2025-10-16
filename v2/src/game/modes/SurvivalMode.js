@@ -19,11 +19,15 @@ export class SurvivalMode extends GameMode {
   async init(game) {
     await super.init(game);
 
-    // Create player
+    // Load the survival level (which loads environment and spawn config)
+    await game.loadLevel('survival_void');
+    console.log('✅ Level loaded');
+
+    // Create player at level's start position
     await game.createPlayer();
     console.log('✅ Player created');
 
-    // Initialize spawn system with survival config
+    // Initialize spawn system (spawn config already loaded by level system)
     await game.spawnSystem.init('survival_basic');
     console.log('✅ Spawn system initialized');
   }

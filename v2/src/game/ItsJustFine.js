@@ -16,42 +16,33 @@ import { CameraSystem } from '../core/camera/CameraSystem.js';
 import { CameraController } from './CameraController.js';
 
 // Systems
-import { RenderSystem } from '../systems/render/RenderSystem.js';
-import { MovementSystem } from '../systems/movement/MovementSystem.js';
-import { PlayerInputSystem } from '../systems/input/PlayerInputSystem.js';
-import { AISystem } from '../systems/ai/AISystem.js';
-import { BossSystem } from '../systems/entity/BossSystem.js';
-import { SpawnSystem } from '../systems/spawn/SpawnSystem.js';
-import { CollisionSystem } from '../systems/physics/CollisionSystem.js';
-import { DamageSystem } from '../systems/combat/DamageSystem.js';
-import { WeaponSystem } from '../systems/combat/WeaponSystem.js';
-import { ProjectileSystem } from '../systems/combat/ProjectileSystem.js';
-import { ParticleSystem } from '../systems/effects/ParticleSystem.js';
-import { ParticleManager } from '../systems/effects/ParticleManager.js';
-import { StatusEffectSystem } from '../systems/combat/StatusEffectSystem.js';
-import { AudioSystem } from '../systems/audio/AudioSystem.js';
-import { LevelingSystem } from '../systems/progression/LevelingSystem.js';
-import { PickupSystem } from '../systems/items/PickupSystem.js';
-import { UISystem } from '../systems/ui/UISystem.js';
-import { AnimationSystem } from '../systems/animation/AnimationSystem.js';
-
-// Components
-import { Entity } from '../core/ecs/Entity.js';
-import { Transform } from '../components/Transform.js';
-import { Health } from '../components/Health.js';
-import { Movement } from '../components/Movement.js';
-import { Renderable } from '../components/Renderable.js';
-import { Collider } from '../components/Collider.js';
-import { Weapon } from '../components/Weapon.js';
-import { Experience } from '../components/Experience.js';
-import { Pickup } from '../components/Pickup.js';
-import { Animation } from '../components/Animation.js';
+import { RenderSystem } from '../core/systems/RenderSystem.js';
+import { MovementSystem } from '../core/systems/MovementSystem.js';
+import { PlayerInputSystem } from '../game/systems/input/PlayerInputSystem.js';
+import { AISystem } from '../game/systems/ai/AISystem.js';
+import { BossSystem } from '../game/systems/entity/BossSystem.js';
+import { SpawnSystem } from '../game/systems/spawn/SpawnSystem.js';
+import { CollisionSystem } from '../core/systems/CollisionSystem.js';
+import { DamageSystem } from '../game/systems/combat/DamageSystem.js';
+import { WeaponSystem } from '../game/systems/combat/WeaponSystem.js';
+import { ProjectileSystem } from '../game/systems/combat/ProjectileSystem.js';
+import { ParticleSystem } from '../game/systems/effects/ParticleSystem.js';
+import { ParticleManager } from '../game/systems/effects/ParticleManager.js';
+import { StatusEffectSystem } from '../game/systems/combat/StatusEffectSystem.js';
+import { AudioSystem } from '../game/systems/audio/AudioSystem.js';
+import { LevelingSystem } from '../game/systems/progression/LevelingSystem.js';
+import { PickupSystem } from '../game/systems/items/PickupSystem.js';
+import { UISystem } from '../game/systems/ui/UISystem.js';
+import { AnimationSystem } from '../core/systems/AnimationSystem.js';
+import { LevelSystem } from '../game/systems/level/LevelSystem.js';
 
 // Entity Factory
-import { entityFactory } from '../systems/entity/EntityFactory.js';
+import { entityFactory } from '../game/systems/entity/EntityFactory.js';
 
-import { OptimizationConfig } from '../config/optimization.js';
-import * as THREE from 'three';
+// Config
+import { configLoader } from '../utils/ConfigLoader.js';
+
+import { OptimizationConfig } from '../core/config/optimization.js';
 
 /**
  * Main game class for "It's Just Fine"
@@ -85,6 +76,7 @@ export class ItsJustFine {
     this.pickupSystem = null;
     this.uiSystem = null;
     this.animationSystem = null;
+    this.levelSystem = null;
 
     // Game state
     this.initialized = false;
@@ -153,9 +145,6 @@ export class ItsJustFine {
     this.initializeSystems();
     console.log('✅ Systems initialized');
 
-    // Create test ground
-    this.createGround();
-
     this.initialized = true;
     console.log('✅ Game initialized');
   }
@@ -205,6 +194,9 @@ export class ItsJustFine {
     // Animation
     this.animationSystem = new AnimationSystem();
 
+    // Level management
+    this.levelSystem = new LevelSystem(this.renderer);
+
     // Setup event listeners
     this.setupEventListeners();
   }
@@ -246,8 +238,15 @@ export class ItsJustFine {
           tag: 'death_particle'
         });
 
-        // Spawn XP pickup
-        this.spawnXPPickup(transform.x, transform.y, transform.z);
+        // Register kill with level system
+        if (this.levelSystem) {
+          const enemyType = entity.userData?.enemyType || 'unknown';
+          const killPoints = entity.userData?.killPoints || 10;
+          this.levelSystem.registerKill(enemyType, killPoints);
+        }
+
+        // TODO: Implement XP drop system from v1
+        // Should use entityFactory to create XP pickups based on enemy config
       }
     });
 
@@ -287,159 +286,53 @@ export class ItsJustFine {
    * @returns {Entity} Player entity
    */
   async createPlayer() {
-    const player = new Entity();
-
-    // Transform
-    const transform = new Transform();
-    transform.init({ x: 0, y: 0, z: 0, scaleX: 1.0, scaleY: 1.0, scaleZ: 1.0, rotationY: 0 });
-    player.addComponent(transform);
-
-    // Health
-    const health = new Health();
-    health.init({ max: 100, current: 100 });
-    player.addComponent(health);
-
-    // Movement
-    const movement = new Movement();
-    movement.init({ speed: 8, maxSpeed: 12, drag: 0 });
-    player.addComponent(movement);
-
-    // Renderable - Let RenderSystem handle model loading
-    const renderable = new Renderable();
-    renderable.init({
-      modelType: 'player',
-      color: 0xffffff,
-      castShadow: true,
-      receiveShadow: true
-    });
-    player.addComponent(renderable);
-
-    // Collider
-    const collider = new Collider();
-    collider.init({
-      shape: 'sphere',
-      radius: 0.75,
-      layer: 'player',
-      collidesWith: ['enemy'],
-      isSolid: true,
-      bounciness: 0.3,
-      collisionResolutionMode: 'horizontal'
-    });
-    player.addComponent(collider);
-
-    // Weapon
-    const weapon = new Weapon();
-    weapon.init({
-      weaponType: 'magic_pistol',
-      damage: 25,
-      fireRate: 0.15,
-      projectileSpeed: 25,
-      projectileLifetime: 3,
-      projectileSize: 0.3,
-      projectileColor: 0xffff00,
-      spread: 0,
-      projectilesPerShot: 1,
-      piercing: false,
-      homing: false,
-      explosive: false
-    });
-    player.addComponent(weapon);
-
-    // Experience
-    const experience = new Experience();
-    experience.init({
+    // Use entityFactory to create player (it will be registered)
+    const player = entityFactory.createPlayer({
+      x: 0,
+      y: 0,
+      z: 0,
+      health: 100,
+      speed: 8,
       level: 1,
-      baseXPRequirement: 100,
-      xpCurveMultiplier: 1.5,
-      healthPerLevel: 10,
-      damagePerLevel: 2,
-      speedPerLevel: 0.1
+      xp: 0
     });
-    player.addComponent(experience);
 
-    // Animation - will be set up by RenderSystem when model loads
-    const animation = new Animation();
-    player.addComponent(animation);
-
-    // Tag as player
-    player.addTag('player');
-
-    // Add to engine AFTER model is loaded
     this.engine.addEntity(player);
     this.player = player;
 
-    // Set player reference for pickup system
+    // Set player reference for systems that need it
     this.pickupSystem.setPlayer(player);
 
+    // Set camera to follow player
+    const playerTransform = player.getComponent('Transform');
+    if (playerTransform) {
+      this.cameraSystem.setTarget({
+        x: playerTransform.x,
+        y: playerTransform.y,
+        z: playerTransform.z
+      });
+    }
+
+    console.log('Player created:', player.id);
     return player;
   }
 
   /**
-   * Spawn XP pickup
+   * Load a level
+   * @param {string} levelId - Level identifier
+   * @returns {Promise} Resolves when level is loaded
    */
-  spawnXPPickup(x, y, z) {
-    const pickupEntity = new Entity();
+  async loadLevel(levelId) {
+    console.log(`Loading level: ${levelId}`);
 
-    const transform = new Transform();
-    transform.init({
-      x,
-      y: y + 0.5,
-      z,
-      scaleX: 0.01,
-      scaleY: 0.01,
-      scaleZ: 0.01
-    });
-    pickupEntity.addComponent(transform);
+    // Load level configuration and environment
+    await this.levelSystem.loadLevel(levelId);
 
-    const renderable = new Renderable();
-    renderable.init({
-      modelType: 'sphere',
-      color: 0x00ff00,
-      emissive: 0x00ff00,
-      metalness: 0.8,
-      roughness: 0.2,
-      castShadow: false,
-      receiveShadow: false
-    });
-    pickupEntity.addComponent(renderable);
+    // Start the level
+    this.levelSystem.startLevel();
 
-    const pickup = new Pickup();
-    pickup.init({
-      pickupType: 'xp',
-      value: 10,
-      autoCollect: true,
-      collectRadius: 0.8,
-      magnetRange: 3.0,
-      magnetSpeed: 6.0,
-      lifetime: 30,
-      bobHeight: 0.3,
-      bobSpeed: 2.0,
-      rotateSpeed: 2.0
-    });
-    pickupEntity.addComponent(pickup);
-
-    pickupEntity.addTag('pickup');
-    pickupEntity.addTag('xp');
-
-    this.engine.addEntity(pickupEntity);
-  }
-
-  /**
-   * Create ground plane
-   */
-  createGround() {
-    const groundGeometry = new THREE.PlaneGeometry(200, 200);
-    const groundMaterial = new THREE.MeshStandardMaterial({
-      color: 0x8b7355,
-      roughness: 0.8,
-      metalness: 0.2,
-      transparent: true,
-      opacity: 0.3
-    });
-    const ground = new THREE.Mesh(groundGeometry, groundMaterial);
-    ground.rotation.x = -Math.PI / 2;
-    ground.receiveShadow = true;
-    this.renderer.addToScene(ground);
+    console.log(`Level loaded: ${this.levelSystem.levelConfig.name}`);
+    return this.levelSystem.levelConfig;
   }
 
   /**
@@ -494,6 +387,11 @@ export class ItsJustFine {
       this.currentMode.update(dt);
     }
 
+    // Update level system
+    if (this.levelSystem) {
+      this.levelSystem.updateTime(dt);
+    }
+
     // Update systems
     this.playerInputSystem.update(dt, this.engine.entities);
     this.aiSystem.update(dt, this.engine.entities);
@@ -520,9 +418,10 @@ export class ItsJustFine {
 
     this.uiSystem.update(dt, {
       player: this.player,
-      currentWave: this.spawnSystem.currentWave || 1,
+      currentWave: this.levelSystem?.getLevelInfo()?.wave || this.spawnSystem.currentWave || 1,
       enemyCount: enemyCount,
-      boss: boss
+      boss: boss,
+      levelInfo: this.levelSystem?.getLevelInfo()
     });
 
     // Clear input state
@@ -540,6 +439,9 @@ export class ItsJustFine {
    * Cleanup
    */
   cleanup() {
+    if (this.levelSystem) {
+      this.levelSystem.cleanup();
+    }
     this.engine.cleanup();
     this.renderer.cleanup();
     this.input.cleanup();

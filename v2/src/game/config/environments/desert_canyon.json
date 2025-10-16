@@ -1,0 +1,139 @@
+{
+  "id": "desert_canyon",
+  "name": "Desert Canyon",
+  "description": "Rocky canyon arena with scattered boulders and cacti",
+
+  "ground": {
+    "type": "terrain",
+    "size": 200,
+    "texture": "/assets/textures/sand.jpg",
+    "normalMap": "/assets/textures/sand_normal.jpg",
+    "color": 13936500,
+    "receiveShadow": true,
+    "properties": {
+      "friction": 0.6,
+      "restitution": 0.1
+    },
+    "heightmap": null
+  },
+
+  "lighting": {
+    "background": 16754253,
+    "ambient": {
+      "color": 16766115,
+      "intensity": 0.6
+    },
+    "sun": {
+      "color": 16774374,
+      "intensity": 1.5,
+      "position": { "x": 30, "y": 50, "z": 20 },
+      "castShadow": true,
+      "shadowMapSize": 2048
+    },
+    "fill": {
+      "color": 16750950,
+      "intensity": 0.4,
+      "position": { "x": -20, "y": 15, "z": -15 }
+    },
+    "hemisphere": {
+      "sky": 16766115,
+      "ground": 10187347,
+      "intensity": 0.8
+    }
+  },
+
+  "boundaries": {
+    "type": "box",
+    "minX": -100,
+    "maxX": 100,
+    "minZ": -100,
+    "maxZ": 100,
+    "height": 50,
+    "killPlane": -10
+  },
+
+  "objects": [
+    {
+      "id": "rock_1",
+      "asset": "/assets/models/rock_large.glb",
+      "position": { "x": 15, "y": 0, "z": 20 },
+      "rotation": { "x": 0, "y": 0.5, "z": 0 },
+      "scale": { "x": 2, "y": 2, "z": 2 },
+      "solid": true,
+      "castShadow": true,
+      "receiveShadow": true,
+      "collider": {
+        "type": "cylinder",
+        "radius": 3,
+        "height": 4
+      }
+    },
+    {
+      "id": "rock_2",
+      "asset": "/assets/models/rock_large.glb",
+      "position": { "x": -25, "y": 0, "z": 30 },
+      "rotation": { "x": 0, "y": 1.2, "z": 0 },
+      "scale": { "x": 1.5, "y": 1.8, "z": 1.5 },
+      "solid": true,
+      "castShadow": true,
+      "receiveShadow": true,
+      "collider": {
+        "type": "cylinder",
+        "radius": 2.5,
+        "height": 3.5
+      }
+    },
+    {
+      "id": "rock_3",
+      "asset": "/assets/models/rock_medium.glb",
+      "position": { "x": 40, "y": 0, "z": -15 },
+      "rotation": { "x": 0, "y": 2.1, "z": 0 },
+      "scale": { "x": 1.2, "y": 1.2, "z": 1.2 },
+      "solid": true,
+      "castShadow": true,
+      "receiveShadow": true,
+      "collider": {
+        "type": "cylinder",
+        "radius": 1.8,
+        "height": 2.5
+      }
+    },
+    {
+      "id": "cactus_1",
+      "asset": "/assets/models/cactus.glb",
+      "position": { "x": -10, "y": 0, "z": -25 },
+      "rotation": { "x": 0, "y": 0, "z": 0 },
+      "scale": { "x": 1, "y": 1, "z": 1 },
+      "solid": false,
+      "castShadow": true,
+      "receiveShadow": true
+    },
+    {
+      "id": "cactus_2",
+      "asset": "/assets/models/cactus.glb",
+      "position": { "x": 30, "y": 0, "z": 35 },
+      "rotation": { "x": 0, "y": 0.8, "z": 0 },
+      "scale": { "x": 0.8, "y": 1.2, "z": 0.8 },
+      "solid": false,
+      "castShadow": true,
+      "receiveShadow": true
+    }
+  ],
+
+  "fog": {
+    "enabled": true,
+    "color": 16754253,
+    "near": 60,
+    "far": 150
+  },
+
+  "audio": {
+    "ambience": "/assets/audio/desert_wind.mp3",
+    "music": null
+  },
+
+  "heatmap": {
+    "enabled": false,
+    "zones": []
+  }
+}

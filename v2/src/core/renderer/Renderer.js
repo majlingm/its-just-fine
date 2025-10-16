@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { getCameraConfig, getDeviceCameraSettings } from '../../config/camera.js';
+import { getCameraConfig, getDeviceCameraSettings } from '../config/camera.js';
 
 /**
  * Renderer - Three.js rendering abstraction (Platform-agnostic)
