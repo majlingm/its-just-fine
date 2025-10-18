@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Asset Viewer - It's Just Fine</title>
+    <link rel="stylesheet" href="../shared/styles/tools.css">
+    <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+    <div class="tool-page">
+        <header class="tool-header">
+            <h1>🖼️ Asset Viewer</h1>
+            <button class="back-button" onclick="window.location.href='../index.html'">← Back to Tools</button>
+        </header>
+
+        <div class="tool-content">
+            <aside class="sidebar">
+                <div class="panel-section">
+                    <h3>Asset Categories</h3>
+                    <div class="category-list">
+                        <button class="category-btn active" data-category="sprites">Sprites</button>
+                        <button class="category-btn" data-category="textures">Textures</button>
+                        <button class="category-btn" data-category="models">3D Models</button>
+                    </div>
+                </div>
+
+                <div class="panel-section">
+                    <h3>Subcategories</h3>
+                    <div id="subcategory-list" class="subcategory-list">
+                        <!-- Populated dynamically -->
+                    </div>
+                </div>
+
+                <div class="panel-section">
+                    <h3>Search</h3>
+                    <input type="text" id="asset-search" placeholder="Search assets...">
+                </div>
+
+                <div class="panel-section">
+                    <h3>Info</h3>
+                    <div id="asset-info">
+                        <p class="text-secondary">Select an asset to view details</p>
+                    </div>
+                </div>
+            </aside>
+
+            <main class="main-panel">
+                <div class="viewer-container">
+                    <div class="viewer-controls">
+                        <div class="control-group">
+                            <label>View Mode:</label>
+                            <select id="view-mode">
+                                <option value="grid">Grid</option>
+                                <option value="list">List</option>
+                            </select>
+                        </div>
+                        <div class="control-group">
+                            <label>Zoom:</label>
+                            <input type="range" id="zoom-slider" min="50" max="200" value="100">
+                            <span id="zoom-value">100%</span>
+                        </div>
+                    </div>
+
+                    <div id="asset-grid" class="asset-grid">
+                        <!-- Assets will be displayed here -->
+                        <div class="empty-state">
+                            <p>Select a category to view assets</p>
+                        </div>
+                    </div>
+
+                    <div id="preview-panel" class="preview-panel hidden">
+                        <div class="preview-header">
+                            <h3 id="preview-title">Asset Preview</h3>
+                            <button id="close-preview">✕</button>
+                        </div>
+                        <div class="preview-content">
+                            <canvas id="preview-canvas"></canvas>
+                            <div id="preview-info"></div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script type="module" src="./main.js"></script>
+</body>
+</html>

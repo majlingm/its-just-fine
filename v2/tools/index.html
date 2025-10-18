@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>It's Just Fine - Development Tools</title>
+    <link rel="stylesheet" href="./shared/styles/tools.css">
+</head>
+<body>
+    <div class="tools-container">
+        <header class="tools-header">
+            <h1>It's Just Fine - Development Tools</h1>
+            <p class="subtitle">Game Engine Development Suite</p>
+        </header>
+
+        <main class="tools-grid">
+            <div class="tool-card" data-tool="asset-viewer">
+                <div class="tool-icon">🖼️</div>
+                <h2>Asset Viewer</h2>
+                <p>Browse and preview all game assets including sprites, textures, and 3D models</p>
+                <button onclick="window.location.href='./asset-viewer/index.html'">Open Tool</button>
+            </div>
+
+            <div class="tool-card" data-tool="world-builder">
+                <div class="tool-icon">🗺️</div>
+                <h2>World Builder</h2>
+                <p>Design and construct game levels, place objects, and configure terrain</p>
+                <button onclick="window.location.href='./world-builder/index.html'">Open Tool</button>
+            </div>
+
+            <div class="tool-card" data-tool="spell-creator">
+                <div class="tool-icon">✨</div>
+                <h2>Spell Creator</h2>
+                <p>Create and balance spells with visual effects, damage, and behavior configurations</p>
+                <button onclick="window.location.href='./spell-creator/index.html'">Open Tool</button>
+            </div>
+
+            <div class="tool-card" data-tool="effects-creator">
+                <div class="tool-icon">💥</div>
+                <h2>Effects Creator</h2>
+                <p>Design particle effects, visual effects, and animations for spells and abilities</p>
+                <button onclick="window.location.href='./effects-creator/index.html'">Open Tool</button>
+            </div>
+
+            <div class="tool-card" data-tool="enemy-creator">
+                <div class="tool-icon">👹</div>
+                <h2>Enemy Creator</h2>
+                <p>Configure enemy types, AI behavior, stats, and loot drops</p>
+                <button onclick="window.location.href='./enemy-creator/index.html'">Open Tool</button>
+            </div>
+
+            <div class="tool-card coming-soon" data-tool="sound-editor">
+                <div class="tool-icon">🔊</div>
+                <h2>Sound Editor</h2>
+                <p>Manage audio assets and configure sound effects</p>
+                <button disabled>Coming Soon</button>
+            </div>
+        </main>
+
+        <footer class="tools-footer">
+            <a href="../index.html">← Back to Game</a>
+        </footer>
+    </div>
+</body>
+</html>
