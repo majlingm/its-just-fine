@@ -3,10 +3,11 @@ import { Entity } from './V1Entity.js';
 import { calculateDamageWithCrit } from '../utils/V1damageCalculations.js';
 
 export class SkullShield extends Entity {
-  constructor(engine, player, damage, spell = null) {
+  constructor(engine, player, damage, spell = null, realPlayer = null) {
     super();
     this.engine = engine;
-    this.player = player;
+    this.player = player; // v1 compatibility (fallback)
+    this.realPlayer = realPlayer; // Real player entity with Transform
     this.baseDamage = damage;
     this.spell = spell;
     this.skulls = [];
@@ -132,8 +133,23 @@ export class SkullShield extends Entity {
     }
   }
 
+  // Get current player position (supports both v1 and v2)
+  getPlayerPosition() {
+    if (this.realPlayer && this.realPlayer.getComponent) {
+      const transform = this.realPlayer.getComponent('Transform');
+      if (transform) {
+        return { x: transform.x, y: transform.y, z: transform.z };
+      }
+    }
+    // Fallback to v1 player object
+    return { x: this.player.x, y: this.player.y, z: this.player.z };
+  }
+
   update(dt) {
     if (!this.active) return;
+
+    // Get current player position
+    const playerPos = this.getPlayerPosition();
 
     // Update rotation
     this.currentRotation += this.rotationSpeed * dt;
@@ -155,8 +171,8 @@ export class SkullShield extends Entity {
       const radiusOffset = Math.sin(skull.bobPhase) * 0.3;
       const radius = this.ringRadius + radiusOffset;
 
-      const x = this.player.x + Math.cos(angle) * radius;
-      const z = this.player.z + Math.sin(angle) * radius;
+      const x = playerPos.x + Math.cos(angle) * radius;
+      const z = playerPos.z + Math.sin(angle) * radius;
 
       // Bobbing height
       const bob = Math.abs(Math.sin(skull.age * 4)) * 0.2;

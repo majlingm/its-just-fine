@@ -24,13 +24,14 @@ export class V1PersistentSpell extends Spell {
   /**
    * Cast the persistent spell
    * @param {object} engine - Game engine
-   * @param {object} player - Player object
+   * @param {object} player - Player object (v1 compatibility)
    * @param {object} stats - Player stats
+   * @param {object} realPlayer - Real player entity (optional, for v2)
    */
-  cast(engine, player, stats) {
+  cast(engine, player, stats, realPlayer = null) {
     // Only create entity if it doesn't exist or is inactive
     if (!this.activeEntity || !this.activeEntity.active) {
-      this.createEntity(engine, player, stats);
+      this.createEntity(engine, player, stats, realPlayer);
     }
 
     // Check for special actions (like burst for Ring of Fire)
@@ -42,17 +43,18 @@ export class V1PersistentSpell extends Spell {
   /**
    * Create the persistent entity
    * @param {object} engine - Game engine
-   * @param {object} player - Player object
+   * @param {object} player - Player object (v1 compatibility)
    * @param {object} stats - Player stats
+   * @param {object} realPlayer - Real player entity (optional, for v2)
    */
-  createEntity(engine, player, stats) {
+  createEntity(engine, player, stats, realPlayer = null) {
     if (!this.entityClass) {
       console.error('PersistentSpell: No entityClass defined');
       return;
     }
 
     const baseDamage = this.damage * stats.damage;
-    this.activeEntity = new this.entityClass(engine, player, baseDamage, this);
+    this.activeEntity = new this.entityClass(engine, player, baseDamage, this, realPlayer);
     engine.addEntity(this.activeEntity);
   }
 

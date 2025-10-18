@@ -1,17 +1,19 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import { GroundSystem } from './GroundSystem.js';
+import { TerrainSystem } from './TerrainSystem.js';
 
 /**
  * EnvironmentSystem - Manages complete environment setup
  *
- * Orchestrates ground, lighting, objects, boundaries, and atmospheric effects.
+ * Orchestrates ground, terrain, lighting, objects, boundaries, and atmospheric effects.
  * Loads environment configurations and creates the game world.
  */
 export class EnvironmentSystem {
   constructor(renderer) {
     this.renderer = renderer;
     this.groundSystem = new GroundSystem(renderer);
+    this.terrainSystem = new TerrainSystem(renderer);
     this.gltfLoader = new GLTFLoader();
 
     // Environment state
@@ -19,6 +21,7 @@ export class EnvironmentSystem {
     this.objects = [];
     this.lights = [];
     this.boundaries = null;
+    this.useProceduralTerrain = false;
   }
 
   /**
@@ -32,9 +35,16 @@ export class EnvironmentSystem {
 
     this.currentEnvironment = environmentConfig;
 
-    // Create ground
-    if (environmentConfig.ground) {
-      this.groundSystem.create(environmentConfig.ground);
+    // Check if using procedural terrain
+    if (environmentConfig.proceduralTerrain) {
+      this.useProceduralTerrain = true;
+      this.terrainSystem.generate();
+    } else {
+      this.useProceduralTerrain = false;
+      // Create ground
+      if (environmentConfig.ground) {
+        this.groundSystem.create(environmentConfig.ground);
+      }
     }
 
     // Setup lighting
@@ -58,6 +68,49 @@ export class EnvironmentSystem {
     }
 
     return this.currentEnvironment;
+  }
+
+  /**
+   * Enable/disable procedural terrain
+   * @param {boolean} enabled - Whether to use procedural terrain
+   * @param {Array} entities - Optional array of entities to reposition
+   * @param {string} style - Terrain style: 'normal' or 'fantasy'
+   */
+  setProceduralTerrain(enabled, entities = null, style = 'normal') {
+    if (enabled && !this.useProceduralTerrain) {
+      this.groundSystem.cleanup();
+      this.terrainSystem.generate(style);
+      this.useProceduralTerrain = true;
+
+      // Reposition all existing entities to terrain height
+      if (entities) {
+        for (const entity of entities) {
+          if (!entity.active) continue;
+          const transform = entity.getComponent?.('Transform');
+          if (transform) {
+            const terrainHeight = this.getTerrainHeight(transform.x, transform.z);
+            transform.y = terrainHeight;
+          }
+        }
+      }
+    } else if (!enabled && this.useProceduralTerrain) {
+      this.terrainSystem.cleanup();
+      if (this.currentEnvironment && this.currentEnvironment.ground) {
+        this.groundSystem.create(this.currentEnvironment.ground);
+      }
+      this.useProceduralTerrain = false;
+
+      // Reset all entities to ground level (Y=0)
+      if (entities) {
+        for (const entity of entities) {
+          if (!entity.active) continue;
+          const transform = entity.getComponent?.('Transform');
+          if (transform) {
+            transform.y = 0;
+          }
+        }
+      }
+    }
   }
 
   /**
@@ -294,11 +347,46 @@ export class EnvironmentSystem {
   }
 
   /**
+   * Update environment (particles, etc.)
+   * @param {number} dt - Delta time
+   */
+  update(dt) {
+    if (this.useProceduralTerrain && this.terrainSystem) {
+      this.terrainSystem.updateParticles(dt);
+    }
+  }
+
+  /**
+   * Get terrain height at position (for procedural terrain)
+   * @param {number} x - X position
+   * @param {number} z - Z position
+   * @returns {number} Height at position, or 0 if not using procedural terrain
+   */
+  getTerrainHeight(x, z) {
+    if (this.useProceduralTerrain && this.terrainSystem) {
+      return this.terrainSystem.getHeightAt(x, z);
+    }
+    return 0;
+  }
+
+  /**
+   * Get collision objects from terrain (trees, rocks)
+   * @returns {Array} Array of collision objects
+   */
+  getTerrainColliders() {
+    if (this.useProceduralTerrain && this.terrainSystem) {
+      return this.terrainSystem.getCollisionObjects();
+    }
+    return [];
+  }
+
+  /**
    * Clean up environment
    */
   cleanup() {
-    // Cleanup ground
+    // Cleanup ground or terrain
     this.groundSystem.cleanup();
+    this.terrainSystem.cleanup();
 
     // Remove all objects
     this.objects.forEach(obj => {
@@ -330,5 +418,6 @@ export class EnvironmentSystem {
     // Reset state
     this.currentEnvironment = null;
     this.boundaries = null;
+    this.useProceduralTerrain = false;
   }
 }

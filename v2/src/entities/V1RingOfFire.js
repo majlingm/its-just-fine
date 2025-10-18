@@ -4,10 +4,11 @@ import { resourceCache } from '../systems/V1ResourceCache.js';
 import { calculateDamageWithCrit } from '../utils/V1damageCalculations.js';
 
 export class RingOfFire extends Entity {
-  constructor(engine, player, damage, spell = null) {
+  constructor(engine, player, damage, spell = null, realPlayer = null) {
     super();
     this.engine = engine;
-    this.player = player;
+    this.player = player; // v1 compatibility (fallback)
+    this.realPlayer = realPlayer; // Real player entity with Transform
     this.baseDamage = damage * 0.09; // Each particle does 9% of base damage
     this.spell = spell; // Store spell for crit calculation
     this.fireParticles = [];
@@ -46,8 +47,12 @@ export class RingOfFire extends Entity {
   triggerBurst() {
     if (!this.isRingFull() || this.burstActive) return;
 
+    console.log('🔥 Ring of Fire BURST!');
     this.burstActive = true;
     this.burstCooldownTimer = this.burstCooldown;
+
+    // Get current player position
+    const playerPos = this.getPlayerPosition();
 
     // Convert all active particles to projectiles
     this.fireParticles.forEach(particle => {
@@ -59,8 +64,8 @@ export class RingOfFire extends Entity {
         // Get current particle position
         const radiusOffset = Math.sin(particle.bobPhase + angle * 2) * 0.2;
         const radius = this.ringRadius + radiusOffset;
-        const x = this.player.x + Math.cos(angle) * radius;
-        const z = this.player.z + Math.sin(angle) * radius;
+        const x = playerPos.x + Math.cos(angle) * radius;
+        const z = playerPos.z + Math.sin(angle) * radius;
 
         // Calculate burst damage with crit (create temp spell object with burst damage)
         const burstSpell = {...this.spell, damage: this.baseDamage * this.burstDamageMultiplier};
@@ -139,8 +144,23 @@ export class RingOfFire extends Entity {
     }
   }
 
+  // Get current player position (supports both v1 and v2)
+  getPlayerPosition() {
+    if (this.realPlayer && this.realPlayer.getComponent) {
+      const transform = this.realPlayer.getComponent('Transform');
+      if (transform) {
+        return { x: transform.x, y: transform.y, z: transform.z };
+      }
+    }
+    // Fallback to v1 player object
+    return { x: this.player.x, y: this.player.y, z: this.player.z };
+  }
+
   update(dt) {
     if (!this.active) return;
+
+    // Get current player position
+    const playerPos = this.getPlayerPosition();
 
     // Update rotation
     this.currentRotation += this.rotationSpeed * dt;
@@ -262,8 +282,8 @@ export class RingOfFire extends Entity {
       const radiusOffset = Math.sin(particle.bobPhase + angle * 2) * 0.2; // Reduced to keep ring tighter
       const radius = this.ringRadius + radiusOffset;
 
-      const x = this.player.x + Math.cos(angle) * radius;
-      const z = this.player.z + Math.sin(angle) * radius;
+      const x = playerPos.x + Math.cos(angle) * radius;
+      const z = playerPos.z + Math.sin(angle) * radius;
 
       // Constant height with just subtle flicker
       const flicker = Math.abs(Math.sin(particle.age * 12)) * 0.08;

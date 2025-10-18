@@ -174,6 +174,97 @@ export class SpellTestMenu {
 
     this.container.appendChild(spawnBtn);
 
+    // Add procedural terrain toggle
+    const terrainBtn = document.createElement('button');
+    terrainBtn.textContent = 'Enable Procedural Terrain';
+    terrainBtn.style.cssText = `
+      display: block;
+      width: 100%;
+      padding: 8px;
+      margin-top: 15px;
+      background: #2288aa;
+      color: white;
+      border: 1px solid #44aacc;
+      border-radius: 4px;
+      cursor: pointer;
+      font-family: monospace;
+      font-size: 12px;
+    `;
+
+    let terrainEnabled = false;
+    terrainBtn.addEventListener('click', () => {
+      terrainEnabled = !terrainEnabled;
+      this.toggleProceduralTerrain(terrainEnabled);
+      terrainBtn.textContent = terrainEnabled ? 'Disable Procedural Terrain' : 'Enable Procedural Terrain';
+      terrainBtn.style.background = terrainEnabled ? '#aa4422' : '#2288aa';
+
+      // If enabling normal terrain, disable fantasy terrain
+      if (terrainEnabled && fantasyEnabled) {
+        fantasyEnabled = false;
+        fantasyBtn.textContent = 'Enable Fantasy Terrain';
+        fantasyBtn.style.background = '#aa22aa';
+      }
+    });
+
+    this.container.appendChild(terrainBtn);
+
+    // Add fantasy terrain toggle
+    const fantasyBtn = document.createElement('button');
+    fantasyBtn.textContent = 'Enable Fantasy Terrain';
+    fantasyBtn.style.cssText = `
+      display: block;
+      width: 100%;
+      padding: 8px;
+      margin-top: 5px;
+      background: #aa22aa;
+      color: white;
+      border: 1px solid #cc44cc;
+      border-radius: 4px;
+      cursor: pointer;
+      font-family: monospace;
+      font-size: 12px;
+    `;
+
+    let fantasyEnabled = false;
+    fantasyBtn.addEventListener('click', () => {
+      fantasyEnabled = !fantasyEnabled;
+      this.toggleFantasyTerrain(fantasyEnabled);
+      fantasyBtn.textContent = fantasyEnabled ? 'Disable Fantasy Terrain' : 'Enable Fantasy Terrain';
+      fantasyBtn.style.background = fantasyEnabled ? '#aa4422' : '#aa22aa';
+
+      // If enabling fantasy, disable normal terrain
+      if (fantasyEnabled && terrainEnabled) {
+        terrainEnabled = false;
+        terrainBtn.textContent = 'Enable Procedural Terrain';
+        terrainBtn.style.background = '#2288aa';
+      }
+    });
+
+    this.container.appendChild(fantasyBtn);
+
+    // Add rotate terrain button
+    const rotateBtn = document.createElement('button');
+    rotateBtn.textContent = 'Rotate Terrain 90°';
+    rotateBtn.style.cssText = `
+      display: block;
+      width: 100%;
+      padding: 8px;
+      margin-top: 5px;
+      background: #aa6622;
+      color: white;
+      border: 1px solid #cc8844;
+      border-radius: 4px;
+      cursor: pointer;
+      font-family: monospace;
+      font-size: 12px;
+    `;
+
+    rotateBtn.addEventListener('click', () => {
+      this.rotateTerrain();
+    });
+
+    this.container.appendChild(rotateBtn);
+
     // Add toggle button
     const toggleBtn = document.createElement('button');
     toggleBtn.textContent = 'Hide Menu (F1)';
@@ -320,10 +411,13 @@ export class SpellTestMenu {
       const x = playerTransform.x + Math.cos(angle) * radius;
       const z = playerTransform.z + Math.sin(angle) * radius;
 
+      // Get terrain height at spawn position
+      const y = this.game.levelSystem?.environmentSystem?.getTerrainHeight(x, z) || 0;
+
       // Spawn enemy using entityFactory
       this.game.entityFactory.createEnemy('basic_melee', {
         x: x,
-        y: 0,
+        y: y,
         z: z
       }).then(enemy => {
         this.game.engine.addEntity(enemy);
@@ -347,6 +441,71 @@ export class SpellTestMenu {
     } else {
       console.error('GroundSystem not available');
     }
+  }
+
+  toggleProceduralTerrain(enabled) {
+    if (!this.game || !this.game.levelSystem) {
+      console.error('No game/levelSystem instance available');
+      return;
+    }
+
+    if (this.game.levelSystem.environmentSystem) {
+      // Pass entities array so they get repositioned to terrain height
+      this.game.levelSystem.environmentSystem.setProceduralTerrain(
+        enabled,
+        this.game.engine.entities,
+        'normal'
+      );
+      this.showFeedback(enabled ? 'Procedural Terrain: ON' : 'Procedural Terrain: OFF');
+      console.log(`✅ Procedural terrain: ${enabled ? 'enabled' : 'disabled'}`);
+    } else {
+      console.error('EnvironmentSystem not available');
+    }
+  }
+
+  toggleFantasyTerrain(enabled) {
+    if (!this.game || !this.game.levelSystem) {
+      console.error('No game/levelSystem instance available');
+      return;
+    }
+
+    if (this.game.levelSystem.environmentSystem) {
+      // Pass entities array and fantasy style
+      this.game.levelSystem.environmentSystem.setProceduralTerrain(
+        enabled,
+        this.game.engine.entities,
+        'fantasy'
+      );
+      this.showFeedback(enabled ? 'Fantasy Terrain: ON' : 'Fantasy Terrain: OFF');
+      console.log(`✅ Fantasy terrain: ${enabled ? 'enabled' : 'disabled'}`);
+    } else {
+      console.error('EnvironmentSystem not available');
+    }
+  }
+
+  rotateTerrain() {
+    if (!this.game || !this.game.levelSystem) {
+      console.error('No game/levelSystem instance available');
+      return;
+    }
+
+    const environmentSystem = this.game.levelSystem.environmentSystem;
+    if (!environmentSystem || !environmentSystem.terrainSystem || !environmentSystem.terrainSystem.terrain) {
+      console.error('Terrain not available');
+      this.showFeedback('No Terrain to Rotate!');
+      return;
+    }
+
+    const terrain = environmentSystem.terrainSystem.terrain;
+
+    // Rotate terrain 90 degrees around Z axis (since terrain is already rotated -90° on X to be horizontal)
+    terrain.rotation.z += Math.PI / 2;
+
+    // Get current rotation in degrees for display
+    const degrees = Math.round((terrain.rotation.z * 180 / Math.PI) % 360);
+
+    this.showFeedback(`Rotated to ${degrees}°`);
+    console.log(`✅ Terrain rotated to: ${degrees}°`);
   }
 
   toggle() {

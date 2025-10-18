@@ -264,22 +264,21 @@ export class RenderSystem extends ComponentSystem {
     mesh.renderOrder = renderable.renderOrder;
 
     // Set initial transform
-    mesh.position.set(transform.x, transform.y, transform.z);
+    if (renderable.modelType === 'shader' && renderable.shaderConfig) {
+      // For shader enemies, apply height offset so transform.y represents ground position
+      const config = renderable.shaderConfig;
+      const yOffset = config.height / 2;
+      mesh.position.set(transform.x, transform.y + yOffset, transform.z);
+
+      if (config.isCrawler) {
+        mesh.rotation.x = -Math.PI / 2; // Lay flat on ground
+      }
+    } else {
+      mesh.position.set(transform.x, transform.y, transform.z);
+    }
+
     mesh.rotation.set(transform.rotationX, transform.rotationY, transform.rotationZ);
     mesh.scale.set(transform.scaleX, transform.scaleY, transform.scaleZ);
-
-    // Special handling for shader-based enemies
-    if (renderable.modelType === 'shader' && renderable.shaderConfig) {
-      const config = renderable.shaderConfig;
-      // Position at correct height (half of height for standing, close to ground for crawlers)
-      if (config.isCrawler) {
-        mesh.position.y = config.height / 2;
-        mesh.rotation.x = -Math.PI / 2; // Lay flat on ground
-      } else {
-        mesh.position.y = config.height / 2;
-        // Standing enemies will be billboarded in syncMesh
-      }
-    }
 
     // Store mesh reference in component
     renderable.mesh = mesh;
@@ -406,8 +405,14 @@ export class RenderSystem extends ComponentSystem {
   syncMesh(entity, transform, renderable) {
     const mesh = renderable.mesh;
 
-    // Update position
-    mesh.position.set(transform.x, transform.y, transform.z);
+    // Update position (with height offset for shader-based enemies)
+    if (renderable.modelType === 'shader' && renderable.shaderConfig) {
+      const config = renderable.shaderConfig;
+      const yOffset = config.height / 2; // Center plane at correct height
+      mesh.position.set(transform.x, transform.y + yOffset, transform.z);
+    } else {
+      mesh.position.set(transform.x, transform.y, transform.z);
+    }
 
     // Update rotation directly from transform
     mesh.rotation.set(transform.rotationX, transform.rotationY, transform.rotationZ);

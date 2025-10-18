@@ -35,6 +35,7 @@ import { PickupSystem } from '../game/systems/items/PickupSystem.js';
 import { UISystem } from '../game/systems/ui/UISystem.js';
 import { AnimationSystem } from '../core/systems/AnimationSystem.js';
 import { LevelSystem } from '../game/systems/level/LevelSystem.js';
+import { TerrainFollowSystem } from '../game/systems/physics/TerrainFollowSystem.js';
 
 // Entity Factory
 import { entityFactory } from '../game/systems/entity/EntityFactory.js';
@@ -78,6 +79,7 @@ export class ItsJustFine {
     this.uiSystem = null;
     this.animationSystem = null;
     this.levelSystem = null;
+    this.terrainFollowSystem = null;
 
     // Game state
     this.initialized = false;
@@ -166,6 +168,12 @@ export class ItsJustFine {
     this.movementSystem = new MovementSystem(this.frustumCuller);
     this.collisionSystem = new CollisionSystem();
 
+    // Level management (needs to be before TerrainFollowSystem)
+    this.levelSystem = new LevelSystem(this.renderer);
+
+    // Terrain (needs levelSystem.environmentSystem)
+    this.terrainFollowSystem = new TerrainFollowSystem(this.levelSystem.environmentSystem);
+
     // Input
     this.weaponSystem = new WeaponSystem(this.engine);
     this.playerInputSystem = new PlayerInputSystem(this.input, this.weaponSystem);
@@ -203,9 +211,6 @@ export class ItsJustFine {
 
     // Animation
     this.animationSystem = new AnimationSystem();
-
-    // Level management
-    this.levelSystem = new LevelSystem(this.renderer);
 
     // Setup event listeners
     this.setupEventListeners();
@@ -369,6 +374,10 @@ export class ItsJustFine {
     // Update level system
     if (this.levelSystem) {
       this.levelSystem.updateTime(dt);
+      // Update environment (particles, etc.)
+      if (this.levelSystem.environmentSystem) {
+        this.levelSystem.environmentSystem.update(dt);
+      }
     }
 
     // Update V1 spells for player
@@ -395,17 +404,37 @@ export class ItsJustFine {
           projectileSpeed: 1.0
         };
 
-        // Update and auto-cast all active spells
+        // Check for auto-cast toggle (T key)
+        if (this.input.isKeyPressed('t')) {
+          if (this.player.userData.autoSpellCast === undefined) {
+            this.player.userData.autoSpellCast = true; // Initialize to true
+          }
+          this.player.userData.autoSpellCast = !this.player.userData.autoSpellCast;
+          console.log(`🎯 Auto-cast spells: ${this.player.userData.autoSpellCast ? 'ON' : 'OFF'}`);
+        }
+
+        // Default auto-cast to true if not set
+        const shouldAutoCast = this.player.userData.autoSpellCast !== false;
+
+        // Update and optionally auto-cast all active spells
         for (const spell of this.player.userData.activeSpells) {
           spell.update(dt);
 
-          // Auto-cast if ready
-          if (spell.isReady()) {
+          // Auto-cast if ready and enabled
+          if (shouldAutoCast && spell.isReady()) {
             try {
-              spell.cast(v1Engine, v1Player, v1Stats);
+              // Pass both v1Player (for compatibility) and real player entity
+              spell.cast(v1Engine, v1Player, v1Stats, this.player);
               spell.triggerCooldown();
             } catch (error) {
               console.error(`Error casting spell ${spell.name}:`, error);
+            }
+          }
+
+          // Check for burst trigger (E key for Ring of Fire/Ice)
+          if (this.input.isKeyPressed('e')) {
+            if (spell.activeEntity && typeof spell.activeEntity.triggerBurst === 'function') {
+              spell.activeEntity.triggerBurst();
             }
           }
         }
@@ -424,6 +453,7 @@ export class ItsJustFine {
     this.particleManager.update(dt);
     this.statusEffectSystem.update(dt, this.engine.entities);
     this.movementSystem.update(dt, this.engine.entities);
+    this.terrainFollowSystem.update(dt, this.engine.entities); // Update terrain height and collisions
     this.collisionSystem.update(dt, this.engine.entities);
     this.damageSystem.update(dt, this.engine.entities);
     this.animationSystem.update(dt, this.engine.entities);

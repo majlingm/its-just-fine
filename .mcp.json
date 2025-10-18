@@ -18,6 +18,16 @@
         "@peng-shawn/mermaid-mcp-server"
       ],
       "env": {}
+    },
+    "openrouter": {
+      "type": "stdio",
+      "command": "node",
+      "args": [
+        "/Users/majling/Development/openrouter/index.js"
+      ],
+      "env": {
+        "OPENROUTER_API_KEY": "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"
+      }
     }
   }
 }

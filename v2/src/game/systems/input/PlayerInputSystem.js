@@ -76,7 +76,6 @@ export class PlayerInputSystem extends ComponentSystem {
       const isMoving = inputX !== 0 || inputZ !== 0;
 
       if (isMoving) {
-        console.log('Player is moving, should play run animation');
         // Normalize diagonal movement
         const magnitude = Math.sqrt(inputX * inputX + inputZ * inputZ);
         let normalizedX = inputX / magnitude;
@@ -146,7 +145,6 @@ export class PlayerInputSystem extends ComponentSystem {
 
     // Play the animation if found and not already playing
     if (animName && animation.currentAnimation !== animName) {
-      console.log(`🎬 Switching to: ${animName} (from ${animation.currentAnimation})`);
       animation.play(animName);
     }
   }
@@ -157,10 +155,32 @@ export class PlayerInputSystem extends ComponentSystem {
    * @param {Transform} transform - Player transform
    */
   handleShooting(entity, transform) {
-    // Check for shooting input (space bar or primary pointer/mouse)
-    const isShooting = this.inputManager.isKeyDown(' ') || this.inputManager.isPrimaryPointerDown();
+    // Initialize auto-fire setting if not set (default: true)
+    if (entity.userData.autoFire === undefined) {
+      entity.userData.autoFire = true;
+    }
 
-    if (isShooting) {
+    // Toggle auto-fire with R key
+    if (this.inputManager.isKeyPressed('r')) {
+      entity.userData.autoFire = !entity.userData.autoFire;
+      console.log(`🔫 Auto-fire: ${entity.userData.autoFire ? 'ON' : 'OFF'}`);
+    }
+
+    // Determine if we should shoot
+    let shouldShoot = false;
+
+    if (entity.userData.autoFire) {
+      // Auto-fire mode: shoot if space bar or pointer is held down
+      shouldShoot = this.inputManager.isKeyDown(' ') || this.inputManager.isPrimaryPointerDown();
+    } else {
+      // Manual fire mode: shoot when Q key is held down
+      shouldShoot = this.inputManager.isKeyDown('q');
+      if (shouldShoot) {
+        console.log('Q key pressed - manual fire');
+      }
+    }
+
+    if (shouldShoot) {
       // For now, shoot in the direction the player is facing
       // TODO: Calculate actual world position from pointer screen coordinates
       // This requires camera projection which we'll add later
@@ -173,8 +193,8 @@ export class PlayerInputSystem extends ComponentSystem {
       const targetX = transform.x + dirX * shootDistance;
       const targetZ = transform.z + dirZ * shootDistance;
 
-      // Request weapon fire
-      this.weaponSystem.requestFire(entity.id, targetX, targetZ, true);
+      // Request weapon fire (auto-fire uses continuous, manual uses single-shot)
+      this.weaponSystem.requestFire(entity.id, targetX, targetZ, entity.userData.autoFire);
     }
   }
 }
