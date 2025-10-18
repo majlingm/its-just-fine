@@ -49,6 +49,42 @@ export class Entity {
     const type = component.type || component.constructor.name;
     component.entity = this;
     this.components.set(type, component);
+
+    // V1 compatibility: expose Transform properties directly on entity
+    if (type === 'Transform') {
+      Object.defineProperty(this, 'x', {
+        get: () => component.x,
+        set: (v) => { component.x = v; },
+        configurable: true
+      });
+      Object.defineProperty(this, 'y', {
+        get: () => component.y,
+        set: (v) => { component.y = v; },
+        configurable: true
+      });
+      Object.defineProperty(this, 'z', {
+        get: () => component.z,
+        set: (v) => { component.z = v; },
+        configurable: true
+      });
+    }
+
+    // V1 compatibility: expose Health properties and methods directly on entity
+    if (type === 'Health') {
+      Object.defineProperty(this, 'health', {
+        get: () => component.current,
+        set: (v) => { component.current = v; },
+        configurable: true
+      });
+      Object.defineProperty(this, 'maxHealth', {
+        get: () => component.max,
+        set: (v) => { component.max = v; },
+        configurable: true
+      });
+      // Expose takeDamage method
+      this.takeDamage = (damage, isCrit) => component.takeDamage(damage, isCrit);
+    }
+
     return this;
   }
 

@@ -166,7 +166,7 @@ export class BossSystem extends ComponentSystem {
 
     boss.useAttack(this.currentTime);
 
-    console.log(`${boss.bossName} charges!`);
+    // console.log(`${boss.bossName} charges!`);
   }
 
   /**
@@ -240,7 +240,7 @@ export class BossSystem extends ComponentSystem {
       const finalDamage = Math.floor(damage * (boss.damageMultiplier || 1.0));
 
       playerHealth.current -= finalDamage;
-      console.log(`${boss.bossName} charge hits for ${finalDamage} damage!`);
+      // console.log(`${boss.bossName} charge hits for ${finalDamage} damage!`);
     }
   }
 
@@ -281,11 +281,11 @@ export class BossSystem extends ComponentSystem {
 
     if (distance <= radius) {
       playerHealth.current -= finalDamage;
-      console.log(`${boss.bossName} ground slam hits for ${finalDamage} damage!`);
+      // console.log(`${boss.bossName} ground slam hits for ${finalDamage} damage!`);
     }
 
     boss.useAttack(this.currentTime);
-    console.log(`${boss.bossName} slams the ground!`);
+    // console.log(`${boss.bossName} slams the ground!`);
   }
 
   /**
@@ -310,7 +310,7 @@ export class BossSystem extends ComponentSystem {
       return;
     }
 
-    console.log(`${boss.bossName} summons ${minionCount} ${minionType}!`);
+    // console.log(`${boss.bossName} summons ${minionCount} ${minionType}!`);
 
     // Spawn minions around boss
     for (let i = 0; i < minionCount; i++) {

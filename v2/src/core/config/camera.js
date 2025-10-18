@@ -73,7 +73,14 @@ export const CameraConfig = {
       min: 5,
       max: 50,
       step: 2,
-      smoothing: 0.15
+      smoothing: 0.15,
+      // Dynamic camera positioning when zooming
+      dynamicAngle: {
+        enabled: true,
+        startThreshold: 0.7,
+        zoomedHeightMult: 0.6,
+        zoomedRadiusMult: 1.5
+      }
     },
 
     // Rotation settings (for user control)
@@ -96,58 +103,67 @@ export const CameraConfig = {
     near: 0.1,
     far: 1000,
 
-    distance: 6,  // Zoomed out for better view
+    distance: 12,
     horizontalAngle: 0,
-    verticalAngle: Math.PI / 6, // ~30° angle
-
-    heightMultiplier: 1.0,   // Camera height = distance * 1.0 = 6
-    radiusMultiplier: 1.0,   // Horizontal offset = distance * 1.0 = 6
+    verticalAngle: 0.5,
+    heightMultiplier: 2.0,
+    radiusMultiplier: 0.5,
 
     follow: {
       enabled: true,
       smoothing: 0.1,
-      lookAtOffset: { x: 0, y: 0, z: 0 },
+      lookAtOffset: { x: 0, y: 1, z: 0 },  // Look at player's torso instead of feet
       rotationSmoothing: 0.2
     },
 
     deviceOverrides: {
       desktop: {
-        distance: 6,
-        heightMultiplier: 1.0,
-        radiusMultiplier: 1.0
+        distance: 12,
+        heightMultiplier: 2.0,
+        radiusMultiplier: 1
       },
       tablet: {
-        distance: 5,
-        heightMultiplier: 1.0,
-        radiusMultiplier: 1.0
+        distance: 12,
+        heightMultiplier: 2.0,
+        radiusMultiplier: 0.5
       },
       mobile: {
         portrait: {
           distance: 6,
-          heightMultiplier: 1.0,
-          radiusMultiplier: 1.0
+          heightMultiplier: 2.0,
+          radiusMultiplier: 0.5
         },
         landscape: {
-          distance: 5,
-          heightMultiplier: 1.0,
-          radiusMultiplier: 1.0
+          distance: 6,
+          heightMultiplier: 2.0,
+          radiusMultiplier: 0.5
         }
       }
     },
 
     zoom: {
-      min: 2,
-      max: 15,
+      min: 3,
+      max: 40,
       step: 1,
-      smoothing: 0.15
+      smoothing: 0.15,
+      // Dynamic camera positioning when zooming
+      dynamicAngle: {
+        enabled: true,
+        // When to start transitioning (0.0 = always, 1.0 = only at max zoom)
+        startThreshold: 0.85,
+        // Camera position multipliers when fully zoomed in (third-person view)
+        zoomedHeightMult: 1.0,      // Height multiplier when zoomed in
+        zoomedRadiusMult: 1.5,      // Radius multiplier when zoomed in (how far behind player)
+        zoomedLookAtYOffset: 2.0    // Look at a point 2 units above the player (creates horizontal view)
+      }
     },
 
     rotation: {
       enabled: true, // Allow camera rotation with Q/E keys
       horizontalSpeed: 0.05,
       verticalSpeed: 0.03,
-      verticalMin: 0,
-      verticalMax: Math.PI / 3 // Max 60° vertical angle
+      verticalMin: 0.1,
+      verticalMax: 0.9
     }
   },
 
@@ -196,7 +212,14 @@ export const CameraConfig = {
       min: 3,
       max: 20,
       step: 1,
-      smoothing: 0.2
+      smoothing: 0.2,
+      // Dynamic camera positioning when zooming
+      dynamicAngle: {
+        enabled: true,
+        startThreshold: 0.5,
+        zoomedHeightMult: 0.5,
+        zoomedRadiusMult: 1.2
+      }
     },
 
     rotation: {
@@ -238,7 +261,14 @@ export const CameraConfig = {
       min: 5,
       max: 30,
       step: 2,
-      smoothing: 0.1
+      smoothing: 0.1,
+      // Dynamic camera positioning (disabled for top-down)
+      dynamicAngle: {
+        enabled: false,
+        startThreshold: 1.0,
+        zoomedHeightMult: 1.0,
+        zoomedRadiusMult: 0.0
+      }
     },
 
     rotation: {

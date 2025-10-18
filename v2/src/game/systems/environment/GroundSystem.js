@@ -44,14 +44,29 @@ export class GroundSystem {
       geometry = new THREE.PlaneGeometry(size, size);
     }
 
-    // Create material
+    // Create checkered pattern texture
+    const canvas = document.createElement('canvas');
+    canvas.width = 512;
+    canvas.height = 512;
+    const ctx = canvas.getContext('2d');
+
+    // Draw solid black ground
+    ctx.fillStyle = '#000000';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    const checkerTexture = new THREE.CanvasTexture(canvas);
+    checkerTexture.wrapS = THREE.RepeatWrapping;
+    checkerTexture.wrapT = THREE.RepeatWrapping;
+    checkerTexture.repeat.set(10, 10);
+
+    // Create material with checker pattern
     const material = new THREE.MeshStandardMaterial({
-      color: color,
+      map: checkerTexture,
       roughness: 0.8,
       metalness: 0.2
     });
 
-    // Load texture if provided
+    // Load custom texture if provided (overrides checker pattern)
     if (texture) {
       const textureLoader = new THREE.TextureLoader();
       textureLoader.load(texture, (loadedTexture) => {

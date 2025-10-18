@@ -77,45 +77,45 @@ export class AudioSystem {
    * Setup event listeners for automatic sound playback
    */
   setupEventListeners() {
-    // Weapon fired
-    window.addEventListener('weapon-fired', (event) => {
-      const entity = event.detail.entity;
-      this.playSound('weapon_fire', {
-        position: this.getEntityPosition(entity),
-        spatial: true
-      });
-    });
+    // Weapon fired (DISABLED - sounds off for now)
+    // window.addEventListener('weapon-fired', (event) => {
+    //   const entity = event.detail.entity;
+    //   this.playSound('weapon_fire', {
+    //     position: this.getEntityPosition(entity),
+    //     spatial: true
+    //   });
+    // });
 
-    // Entity damaged
-    window.addEventListener('entity-damaged', (event) => {
-      const target = event.detail.target;
-      const soundId = target.hasTag('player') ? 'hit_player' : 'hit_enemy';
-      this.playSound(soundId, {
-        position: this.getEntityPosition(target),
-        spatial: true
-      });
-    });
+    // Entity damaged (DISABLED)
+    // window.addEventListener('entity-damaged', (event) => {
+    //   const target = event.detail.target;
+    //   const soundId = target.hasTag('player') ? 'hit_player' : 'hit_enemy';
+    //   this.playSound(soundId, {
+    //     position: this.getEntityPosition(target),
+    //     spatial: true
+    //   });
+    // });
 
-    // Entity died
-    window.addEventListener('entity-died', (event) => {
-      const entity = event.detail.entity;
-      if (entity.hasTag('enemy')) {
-        this.playSound('enemy_die', {
-          position: this.getEntityPosition(entity),
-          spatial: true
-        });
-      }
-    });
+    // Entity died (DISABLED)
+    // window.addEventListener('entity-died', (event) => {
+    //   const entity = event.detail.entity;
+    //   if (entity.hasTag('enemy')) {
+    //     this.playSound('enemy_die', {
+    //       position: this.getEntityPosition(entity),
+    //       spatial: true
+    //     });
+    //   }
+    // });
 
-    // Enemy spawned
-    window.addEventListener('enemy-spawned', (event) => {
-      const entity = event.detail.entity;
-      this.playSound('enemy_spawn', {
-        position: this.getEntityPosition(entity),
-        spatial: true,
-        volume: 0.2
-      });
-    });
+    // Enemy spawned (DISABLED)
+    // window.addEventListener('enemy-spawned', (event) => {
+    //   const entity = event.detail.entity;
+    //   this.playSound('enemy_spawn', {
+    //     position: this.getEntityPosition(entity),
+    //     spatial: true,
+    //     volume: 0.2
+    //   });
+    // });
   }
 
   /**

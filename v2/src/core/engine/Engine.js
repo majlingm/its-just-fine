@@ -1,3 +1,6 @@
+import * as THREE from 'three';
+import { InstancedParticlePool as V1InstancedParticlePool } from '../../effects/V1InstancedParticlePool.js';
+
 /**
  * Engine - Core game loop and entity management (Platform-agnostic)
  *
@@ -29,6 +32,9 @@ export class Engine {
 
     // Entity pool reference (set during init)
     this.entityPool = null;
+
+    // V1 particle pools (for v1 compatibility)
+    this.v1ParticlePools = new Map();
   }
 
   /**
@@ -128,6 +134,11 @@ export class Engine {
         entity.update(dt);
       }
     }
+
+    // Update V1 particle pools
+    for (const pool of this.v1ParticlePools.values()) {
+      pool.update(dt);
+    }
   }
 
   /**
@@ -138,6 +149,45 @@ export class Engine {
     if (this.onRender) {
       this.onRender();
     }
+  }
+
+  /**
+   * Get instanced particle pool (v1 compatibility)
+   * @param {string} poolName - Name of the pool
+   * @returns {V1InstancedParticlePool} V1 Instanced Particle pool
+   */
+  getInstancedParticlePool(poolName) {
+    // Check if we already have this pool
+    if (this.v1ParticlePools.has(poolName)) {
+      return this.v1ParticlePools.get(poolName);
+    }
+
+    // Create a new V1 particle pool
+    // Note: scene reference is set by the game layer
+    if (!this.scene) {
+      console.warn(`[Engine] Scene not set, cannot create particle pool: ${poolName}`);
+      return {
+        spawn: () => null,
+        update: () => {},
+        clear: () => {}
+      };
+    }
+
+    // Use v1's configuration for particle pools (from GameEngine.js)
+    const configs = {
+      flames: { maxParticles: 2000, size: 0.8, blending: THREE.AdditiveBlending },
+      ice: { maxParticles: 1000, size: 0.3, blending: THREE.AdditiveBlending },
+      shadow: { maxParticles: 1000, size: 0.6, blending: THREE.AdditiveBlending },
+      fire_explosion: { maxParticles: 1500, size: 0.5, blending: THREE.AdditiveBlending },
+      lightning_explosion: { maxParticles: 1000, size: 0.4, blending: THREE.AdditiveBlending },
+      generic: { maxParticles: 2000, size: 1.0, blending: THREE.AdditiveBlending }
+    };
+
+    const config = configs[poolName] || configs.generic;
+    const pool = new V1InstancedParticlePool(this.scene, config);
+    this.v1ParticlePools.set(poolName, pool);
+    console.log(`[Engine] Created V1 instanced particle pool: ${poolName} with ${config.maxParticles} particles`);
+    return pool;
   }
 
   /**

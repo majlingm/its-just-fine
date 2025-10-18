@@ -65,6 +65,11 @@ export class Health extends Component {
   damage(amount) {
     if (this.invulnerable) return 0;
 
+    // GOD MODE: Check if this entity has 'player' tag
+    if (this.entity && this.entity.hasTag && this.entity.hasTag('player')) {
+      return 0; // Player takes no damage
+    }
+
     let actualDamage = amount;
 
     // Apply to shield first
@@ -80,5 +85,16 @@ export class Health extends Component {
     }
 
     return amount; // Return total damage attempted
+  }
+
+  /**
+   * V1-compatible takeDamage method
+   * @param {number} amount - Damage amount
+   * @param {boolean} isCrit - Is critical hit (unused in v2 but kept for compatibility)
+   * @returns {boolean} True if entity died
+   */
+  takeDamage(amount, isCrit = false) {
+    this.damage(amount);
+    return this.current <= 0;
   }
 }

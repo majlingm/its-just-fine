@@ -7,10 +7,13 @@
  */
 
 import { GameMode } from '../GameMode.js';
+import { SpellTestMenu } from '../../debug/SpellTestMenu.js';
+import { V1SpellRegistry } from '../../spells/V1SpellRegistry.js';
 
 export class SurvivalMode extends GameMode {
   constructor() {
     super('survival', 'Survival');
+    this.spellTestMenu = null;
   }
 
   /**
@@ -30,6 +33,11 @@ export class SurvivalMode extends GameMode {
     // Initialize spawn system (spawn config already loaded by level system)
     await game.spawnSystem.init('survival_basic');
     console.log('✅ Spawn system initialized');
+
+    // Initialize spell test menu (pass game instance for enemy spawning)
+    const spellRegistry = new V1SpellRegistry(game.engine);
+    this.spellTestMenu = new SpellTestMenu(spellRegistry, game.player, game);
+    console.log('✅ Spell test menu initialized');
   }
 
   /**

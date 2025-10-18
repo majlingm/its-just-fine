@@ -68,12 +68,12 @@ export class SpawnSystem extends ComponentSystem {
    * @param {string} spawnConfigId - ID of spawn config to load (e.g., 'survival_basic')
    */
   async init(spawnConfigId) {
-    console.log(`SpawnSystem: Loading spawn config '${spawnConfigId}'`);
+    // console.log(`SpawnSystem: Loading spawn config '${spawnConfigId}'`);
 
     try {
       // Load spawn configuration
       this.spawnConfig = await configLoader.load(`spawns/${spawnConfigId}.json`);
-      console.log(`SpawnSystem: Loaded spawn config:`, this.spawnConfig);
+      // console.log(`SpawnSystem: Loaded spawn config:`, this.spawnConfig);
 
       // Validate config
       if (!this.spawnConfig.waves || this.spawnConfig.waves.length === 0) {
@@ -93,8 +93,8 @@ export class SpawnSystem extends ComponentSystem {
       this.startDelayTimer = startDelay;
 
       this.initialized = true;
-      console.log(`SpawnSystem: Initialized with ${this.spawnConfig.waves.length} waves`);
-      console.log(`SpawnSystem: Start delay: ${startDelay}s`);
+      // console.log(`SpawnSystem: Initialized with ${this.spawnConfig.waves.length} waves`);
+      // console.log(`SpawnSystem: Start delay: ${startDelay}s`);
     } catch (error) {
       console.error(`SpawnSystem: Failed to load spawn config '${spawnConfigId}':`, error);
       throw error;
@@ -113,22 +113,22 @@ export class SpawnSystem extends ComponentSystem {
 
     // Find player entity
     if (!this.playerEntity) {
-      this.playerEntity = allEntities.find(e => e.hasTag('player'));
+      this.playerEntity = allEntities.find(e => e.hasTag && e.hasTag('player'));
       if (!this.playerEntity) {
         console.warn('SpawnSystem: No player entity found');
         return;
       }
     }
 
-    // Update active enemies list
-    this.activeEnemies = allEntities.filter(e => e.hasTag('enemy'));
+    // Update active enemies list (filter out V1 entities that don't have hasTag)
+    this.activeEnemies = allEntities.filter(e => e.hasTag && e.hasTag('enemy'));
 
     // Handle start delay
     if (!this.startDelayComplete) {
       this.startDelayTimer -= dt;
       if (this.startDelayTimer <= 0) {
         this.startDelayComplete = true;
-        console.log('SpawnSystem: Start delay complete, ready to spawn');
+        // console.log('SpawnSystem: Start delay complete, ready to spawn');
       } else {
         return; // Still waiting
       }
@@ -139,7 +139,7 @@ export class SpawnSystem extends ComponentSystem {
       this.wavePauseTimer -= dt;
       if (this.wavePauseTimer <= 0) {
         this.inWavePause = false;
-        console.log('SpawnSystem: Wave pause complete');
+        // console.log('SpawnSystem: Wave pause complete');
       } else {
         return; // Still in pause
       }
@@ -166,7 +166,7 @@ export class SpawnSystem extends ComponentSystem {
         waveIndex >= this.spawnConfig.waves.length) {
 
       if (!this.isInfiniteMode) {
-        console.log('SpawnSystem: Entering infinite mode');
+        // console.log('SpawnSystem: Entering infinite mode');
         this.isInfiniteMode = true;
         this.infiniteLoopCount = 0;
       }
@@ -177,7 +177,7 @@ export class SpawnSystem extends ComponentSystem {
         const wavesSinceStart = waveIndex - this.spawnConfig.waves.length + 1;
 
         if (wavesSinceStart % bossFrequency === 0) {
-          console.log(`SpawnSystem: Boss wave triggered! (wave ${waveIndex + 1})`);
+          // console.log(`SpawnSystem: Boss wave triggered! (wave ${waveIndex + 1})`);
           this.startBossWave();
           return;
         }
@@ -191,7 +191,7 @@ export class SpawnSystem extends ComponentSystem {
       waveIndex = actualWaveNumber - 1; // Convert to 0-based index
 
       this.infiniteLoopCount++;
-      console.log(`SpawnSystem: Infinite mode loop ${this.infiniteLoopCount}, wave ${actualWaveNumber}`);
+      // console.log(`SpawnSystem: Infinite mode loop ${this.infiniteLoopCount}, wave ${actualWaveNumber}`);
     }
 
     // Get wave config
@@ -209,10 +209,10 @@ export class SpawnSystem extends ComponentSystem {
     this.enemiesSpawnedThisWave = 0;
     this.totalEnemiesInWave = wave.spawnRules.totalEnemies;
 
-    console.log(`SpawnSystem: Starting wave ${wave.waveNumber}: ${wave.name}`);
-    console.log(`  Total enemies: ${this.totalEnemiesInWave}`);
-    console.log(`  Spawn interval: ${wave.spawnRules.spawnInterval}s`);
-    console.log(`  Batch size: ${wave.spawnRules.spawnBatchSize}`);
+    // console.log(`SpawnSystem: Starting wave ${wave.waveNumber}: ${wave.name}`);
+    // console.log(`  Total enemies: ${this.totalEnemiesInWave}`);
+    // console.log(`  Spawn interval: ${wave.spawnRules.spawnInterval}s`);
+    // console.log(`  Batch size: ${wave.spawnRules.spawnBatchSize}`);
   }
 
   /**
@@ -237,14 +237,14 @@ export class SpawnSystem extends ComponentSystem {
 
       if (enemiesRemaining <= threshold) {
         // Wave complete!
-        console.log(`SpawnSystem: Wave ${wave.waveNumber} complete!`);
+        // console.log(`SpawnSystem: Wave ${wave.waveNumber} complete!`);
         this.waveActive = false;
 
         // Start wave pause
         const pauseDelay = this.spawnConfig.globalSettings?.wavePauseDelay || 5.0;
         this.wavePauseTimer = pauseDelay;
         this.inWavePause = true;
-        console.log(`SpawnSystem: Starting wave pause for ${pauseDelay}s`);
+        // console.log(`SpawnSystem: Starting wave pause for ${pauseDelay}s`);
 
         // Queue next wave
         const nextWaveIndex = this.currentWave + 1;
@@ -348,7 +348,7 @@ export class SpawnSystem extends ComponentSystem {
       this.emitSpawnEvent(enemy);
 
       this.enemiesSpawnedThisWave++;
-      console.log(`SpawnSystem: Spawned ${enemyType} at (${position.x.toFixed(1)}, ${position.y.toFixed(1)}, ${position.z.toFixed(1)}) [${this.enemiesSpawnedThisWave}/${this.totalEnemiesInWave}]`);
+      // console.log(`SpawnSystem: Spawned ${enemyType} at (${position.x.toFixed(1)}, ${position.y.toFixed(1)}, ${position.z.toFixed(1)}) [${this.enemiesSpawnedThisWave}/${this.totalEnemiesInWave}]`);
     } catch (error) {
       console.error(`SpawnSystem: Failed to spawn enemy '${enemyType}':`, error);
     }
@@ -470,12 +470,12 @@ export class SpawnSystem extends ComponentSystem {
       return;
     }
 
-    console.log(`SpawnSystem: Spawning boss: ${selectedBoss.bossType}`);
+    // console.log(`SpawnSystem: Spawning boss: ${selectedBoss.bossType}`);
 
     // Display message if configured
     if (selectedBoss.message) {
       setTimeout(() => {
-        console.log(`⚠️ ${selectedBoss.message}`);
+        // console.log(`⚠️ ${selectedBoss.message}`);
         // TODO: Show UI message
       }, (selectedBoss.messageDelay || 0) * 1000);
     }
@@ -486,7 +486,7 @@ export class SpawnSystem extends ComponentSystem {
       const boss = await entityFactory.createBoss(selectedBoss.bossType, position);
       this.emitSpawnEvent(boss);
 
-      console.log(`SpawnSystem: Boss ${selectedBoss.bossType} spawned at (${position.x.toFixed(1)}, ${position.y.toFixed(1)}, ${position.z.toFixed(1)})`);
+      // console.log(`SpawnSystem: Boss ${selectedBoss.bossType} spawned at (${position.x.toFixed(1)}, ${position.y.toFixed(1)}, ${position.z.toFixed(1)})`);
     } catch (error) {
       console.error(`SpawnSystem: Failed to spawn boss ${selectedBoss.bossType}:`, error);
     }
@@ -496,7 +496,7 @@ export class SpawnSystem extends ComponentSystem {
       const addConfig = bossWaveConfig.additionalEnemies;
 
       setTimeout(async () => {
-        console.log(`SpawnSystem: Spawning ${addConfig.count} additional enemies`);
+        // console.log(`SpawnSystem: Spawning ${addConfig.count} additional enemies`);
 
         for (let i = 0; i < addConfig.count; i++) {
           const enemyType = addConfig.enemyTypes[Math.floor(Math.random() * addConfig.enemyTypes.length)];
@@ -540,6 +540,6 @@ export class SpawnSystem extends ComponentSystem {
     this.startDelayTimer = 0;
     this.inWavePause = false;
     this.wavePauseTimer = 0;
-    console.log('SpawnSystem: Reset');
+    // console.log('SpawnSystem: Reset');
   }
 }

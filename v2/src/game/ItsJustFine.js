@@ -43,6 +43,7 @@ import { entityFactory } from '../game/systems/entity/EntityFactory.js';
 import { configLoader } from '../utils/ConfigLoader.js';
 
 import { OptimizationConfig } from '../core/config/optimization.js';
+import { CameraConfig, getCameraConfig, getDeviceCameraSettings } from '../core/config/camera.js';
 
 /**
  * Main game class for "It's Just Fine"
@@ -116,17 +117,22 @@ export class ItsJustFine {
     console.log('✅ Frustum culler initialized');
 
     // Initialize camera system (engine-level)
+    // Get isometric camera config and apply device-specific settings
+    const cameraConfig = getCameraConfig('isometric');
+    const deviceSettings = getDeviceCameraSettings(cameraConfig);
+
     this.cameraSystem = new CameraSystem(this.renderer.camera, {
-      horizontalAngle: 0,
-      verticalAngle: 0.5,
-      distance: 6,
-      heightMultiplier: 2.0,
-      radiusMultiplier: 0.5,
-      smoothing: 0.1,
-      verticalMin: 0.1,
-      verticalMax: 0.9,
-      distanceMin: 3,
-      distanceMax: 20
+      horizontalAngle: cameraConfig.horizontalAngle,
+      verticalAngle: cameraConfig.verticalAngle,
+      distance: deviceSettings.distance || cameraConfig.distance,
+      heightMultiplier: deviceSettings.heightMultiplier || cameraConfig.heightMultiplier,
+      radiusMultiplier: deviceSettings.radiusMultiplier || cameraConfig.radiusMultiplier,
+      smoothing: cameraConfig.follow.smoothing,
+      verticalMin: cameraConfig.rotation.verticalMin,
+      verticalMax: cameraConfig.rotation.verticalMax,
+      distanceMin: cameraConfig.zoom.min,
+      distanceMax: cameraConfig.zoom.max,
+      dynamicZoom: cameraConfig.zoom.dynamicAngle
     });
 
     // Initialize camera controller (game-level)
@@ -163,6 +169,7 @@ export class ItsJustFine {
     // Input
     this.weaponSystem = new WeaponSystem(this.engine);
     this.playerInputSystem = new PlayerInputSystem(this.input, this.weaponSystem);
+    this.playerInputSystem.setCameraSystem(this.cameraSystem); // Enable camera-relative controls
 
     // AI & Spawning
     this.aiSystem = new AISystem(this.frustumCuller);
@@ -177,6 +184,9 @@ export class ItsJustFine {
     // Effects
     this.particleSystem = new ParticleSystem();
     this.particleManager = new ParticleManager(this.engine, this.renderer);
+
+    // Set scene reference on engine (for v1 particle pool compatibility)
+    this.engine.scene = this.renderer.scene;
 
     // Audio
     this.audioSystem = new AudioSystem();
@@ -217,25 +227,19 @@ export class ItsJustFine {
       const transform = entity.getComponent('Transform');
 
       if (transform && entity.hasTag('enemy')) {
-        // Death particles
-        this.particleManager.createBurst({
-          x: transform.x,
-          y: transform.y,
-          z: transform.z,
-          count: 20,
-          burstSpeed: 5,
-          lifetime: 0.8,
-          fadeStart: 0.3,
-          startColor: 0x00ff00,
-          endColor: 0x004400,
-          startOpacity: 1.0,
-          endOpacity: 0.0,
-          startScale: 1.0,
-          endScale: 0.1,
-          scale: 0.15,
-          gravity: -5,
-          drag: 0.92,
-          tag: 'death_particle'
+        // Import FireExplosion dynamically
+        import('../entities/V1FireExplosion.js').then(({ FireExplosion }) => {
+          // Create fire explosion at death location
+          const explosion = new FireExplosion(
+            this.engine,
+            transform.x,
+            transform.z,
+            2.0,      // radius
+            0,        // no damage
+            30,       // particle count
+            false     // not crit
+          );
+          this.engine.addEntity(explosion);
         });
 
         // Register kill with level system
@@ -252,32 +256,7 @@ export class ItsJustFine {
 
     // Weapon fire events
     window.addEventListener('weapon-fired', (event) => {
-      const entity = event.detail.entity;
-      const transform = entity.getComponent('Transform');
-
-      if (transform && entity.hasTag('player')) {
-        // Muzzle flash
-        const dirX = Math.sin(transform.rotationY);
-        const dirZ = Math.cos(transform.rotationY);
-
-        this.particleManager.createParticle({
-          x: transform.x + dirX,
-          y: transform.y,
-          z: transform.z + dirZ,
-          scale: 0.4,
-          lifetime: 0.1,
-          fadeStart: 0,
-          startColor: 0xffff00,
-          endColor: 0xff8800,
-          startOpacity: 1.0,
-          endOpacity: 0.0,
-          startScale: 1.5,
-          endScale: 0.5,
-          gravity: 0,
-          drag: 0.8,
-          tag: 'muzzle_flash'
-        });
-      }
+      // Removed muzzle flash effect
     });
   }
 
@@ -392,6 +371,47 @@ export class ItsJustFine {
       this.levelSystem.updateTime(dt);
     }
 
+    // Update V1 spells for player
+    if (this.player && this.player.userData && this.player.userData.activeSpells) {
+      const playerTransform = this.player.getComponent('Transform');
+      if (playerTransform) {
+        // Create v1-compatible objects
+        const v1Engine = {
+          addEntity: (ent) => this.engine.addEntity(ent),
+          entities: this.engine.entities,
+          scene: this.renderer.scene, // Use renderer's scene
+          time: this.engine.time,
+          getInstancedParticlePool: (poolName) => this.engine.getInstancedParticlePool(poolName)
+        };
+
+        const v1Player = {
+          x: playerTransform.x,
+          y: playerTransform.y,
+          z: playerTransform.z
+        };
+
+        const v1Stats = {
+          damage: 1.0,
+          projectileSpeed: 1.0
+        };
+
+        // Update and auto-cast all active spells
+        for (const spell of this.player.userData.activeSpells) {
+          spell.update(dt);
+
+          // Auto-cast if ready
+          if (spell.isReady()) {
+            try {
+              spell.cast(v1Engine, v1Player, v1Stats);
+              spell.triggerCooldown();
+            } catch (error) {
+              console.error(`Error casting spell ${spell.name}:`, error);
+            }
+          }
+        }
+      }
+    }
+
     // Update systems
     this.playerInputSystem.update(dt, this.engine.entities);
     this.aiSystem.update(dt, this.engine.entities);
@@ -412,9 +432,9 @@ export class ItsJustFine {
     this.levelingSystem.update(dt, this.engine.entities);
     this.pickupSystem.update(dt, this.engine.entities);
 
-    // Update UI
-    const enemyCount = this.engine.entities.filter(e => e.active && e.hasTag('enemy')).length;
-    const boss = this.engine.entities.find(e => e.active && e.hasTag('boss'));
+    // Update UI (filter out V1 entities that don't have hasTag)
+    const enemyCount = this.engine.entities.filter(e => e.active && e.hasTag && e.hasTag('enemy')).length;
+    const boss = this.engine.entities.find(e => e.active && e.hasTag && e.hasTag('boss'));
 
     this.uiSystem.update(dt, {
       player: this.player,

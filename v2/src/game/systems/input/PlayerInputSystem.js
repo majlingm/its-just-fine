@@ -24,6 +24,7 @@ export class PlayerInputSystem extends ComponentSystem {
 
     this.inputManager = inputManager;
     this.weaponSystem = weaponSystem;
+    this.cameraSystem = null; // Will be set externally
   }
 
   /**
@@ -32,6 +33,14 @@ export class PlayerInputSystem extends ComponentSystem {
    */
   setWeaponSystem(weaponSystem) {
     this.weaponSystem = weaponSystem;
+  }
+
+  /**
+   * Set the camera system for camera-relative controls
+   * @param {CameraSystem} cameraSystem
+   */
+  setCameraSystem(cameraSystem) {
+    this.cameraSystem = cameraSystem;
   }
 
   /**
@@ -53,22 +62,37 @@ export class PlayerInputSystem extends ComponentSystem {
         continue;
       }
 
-      // Calculate input direction
+      // Calculate input direction (camera-relative)
       let inputX = 0;
       let inputZ = 0;
 
-      // WASD keys
-      if (this.inputManager.isKeyDown('w')) inputZ = -1;  // Forward
-      if (this.inputManager.isKeyDown('s')) inputZ = 1;   // Backward
-      if (this.inputManager.isKeyDown('a')) inputX = -1;  // Left
-      if (this.inputManager.isKeyDown('d')) inputX = 1;   // Right
+      // WASD keys (in camera space)
+      if (this.inputManager.isKeyDown('w')) inputZ = -1;  // Forward (camera forward)
+      if (this.inputManager.isKeyDown('s')) inputZ = 1;   // Backward (camera backward)
+      if (this.inputManager.isKeyDown('a')) inputX = -1;  // Left (camera left)
+      if (this.inputManager.isKeyDown('d')) inputX = 1;   // Right (camera right)
 
       // Apply input to velocity
       if (inputX !== 0 || inputZ !== 0) {
         // Normalize diagonal movement
         const magnitude = Math.sqrt(inputX * inputX + inputZ * inputZ);
-        const normalizedX = inputX / magnitude;
-        const normalizedZ = inputZ / magnitude;
+        let normalizedX = inputX / magnitude;
+        let normalizedZ = inputZ / magnitude;
+
+        // Rotate input by camera angle to make it camera-relative
+        if (this.cameraSystem) {
+          const cameraAngle = -this.cameraSystem.config.horizontalAngle; // Negate to match camera rotation
+
+          // Rotate the input vector by the camera's horizontal angle
+          const cos = Math.cos(cameraAngle);
+          const sin = Math.sin(cameraAngle);
+
+          const rotatedX = normalizedX * cos - normalizedZ * sin;
+          const rotatedZ = normalizedX * sin + normalizedZ * cos;
+
+          normalizedX = rotatedX;
+          normalizedZ = rotatedZ;
+        }
 
         // Set velocity based on speed
         movement.velocityX = normalizedX * movement.speed;

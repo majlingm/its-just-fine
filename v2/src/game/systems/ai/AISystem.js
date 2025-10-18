@@ -55,7 +55,7 @@ export class AISystem extends ComponentSystem {
         console.warn('AISystem: No player entity found');
         return;
       }
-      console.log(`AISystem: Found player entity ${this.playerEntity.id}`);
+      // console.log(`AISystem: Found player entity ${this.playerEntity.id}`);
     }
 
     // Now filter to only AI entities and process them
@@ -486,7 +486,7 @@ export class AISystem extends ComponentSystem {
       state.cooldownTimer = 0;
 
       // TODO: Trigger teleport particle effect
-      console.log(`Entity ${entity.id} teleported to player`);
+      // console.log(`Entity ${entity.id} teleported to player`);
     } else {
       // Chase player when not teleporting
       const dirX = dx / distance;
@@ -621,7 +621,7 @@ export class AISystem extends ComponentSystem {
         // Face charge direction
         transform.rotationY = Math.atan2(state.chargeDirection.x, state.chargeDirection.z);
 
-        console.log(`Entity ${entity.id} charging at player`);
+        // console.log(`Entity ${entity.id} charging at player`);
       } else {
         // Normal chase behavior when not charging
         const dirX = dx / distance;
@@ -705,7 +705,7 @@ export class AISystem extends ComponentSystem {
         state.evadeDirection.x = -dirZ * perpendicular;
         state.evadeDirection.z = dirX * perpendicular;
 
-        console.log(`Entity ${entity.id} evading`);
+        // console.log(`Entity ${entity.id} evading`);
       } else {
         // Normal chase behavior when not evading
         const dirX = dx / distance;

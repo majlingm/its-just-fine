@@ -304,9 +304,9 @@ export class EntityFactory {
         x,
         y,
         z,
-        scaleX: 1.0,
-        scaleY: 1.0,
-        scaleZ: 1.0,
+        scaleX: 2.0,
+        scaleY: 2.0,
+        scaleZ: 2.0,
         rotationY: 0
       },
       {
@@ -350,9 +350,15 @@ export class EntityFactory {
       {
         type: 'Animation'
       }
+      // Weapon component removed - using V1 spell system instead
     ];
 
     const entity = this.create(components, ['player']);
+
+    // Initialize V1 spell system
+    entity.userData = entity.userData || {};
+    entity.userData.activeSpells = []; // Array of active V1 spell instances
+
     return entity;
   }
 

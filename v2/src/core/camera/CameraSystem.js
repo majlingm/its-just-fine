@@ -1,3 +1,5 @@
+import { CameraConfig } from '../config/camera.js';
+
 /**
  * CameraSystem - Generic, highly configurable camera system for the engine
  *
@@ -39,6 +41,13 @@ export class CameraSystem {
       verticalMax: config.verticalMax || 0.9,
       distanceMin: config.distanceMin || 2,
       distanceMax: config.distanceMax || 50,
+
+      // Dynamic zoom settings (nested in zoom config)
+      dynamicZoom: config.dynamicZoom || {
+        enabled: true,
+        maxAngleIncrease: 0.3,
+        startThreshold: 0.0
+      },
 
       ...config
     };
@@ -117,16 +126,45 @@ export class CameraSystem {
    * @returns {Object} {x, y, z}
    */
   calculateCameraPosition() {
-    const { horizontalAngle, verticalAngle, distance, heightMultiplier, radiusMultiplier } = this.config;
+    const { horizontalAngle, verticalAngle, distance, heightMultiplier, radiusMultiplier, distanceMin, distanceMax, dynamicZoom } = this.config;
 
-    // Calculate height and radius based on vertical angle
-    const height = distance * (heightMultiplier - verticalAngle * (heightMultiplier - 0.5));
-    const radius = distance * (radiusMultiplier + verticalAngle * (1.1 - radiusMultiplier));
+    // Calculate zoom factor (0 = fully zoomed in, 1 = fully zoomed out)
+    const zoomFactor = (distance - distanceMin) / (distanceMax - distanceMin);
+
+    // Calculate dynamic multipliers and lookAt offset based on zoom
+    let finalHeightMultiplier = heightMultiplier;
+    let finalRadiusMultiplier = radiusMultiplier;
+    let lookAtYOffset = 0; // How much to offset the lookAt point vertically
+
+    if (dynamicZoom.enabled && zoomFactor < (1 - dynamicZoom.startThreshold)) {
+      // Calculate how much of the effect to apply based on threshold
+      const effectStrength = (1 - dynamicZoom.startThreshold - zoomFactor) / (1 - dynamicZoom.startThreshold);
+
+      // Interpolate to third-person values when zoomed in
+      // Third-person has lower height (closer to player level) and more radius (behind player)
+      const targetHeightMult = dynamicZoom.zoomedHeightMult || 0.8;
+      const targetRadiusMult = dynamicZoom.zoomedRadiusMult || 1.2;
+
+      finalHeightMultiplier = heightMultiplier + (targetHeightMult - heightMultiplier) * effectStrength;
+      finalRadiusMultiplier = radiusMultiplier + (targetRadiusMult - radiusMultiplier) * effectStrength;
+
+      // Also adjust where the camera is looking - look forward instead of down at player
+      // When fully zoomed in, look at a point ahead of the player at player height
+      const maxLookAtOffset = dynamicZoom.zoomedLookAtYOffset || 0;
+      lookAtYOffset = maxLookAtOffset * effectStrength;
+    }
+
+    // Calculate height and radius
+    const height = distance * finalHeightMultiplier;
+    const radius = distance * finalRadiusMultiplier;
 
     // Calculate position using horizontal angle
     const x = this.target.x + Math.sin(horizontalAngle) * radius;
     const y = height;
     const z = this.target.z + Math.cos(horizontalAngle) * radius;
+
+    // Store lookAt offset for use in updateCameraPosition
+    this.dynamicLookAtYOffset = lookAtYOffset;
 
     return { x, y, z };
   }
@@ -138,6 +176,9 @@ export class CameraSystem {
   updateCameraPosition(dt) {
     const desiredPosition = this.calculateCameraPosition();
 
+    // Get the dynamic lookAt Y offset from calculateCameraPosition
+    const lookAtYOffset = this.dynamicLookAtYOffset || 0;
+
     // Apply smoothing
     if (this.config.smoothing > 0) {
       const smoothFactor = Math.min(1, this.config.smoothing);
@@ -145,15 +186,17 @@ export class CameraSystem {
       this.currentPosition.y += (desiredPosition.y - this.currentPosition.y) * smoothFactor;
       this.currentPosition.z += (desiredPosition.z - this.currentPosition.z) * smoothFactor;
 
+      // Apply lookAt offset - when zoomed in, look at a point above the player
+      const targetLookAtY = this.target.y + lookAtYOffset;
       this.currentLookAt.x += (this.target.x - this.currentLookAt.x) * smoothFactor;
-      this.currentLookAt.y += (this.target.y - this.currentLookAt.y) * smoothFactor;
+      this.currentLookAt.y += (targetLookAtY - this.currentLookAt.y) * smoothFactor;
       this.currentLookAt.z += (this.target.z - this.currentLookAt.z) * smoothFactor;
     } else {
       this.currentPosition.x = desiredPosition.x;
       this.currentPosition.y = desiredPosition.y;
       this.currentPosition.z = desiredPosition.z;
       this.currentLookAt.x = this.target.x;
-      this.currentLookAt.y = this.target.y;
+      this.currentLookAt.y = this.target.y + lookAtYOffset;
       this.currentLookAt.z = this.target.z;
     }
 
