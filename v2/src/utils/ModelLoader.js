@@ -1,23 +1,25 @@
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader.js';
 import * as SkeletonUtils from 'three/examples/jsm/utils/SkeletonUtils.js';
 
 /**
  * ModelLoader - Centralized model loading with caching
  *
- * Handles loading and caching of GLTF models for enemies and other entities.
+ * Handles loading and caching of GLTF and FBX models for enemies and other entities.
  * Models are cached after first load to avoid repeated network requests.
  */
 export class ModelLoader {
   constructor() {
-    this.loader = new GLTFLoader();
-    this.cache = new Map(); // path -> Promise<GLTF>
-    this.models = new Map(); // path -> GLTF
+    this.gltfLoader = new GLTFLoader();
+    this.fbxLoader = new FBXLoader();
+    this.cache = new Map(); // path -> Promise<Model>
+    this.models = new Map(); // path -> Model
   }
 
   /**
-   * Load a GLTF model
+   * Load a model (GLTF or FBX)
    * @param {string} path - Path to the model file
-   * @returns {Promise<Object>} GLTF object
+   * @returns {Promise<Object>} Model object with scene and animations
    */
   async load(path) {
     // Return cached model if available
@@ -30,14 +32,31 @@ export class ModelLoader {
       return this.cache.get(path);
     }
 
+    // Determine loader based on file extension
+    const isFBX = path.toLowerCase().endsWith('.fbx');
+    const loader = isFBX ? this.fbxLoader : this.gltfLoader;
+
     // Start new load
     const loadPromise = new Promise((resolve, reject) => {
-      this.loader.load(
+      loader.load(
         path,
-        (gltf) => {
-          this.models.set(path, gltf);
+        (result) => {
+          // Normalize the result format
+          let model;
+          if (isFBX) {
+            // FBX loader returns the scene directly
+            model = {
+              scene: result,
+              animations: result.animations || []
+            };
+          } else {
+            // GLTF loader returns an object with scene and animations
+            model = result;
+          }
+
+          this.models.set(path, model);
           this.cache.delete(path);
-          resolve(gltf);
+          resolve(model);
         },
         undefined,
         (error) => {

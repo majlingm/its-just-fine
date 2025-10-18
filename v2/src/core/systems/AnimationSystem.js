@@ -42,6 +42,11 @@ export class AnimationSystem extends ComponentSystem {
    * @param {Movement} movement
    */
   updateMovementAnimations(entity, animation, movement) {
+    // Skip player entities - PlayerInputSystem handles their animations
+    if (entity.hasTag('player')) {
+      return;
+    }
+
     // Determine if entity is moving
     const isMoving = Math.abs(movement.velocityX) > 0.1 || Math.abs(movement.velocityZ) > 0.1;
 

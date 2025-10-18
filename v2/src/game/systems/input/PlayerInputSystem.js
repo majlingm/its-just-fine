@@ -73,7 +73,10 @@ export class PlayerInputSystem extends ComponentSystem {
       if (this.inputManager.isKeyDown('d')) inputX = 1;   // Right (camera right)
 
       // Apply input to velocity
-      if (inputX !== 0 || inputZ !== 0) {
+      const isMoving = inputX !== 0 || inputZ !== 0;
+
+      if (isMoving) {
+        console.log('Player is moving, should play run animation');
         // Normalize diagonal movement
         const magnitude = Math.sqrt(inputX * inputX + inputZ * inputZ);
         let normalizedX = inputX / magnitude;
@@ -102,16 +105,49 @@ export class PlayerInputSystem extends ComponentSystem {
         if (normalizedX !== 0 || normalizedZ !== 0) {
           transform.rotationY = Math.atan2(normalizedX, normalizedZ);
         }
+
+        // Play running animation
+        this.playAnimation(entity, 'run');
       } else {
         // No input - stop movement (or apply friction via drag in MovementSystem)
         movement.velocityX = 0;
         movement.velocityZ = 0;
+
+        // Play idle animation
+        this.playAnimation(entity, 'idle');
       }
 
       // Handle shooting
       if (this.weaponSystem) {
         this.handleShooting(entity, transform);
       }
+    }
+  }
+
+  /**
+   * Play animation on entity
+   * @param {Entity} entity - Player entity
+   * @param {string} type - Animation type ('idle' or 'run')
+   */
+  playAnimation(entity, type) {
+    const animation = entity.getComponent('Animation');
+    if (!animation) {
+      console.log('⚠️ No Animation component found');
+      return;
+    }
+
+    // Use exact animation names from anime_character_cyberstyle.glb
+    let animName = null;
+    if (type === 'idle') {
+      animName = 'Armature|Idle';
+    } else if (type === 'run') {
+      animName = 'Armature|Walk';
+    }
+
+    // Play the animation if found and not already playing
+    if (animName && animation.currentAnimation !== animName) {
+      console.log(`🎬 Switching to: ${animName} (from ${animation.currentAnimation})`);
+      animation.play(animName);
     }
   }
 

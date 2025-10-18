@@ -99,6 +99,58 @@ export class SpellTestMenu {
       this.container.appendChild(button);
     });
 
+    // Add ground type selector
+    const groundLabel = document.createElement('div');
+    groundLabel.textContent = 'GROUND TYPE';
+    groundLabel.style.cssText = `
+      font-weight: bold;
+      margin-top: 20px;
+      margin-bottom: 10px;
+      font-size: 14px;
+      color: #88ccff;
+      border-bottom: 1px solid #88ccff;
+      padding-bottom: 5px;
+    `;
+    this.container.appendChild(groundLabel);
+
+    const groundSelect = document.createElement('select');
+    groundSelect.style.cssText = `
+      display: block;
+      width: 100%;
+      padding: 8px;
+      margin: 5px 0;
+      background: #333;
+      color: white;
+      border: 1px solid #666;
+      border-radius: 4px;
+      cursor: pointer;
+      font-family: monospace;
+      font-size: 13px;
+    `;
+
+    const groundTypes = [
+      'black', 'dark', 'bright', 'checkerboard',
+      'void', 'neon', 'matrix', 'psychedelic',
+      'glass', 'ice', 'water', 'mirror',
+      'lava', 'rainbow', 'chrome',
+      'aurora', 'nebula', 'plasma', 'ocean',
+      'snow', 'crystal'
+    ];
+
+    groundTypes.forEach(type => {
+      const option = document.createElement('option');
+      option.value = type;
+      option.textContent = this.formatSpellName(type);
+      if (type === 'black') option.selected = true;
+      groundSelect.appendChild(option);
+    });
+
+    groundSelect.addEventListener('change', (e) => {
+      this.changeGroundType(e.target.value);
+    });
+
+    this.container.appendChild(groundSelect);
+
     // Add spawn enemies button
     const spawnBtn = document.createElement('button');
     spawnBtn.textContent = 'Spawn Test Enemies';
@@ -279,6 +331,22 @@ export class SpellTestMenu {
     }
 
     this.showFeedback('Spawned 5 Test Enemies!');
+  }
+
+  changeGroundType(groundType) {
+    if (!this.game || !this.game.levelSystem) {
+      console.error('No game/levelSystem instance available');
+      return;
+    }
+
+    // Access GroundSystem through LevelSystem -> EnvironmentSystem
+    if (this.game.levelSystem.environmentSystem && this.game.levelSystem.environmentSystem.groundSystem) {
+      this.game.levelSystem.environmentSystem.groundSystem.create(groundType);
+      this.showFeedback(`Ground: ${this.formatSpellName(groundType)}`);
+      console.log(`✅ Changed ground to: ${groundType}`);
+    } else {
+      console.error('GroundSystem not available');
+    }
   }
 
   toggle() {

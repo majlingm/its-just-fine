@@ -118,6 +118,12 @@ export class V1ProjectileSpell extends Spell {
     }
 
     const target = this.findTarget(engine, player);
+
+    // Don't fire if spell requires a target but none is found
+    if (this.targeting === 'nearest' && !target) {
+      return; // No target found, don't cast
+    }
+
     const pool = this.getProjectilePool(engine);
 
     // Fire projectiles

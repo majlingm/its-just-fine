@@ -367,8 +367,21 @@ export class RenderSystem extends ComponentSystem {
         if (animationComponent) {
           const mixer = new THREE.AnimationMixer(modelScene);
           animationComponent.setAnimations(mixer, animations);
-          console.log(`✅ Loaded ${animations.length} animations for ${renderable.modelType}`);
+          console.log(`✅ Loaded ${animations.length} animations for ${renderable.modelType}:`, animations.map(a => a.name || 'unnamed'));
+
+          // Auto-play idle animation for player
+          if (renderable.modelType === 'player' && animations.length > 0) {
+            // Find and play idle animation
+            const idleAnim = animations.find(a => a.name === 'idle normal') ||
+                           animations.find(a => a.name && a.name.toLowerCase().includes('idle')) ||
+                           animations[0];
+            const idleAnimName = idleAnim.name || 'Animation_0';
+            animationComponent.play(idleAnimName, 0);
+            console.log(`🎬 Auto-playing animation: ${idleAnimName}`);
+          }
         }
+      } else {
+        console.log(`ℹ️ No animations found in ${renderable.modelType} model`);
       }
 
       // Cache mesh

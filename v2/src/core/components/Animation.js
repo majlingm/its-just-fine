@@ -1,4 +1,5 @@
 import { Component } from '../ecs/Component.js';
+import * as THREE from 'three';
 
 /**
  * Animation Component
@@ -36,6 +37,7 @@ export class Animation extends Component {
     clips.forEach(clip => {
       this.clips.set(clip.name, clip);
       const action = mixer.clipAction(clip);
+      action.setLoop(THREE.LoopRepeat); // Make animations loop
       this.actions.set(clip.name, action);
     });
   }
